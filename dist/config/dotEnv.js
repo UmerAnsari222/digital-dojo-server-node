@@ -1,0 +1,22 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.STRIPE_WEBHOOK_SECRET = exports.STRIPE_PRODUCT_ID = exports.STRIPE_SECRET_KEY = exports.AWS_BUCKET_NAME = exports.AWS_REGION = exports.AWS_ACCESS_SECRET_KEY = exports.AWS_ACCESS_KEY_ID = exports.HASH_SECRET = exports.EMAIL_HOST = exports.EMAIL_FROM_PASSWORD = exports.EMAIL_FROM = exports.EMAIL_PORT = exports.JWT_SECRET = exports.PORT = void 0;
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+exports.PORT = process.env.PORT || 4400;
+exports.JWT_SECRET = process.env.JWT_SECRET;
+exports.EMAIL_PORT = process.env.EMAIL_PORT || 465;
+exports.EMAIL_FROM = process.env.EMAIL_FROM;
+exports.EMAIL_FROM_PASSWORD = process.env.EMAIL_FROM_PASSWORD;
+exports.EMAIL_HOST = process.env.EMAIL_HOST;
+exports.HASH_SECRET = process.env.HASH_SECRET;
+exports.AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
+exports.AWS_ACCESS_SECRET_KEY = process.env.AWS_ACCESS_SECRET_KEY;
+exports.AWS_REGION = process.env.AWS_REGION;
+exports.AWS_BUCKET_NAME = process.env.AWS_BUCKET_NAME;
+exports.STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+exports.STRIPE_PRODUCT_ID = process.env.STRIPE_PRODUCT_ID;
+exports.STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
