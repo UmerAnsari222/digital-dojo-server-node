@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+
+    <style>
+      body {
+        font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+      }
+
+      .container {
+        width: 65%;
+        margin: 0 auto;
+      }
+
+      .otp-wrapper {
+        background-color: rgba(171, 171, 171, 0.749);
+        padding: 10px 0;
+        text-align: center;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Hello [<%= email %>]</h1>
+      <br />
+      <p>
+        You recently requested for your Digital Dojo account. Please use the
+        following One Time Password (OTP) to proceed
+      </p>
+      <br />
+
+      <div class="otp-wrapper">
+        <h1 class="otp"><%= otp %></h1>
+      </div>
+      <br />
+      <p>
+        This code is valid for [Time Period, e.g., 5 minutes]. If you did not
+        request for login, please ignore this email or contact us immediately at
+        . For security purposes, never share your OTP with anyone.
+      </p>
+      <h4>Thank you,</h4>
+      <h1>Digital Dojo</h1>
+    </div>
+
+    <!-- More HTML content here -->
+  </body>
+</html>
