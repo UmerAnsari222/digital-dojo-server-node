@@ -30,6 +30,7 @@ export const auth = async (req: Request, res: Response, next: NextFunction) => {
   }
 
   req.userId = userId;
+  req.role = user.role;
   next();
 };
 
@@ -68,6 +69,7 @@ export const authAdmin = async (
     }
 
     req.userId = userId;
+    req.role = user.role;
     next();
   } catch (error) {
     console.log("[ERROR_AUTH_ADMIN]", error);
@@ -75,44 +77,43 @@ export const authAdmin = async (
   }
 };
 
-// export const globalAuth = TryCatch(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const authHeader = req.headers.authorization;
+export const globalAuth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers.authorization;
 
-//     if (!authHeader) {
-//       return next(new ErrorHandler("Unauthorized", 401));
-//     }
+  if (!authHeader) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
 
-//     const token = authHeader.split(" ")[1];
+  const token = authHeader.split(" ")[1];
 
-//     if (!token) {
-//       return next(new ErrorHandler("Unauthorized", 401));
-//     }
+  if (!token) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
 
-//     const { userId } = verifyToken(token) as { userId: string };
+  const { userId } = verifyToken(token) as { userId: string };
 
-//     const user = await db.user.findFirst({
-//       where: {
-//         id: userId,
-//       },
-//     });
+  const user = await db.user.findFirst({
+    where: {
+      id: userId,
+    },
+  });
 
-//     if (!user) {
-//       return next(new ErrorHandler("Unauthorized", 401));
-//     }
+  if (!user) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
 
-//     if (
-//       !user.roles.includes("ADMIN") &&
-//       !user.roles.includes("FUNDRAISER") &&
-//       !user.roles.includes("USER")
-//     ) {
-//       return next(new ErrorHandler("Unauthorized", 403));
-//     }
+  if (user.role !== Role.USER && user.role !== Role.ADMIN) {
+    return next(new ErrorHandler("Unauthorized", 403));
+  }
 
-//     req.userId = userId;
-//     next();
-//   }
-// );
+  req.userId = userId;
+  req.role = user.role;
+  next();
+};
 
 export const authMiddleware = async (
   req: Request,
@@ -138,10 +139,10 @@ export const authAdminMiddleware = async (
   await authAdmin(req, res, next);
 };
 
-// export const globalAuthMiddleware = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   await globalAuth(req, res, next);
-// };
+export const globalAuthMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  await globalAuth(req, res, next);
+};

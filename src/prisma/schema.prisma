@@ -8,15 +8,66 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  name       String?
-  email      String   @unique
-  password   String
-  imageUrl   String?
-  fcmToken   String?
-  providerId String?  @unique
-  provider   Provider @default(EMAIL)
-  role       Role     @default(USER)
+  id          String       @id @default(uuid())
+  name        String?
+  email       String       @unique
+  password    String
+  imageUrl    String?
+  fcmToken    String?
+  providerId  String?      @unique
+  provider    Provider     @default(EMAIL)
+  role        Role         @default(USER)
+  habits      Habit[]
+  userHabits  UserHabit[]
+  completions Completion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Habit {
+  id         String @id @default(uuid())
+  title      String
+  daysOfWeek Int[]
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  userHabits UserHabit[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserHabit {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  habitId String
+  habit   Habit  @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  completions Completion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Completion {
+  id   String   @id @default(uuid())
+  date DateTime
+  day  Int
+
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userHabitId String?
+  userHabit   UserHabit? @relation(fields: [userHabitId], references: [id], onDelete: Cascade)
+
+  // TODO:: Challenge add here
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -26,6 +77,8 @@ model Category {
   id       String @id @default(uuid())
   title    String
   imageUrl String
+
+  habits Habit[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
