@@ -1,0 +1,43 @@
+import { Router, Request, Response, NextFunction } from "express";
+import { makeCompletion } from "../controllers/completion";
+import { authAdminMiddleware, authMiddleware } from "../middlewares/auth";
+import {
+  createWeeklyChallenge,
+  getAllWeeklyChallenges,
+  makePublishWeeklyChallenge,
+  updateWeeklyChallengeById,
+} from "../controllers/challenge";
+
+export const challengeRouter = Router();
+
+challengeRouter.post(
+  "/weekly",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await createWeeklyChallenge(req, res, next);
+  }
+);
+
+challengeRouter.get(
+  "/weekly/all",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await getAllWeeklyChallenges(req, res, next);
+  }
+);
+
+challengeRouter.patch(
+  "/weekly/:weeklyChallengeId",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await updateWeeklyChallengeById(req, res, next);
+  }
+);
+
+challengeRouter.patch(
+  "/weekly/:challengeId/publish",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await makePublishWeeklyChallenge(req, res, next);
+  }
+);

@@ -9,6 +9,7 @@ import { urlRouter } from "./routes/presigned";
 import { profileRouter } from "./routes/profile";
 import { habitRouter } from "./routes/habit";
 import { completionRouter } from "./routes/completion";
+import { challengeRouter } from "./routes/challenge";
 
 const app: Application = express();
 
@@ -30,6 +31,7 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/rest-password", forgotPasswordRouter);
 app.use("/api/v1/habit", habitRouter);
+app.use("/api/v1/challenge", challengeRouter);
 app.use("/api/v1/completion", completionRouter);
 app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/profile", profileRouter);
