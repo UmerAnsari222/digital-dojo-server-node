@@ -4,6 +4,8 @@ import { authAdminMiddleware, authMiddleware } from "../middlewares/auth";
 import {
   createWeeklyChallenge,
   getAllWeeklyChallenges,
+  getTodayWeeklyChallenge,
+  getWeeklyChallengeProgress,
   makePublishWeeklyChallenge,
   updateWeeklyChallengeById,
 } from "../controllers/challenge";
@@ -23,6 +25,22 @@ challengeRouter.get(
   authAdminMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await getAllWeeklyChallenges(req, res, next);
+  }
+);
+
+challengeRouter.get(
+  "/weekly/today",
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await getTodayWeeklyChallenge(req, res, next);
+  }
+);
+
+challengeRouter.get(
+  "/weekly/progress",
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await getWeeklyChallengeProgress(req, res, next);
   }
 );
 

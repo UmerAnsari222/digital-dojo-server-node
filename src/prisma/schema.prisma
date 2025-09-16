@@ -82,7 +82,8 @@ model Challenge {
   status        ChallengeStatus @default(DRAFT)
   startDate     DateTime?
 
-  weeklyChallenges WeeklyChallenge[]
+  weeklyChallenges           WeeklyChallenge[]
+  weeklyChallengeCompletions WeeklyChallengeCompletion[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -118,7 +119,11 @@ model WeeklyChallengeCompletion {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   challengeId String?
-  challenge   WeeklyChallenge? @relation(fields: [challengeId], references: [id], onDelete: SetNull)
+  // challenge   WeeklyChallenge? @relation(fields: [challengeId], references: [id], onDelete: SetNull)
+  challenge   Challenge? @relation(fields: [challengeId], references: [id], onDelete: SetNull)
+
+  weeklyChallengeId String?
+  weeklyChallenge   WeeklyChallenge? @relation(fields: [weeklyChallengeId], references: [id], onDelete: SetNull)
 
   date DateTime @default(now())
 

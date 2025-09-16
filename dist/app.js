@@ -14,6 +14,7 @@ const presigned_1 = require("./routes/presigned");
 const profile_1 = require("./routes/profile");
 const habit_1 = require("./routes/habit");
 const completion_1 = require("./routes/completion");
+const challenge_1 = require("./routes/challenge");
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)({ origin: "*" }));
 app.use(express_1.default.json({ limit: "50mb" }));
@@ -30,6 +31,7 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", auth_1.authRouter);
 app.use("/api/v1/rest-password", forgot_password_1.forgotPasswordRouter);
 app.use("/api/v1/habit", habit_1.habitRouter);
+app.use("/api/v1/challenge", challenge_1.challengeRouter);
 app.use("/api/v1/completion", completion_1.completionRouter);
 app.use("/api/v1/category", category_1.categoryRouter);
 app.use("/api/v1/profile", profile_1.profileRouter);

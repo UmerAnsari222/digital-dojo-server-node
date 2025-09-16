@@ -2,6 +2,20 @@ import { NextFunction, Request, Response } from "express";
 import ErrorHandler from "../utils/error";
 import { db } from "../config/db";
 import { Role } from "@prisma/client";
+import {
+  addDays,
+  differenceInCalendarDays,
+  endOfDay,
+  format,
+  isSameDay,
+  isWithinInterval,
+  startOfDay,
+  subDays,
+} from "date-fns";
+import {
+  getRelativeDayIndex,
+  isTodayInChallengeWeek,
+} from "../utils/dateTimeFormatter";
 
 export const createWeeklyChallenge = async (
   req: Request,
@@ -245,12 +259,34 @@ export const makePublishWeeklyChallenge = async (
       return next(new ErrorHandler("Challenge already started", 400));
     }
 
-    // if (isDataFilled) {
-    //   await db.challenge.update({
-    //     where: { id: challengeId },
-    //     data: { status: "SCHEDULE" },
-    //   });
-    // }
+    // ✅ Check for overlapping challenges in the 7-day window
+    const startDateObj = new Date(startDate);
+    const weekStart = subDays(startDateObj, 3);
+    const weekEnd = addDays(startDateObj, 3);
+
+    const overlappingChallenge = await db.challenge.findFirst({
+      where: {
+        id: {
+          not: challengeId,
+        },
+        startDate: {
+          gte: weekStart,
+          lte: weekEnd,
+        },
+        status: {
+          not: "SCHEDULE",
+        },
+      },
+    });
+
+    if (overlappingChallenge) {
+      return next(
+        new ErrorHandler(
+          `Another challenge is already scheduled within this week: ${overlappingChallenge.startDate.toDateString()}`,
+          400
+        )
+      );
+    }
 
     const updateChallenge = await db.challenge.update({
       where: { id: challengeId },
@@ -264,6 +300,151 @@ export const makePublishWeeklyChallenge = async (
     });
   } catch (e) {
     console.log("[MAKE_PUBLISH_WEEKLY_CHALLENGE_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const getTodayWeeklyChallenge = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
+
+  const today = startOfDay(new Date());
+
+  try {
+    const challenges = await db.challenge.findMany({
+      where: {
+        OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }],
+      },
+      include: {
+        weeklyChallenges: {
+          include: {
+            category: true,
+          },
+        },
+      },
+    });
+
+    // ✅ use helper function here
+    const activeChallenge = challenges.find(
+      (c) => c.startDate && isTodayInChallengeWeek(c.startDate.toString())
+    );
+
+    if (!activeChallenge) {
+      return res.status(200).json({
+        challenge: null,
+        msg: "No challenge for today",
+        success: true,
+      });
+    }
+
+    if (activeChallenge.status === "SCHEDULE") {
+      await db.challenge.update({
+        where: { id: activeChallenge.id },
+        data: { status: "RUNNING" },
+      });
+    }
+
+    const todayWeekly = activeChallenge.weeklyChallenges.find(
+      (w) =>
+        w.dayOfWeek ===
+        getRelativeDayIndex(
+          activeChallenge.startDate.toString(),
+          today.toString()
+        )
+    );
+
+    return res.status(200).json({
+      weeklyChallenge: { ...todayWeekly, startDate: activeChallenge.startDate },
+      msg: todayWeekly
+        ? "Today's Challenge Fetched Successfully"
+        : "No challenge scheduled for today",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const getWeeklyChallengeProgress = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
+
+  const today = startOfDay(new Date());
+
+  try {
+    const challenges = await db.challenge.findMany({
+      where: {
+        OR: [{ status: "RUNNING" }],
+      },
+      include: {
+        weeklyChallenges: {
+          include: {
+            category: true,
+          },
+        },
+      },
+    });
+
+    // ✅ use helper function here
+    const activeChallenge = challenges.find(
+      (c) => c.startDate && isTodayInChallengeWeek(c.startDate.toString())
+    );
+
+    if (!activeChallenge) {
+      return next(new ErrorHandler("Challenge not found", 404));
+    }
+
+    console.log(activeChallenge.id);
+
+    // Get all completions for this user + challenge
+    const completions = await db.weeklyChallengeCompletion.findMany({
+      where: {
+        userId,
+        challengeId: activeChallenge.id,
+      },
+    });
+
+    // Normalize completion dates (strip time)
+    const completionDates = completions.map((c) =>
+      startOfDay(new Date(c.date))
+    );
+
+    const startDate = startOfDay(new Date(activeChallenge.startDate));
+
+    // Build a 7-day week view
+    const days = Array.from({ length: 7 }).map((_, i) => {
+      const currentDay = addDays(startDate, i);
+      const done = completionDates.some((d) => isSameDay(d, currentDay));
+
+      return {
+        day: format(currentDay, "EEE"), // Mon, Tue, Wed...
+        date: currentDay.toISOString().split("T")[0], // 2025-09-12
+        done,
+      };
+    });
+
+    return res.status(200).json({
+      progress: days,
+      msg: "Weekly Streak Fetched Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
     next(new ErrorHandler("Something went wrong", 500));
   }
 };

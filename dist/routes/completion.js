@@ -8,3 +8,6 @@ exports.completionRouter = (0, express_1.Router)();
 exports.completionRouter.post("/", auth_1.authMiddleware, async (req, res, next) => {
     await (0, completion_1.makeCompletion)(req, res, next);
 });
+exports.completionRouter.post("/weekly", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, completion_1.makeWeeklyChallengeCompletion)(req, res, next);
+});
