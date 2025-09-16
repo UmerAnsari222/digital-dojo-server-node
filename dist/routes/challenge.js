@@ -5,11 +5,20 @@ const express_1 = require("express");
 const auth_1 = require("../middlewares/auth");
 const challenge_1 = require("../controllers/challenge");
 exports.challengeRouter = (0, express_1.Router)();
+exports.challengeRouter.post("/plan", auth_1.authAdminMiddleware, async (req, res, next) => {
+    await (0, challenge_1.createDailyChallengePlan)(req, res, next);
+});
+exports.challengeRouter.post("/daily", auth_1.authAdminMiddleware, async (req, res, next) => {
+    await (0, challenge_1.createDailyChallenge)(req, res, next);
+});
 exports.challengeRouter.post("/weekly", auth_1.authAdminMiddleware, async (req, res, next) => {
     await (0, challenge_1.createWeeklyChallenge)(req, res, next);
 });
 exports.challengeRouter.get("/weekly/all", auth_1.authAdminMiddleware, async (req, res, next) => {
     await (0, challenge_1.getAllWeeklyChallenges)(req, res, next);
+});
+exports.challengeRouter.get("/daily/today", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, challenge_1.getTodayDailyChallenge)(req, res, next);
 });
 exports.challengeRouter.get("/weekly/today", auth_1.authMiddleware, async (req, res, next) => {
     await (0, challenge_1.getTodayWeeklyChallenge)(req, res, next);

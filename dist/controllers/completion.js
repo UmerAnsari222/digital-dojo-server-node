@@ -8,7 +8,7 @@ const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
 const makeCompletion = async (req, res, next) => {
     const { userId } = req;
-    const { userHabitId } = req.body;
+    const { userHabitId, dailyChallengeId } = req.body;
     if (!userId) {
         return next(new error_1.default("Unauthorized", 401));
     }

@@ -2,8 +2,11 @@ import { Router, Request, Response, NextFunction } from "express";
 import { makeCompletion } from "../controllers/completion";
 import { authAdminMiddleware, authMiddleware } from "../middlewares/auth";
 import {
+  createDailyChallenge,
+  createDailyChallengePlan,
   createWeeklyChallenge,
   getAllWeeklyChallenges,
+  getTodayDailyChallenge,
   getTodayWeeklyChallenge,
   getWeeklyChallengeProgress,
   makePublishWeeklyChallenge,
@@ -11,6 +14,22 @@ import {
 } from "../controllers/challenge";
 
 export const challengeRouter = Router();
+
+challengeRouter.post(
+  "/plan",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await createDailyChallengePlan(req, res, next);
+  }
+);
+
+challengeRouter.post(
+  "/daily",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await createDailyChallenge(req, res, next);
+  }
+);
 
 challengeRouter.post(
   "/weekly",
@@ -25,6 +44,14 @@ challengeRouter.get(
   authAdminMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await getAllWeeklyChallenges(req, res, next);
+  }
+);
+
+challengeRouter.get(
+  "/daily/today",
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await getTodayDailyChallenge(req, res, next);
   }
 );
 

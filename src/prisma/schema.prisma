@@ -24,6 +24,7 @@ model User {
   createdAt                 DateTime                    @default(now())
   updatedAt                 DateTime                    @updatedAt
   WeeklyChallengeCompletion WeeklyChallengeCompletion[]
+  UserDailyChallenge        UserDailyChallenge[]
 }
 
 model Habit {
@@ -63,12 +64,14 @@ model Completion {
   date DateTime
   day  Int
 
-  userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userHabitId String?
-  userHabit   UserHabit? @relation(fields: [userHabitId], references: [id], onDelete: NoAction)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // TODO:: Challenge add here
+  userHabitId String?
+  userHabit   UserHabit? @relation(fields: [userHabitId], references: [id], onDelete: SetNull)
+
+  userChallengeId String?
+  userChallenge   DailyChallenge? @relation(fields: [userChallengeId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -84,6 +87,48 @@ model Challenge {
 
   weeklyChallenges           WeeklyChallenge[]
   weeklyChallengeCompletions WeeklyChallengeCompletion[]
+  dailyChallenges            DailyChallenge[]
+  // userDailyChallenge         UserDailyChallenge[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DailyChallenge {
+  id          String  @id @default(uuid())
+  title       String
+  description String? @db.Text
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  challengeId String?
+  challenge   Challenge? @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  startTime DateTime? @db.Time
+  endTime   DateTime? @db.Time
+
+  userDailyChallenges UserDailyChallenge[]
+  completions         Completion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserDailyChallenge {
+  id        String   @id @default(uuid())
+  date      DateTime @default(now())
+  completed Boolean  @default(false)
+  skip      Boolean  @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dailyChallengeId String?
+  dailyChallenge   DailyChallenge? @relation(fields: [dailyChallengeId], references: [id], onDelete: SetNull)
+
+  // challengeId String?
+  // challenge   Challenge? @relation(fields: [challengeId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -136,11 +181,12 @@ model Category {
   title    String
   imageUrl String
 
-  habits Habit[]
+  habits           Habit[]
+  weeklyChallenges WeeklyChallenge[]
+  dailyChallenges  DailyChallenge[]
 
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  WeeklyChallenge WeeklyChallenge[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {

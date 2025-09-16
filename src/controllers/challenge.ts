@@ -17,6 +17,116 @@ import {
   isTodayInChallengeWeek,
 } from "../utils/dateTimeFormatter";
 
+export const createDailyChallengePlan = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId, role } = req;
+  const { title, challengeType } = req.body;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
+
+  try {
+    const self = await db.user.findUnique({
+      where: { id: userId, role: Role.ADMIN },
+    });
+
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    if (role !== self.role && role !== Role.ADMIN) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    const challenge = await db.challenge.create({
+      data: {
+        title,
+        challengeType: "DAILY",
+        // challengeType: challengeType,
+      },
+    });
+
+    // const weeklyChallenges = Array.from({ length: 7 }, (_, i) => ({
+    //   title: `Challenge ${i}`,
+    //   dayOfWeek: i,
+    //   challengeId: challenge.id,
+    // }));
+
+    // await db.weeklyChallenge.createMany({
+    //   data: weeklyChallenges,
+    // });
+
+    return res.status(201).json({
+      challenge,
+      msg: "Challenge Created Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[CREATE_DAILY_CHALLENGE_PLAIN_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const createDailyChallenge = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId, role } = req;
+  const { title, description, categoryId, challengeId, startTime, endTime } =
+    req.body;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
+
+  try {
+    const self = await db.user.findUnique({
+      where: { id: userId, role: Role.ADMIN },
+    });
+
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    if (role !== self.role && role !== Role.ADMIN) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    const challenge = await db.challenge.findUnique({
+      where: { id: challengeId },
+    });
+
+    if (!challenge) {
+      return next(new ErrorHandler("Plan not found", 404));
+    }
+
+    const daily = await db.dailyChallenge.create({
+      data: {
+        title,
+        description,
+        categoryId: categoryId,
+        challengeId: challengeId,
+        startTime,
+        endTime,
+      },
+    });
+
+    return res.status(201).json({
+      challenge: daily,
+      msg: "Daily Challenge Created Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[CREATE_DAILY_CHALLENGE_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
 export const createWeeklyChallenge = async (
   req: Request,
   res: Response,
@@ -300,6 +410,73 @@ export const makePublishWeeklyChallenge = async (
     });
   } catch (e) {
     console.log("[MAKE_PUBLISH_WEEKLY_CHALLENGE_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const getTodayDailyChallenge = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
+
+  try {
+    const self = await db.user.findUnique({ where: { id: userId } });
+    if (!self) return next(new ErrorHandler("User not found", 404));
+
+    // ✅ First challenge
+    const firstChallenge = await db.dailyChallenge.findFirst({
+      orderBy: { createdAt: "asc" },
+    });
+
+    if (!firstChallenge) {
+      return res.status(200).json({
+        challenge: null,
+        msg: "No daily challenges available",
+        success: true,
+      });
+    }
+
+    // ✅ Start from whichever is later
+    const startDate = new Date(
+      Math.max(
+        new Date(self.createdAt).getTime(),
+        new Date(firstChallenge.createdAt).getTime()
+      )
+    );
+
+    const daysSince = differenceInCalendarDays(new Date(), startDate);
+
+    // ✅ Get total challenges
+    const totalChallenges = await db.dailyChallenge.count();
+
+    if (daysSince < 0 || daysSince >= totalChallenges) {
+      return res.status(200).json({
+        challenge: null,
+        msg: "No challenge for today",
+        success: true,
+      });
+    }
+
+    // ✅ Fetch the correct challenge
+    const daily = await db.dailyChallenge.findFirst({
+      skip: daysSince,
+      take: 1,
+      orderBy: { createdAt: "asc" },
+    });
+
+    return res.status(200).json({
+      challenge: daily,
+      msg: "Today's Challenge Fetched Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[GET_TODAY_DAILY_CHALLENGE_ERROR]", e);
     next(new ErrorHandler("Something went wrong", 500));
   }
 };
