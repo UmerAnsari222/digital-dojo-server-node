@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeWeeklyChallengeCompletion = exports.makeCompletion = void 0;
 const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
+const streak_1 = require("./streak");
 const makeCompletion = async (req, res, next) => {
     const { userId } = req;
     const { userHabitId, dailyChallengeId } = req.body;
@@ -19,21 +20,35 @@ const makeCompletion = async (req, res, next) => {
         if (!self) {
             return next(new error_1.default("Unauthorized", 401));
         }
-        const userHabit = await db_1.db.userHabit.findUnique({
-            where: {
-                id: userHabitId,
-                userId: userId,
-                habit: {
-                    daysOfWeek: { has: today.getDay() },
+        let userHabit;
+        let dailyChallenge;
+        if (userHabitId) {
+            userHabit = await db_1.db.userHabit.findUnique({
+                where: {
+                    id: userHabitId,
+                    userId: userId,
+                    habit: {
+                        daysOfWeek: { has: today.getDay() },
+                    },
                 },
-            },
-        });
-        if (!userHabit) {
-            return next(new error_1.default("User Habit not found", 404));
+            });
         }
+        if (dailyChallengeId) {
+            dailyChallenge = await db_1.db.dailyChallenge.findUnique({
+                where: { id: dailyChallengeId },
+            });
+        }
+        console.log({ userHabitId, dailyChallengeId });
+        if (!userHabit && !dailyChallenge) {
+            return next(new error_1.default("Challenge or Habit not found", 404));
+        }
+        // if (!dailyChallenge) {
+        //   return next(new ErrorHandler("Daily Challenge not found", 404));
+        // }
         const existingCompletions = await db_1.db.completion.findMany({
             where: {
-                userHabitId: userHabitId,
+                userHabitId: userHabitId ? userHabitId : null,
+                userChallengeId: dailyChallengeId ? dailyChallengeId : null,
                 userId: userId,
                 date: today,
                 day: today.getDay(),
@@ -48,8 +63,10 @@ const makeCompletion = async (req, res, next) => {
                 day: today.getDay(),
                 userId: userId,
                 userHabitId: userHabitId,
+                userChallengeId: dailyChallengeId,
             },
         });
+        await (0, streak_1.processCompletion)(userId);
         return res.status(201).json({
             completion,
             msg: "Completion Created Successfully",

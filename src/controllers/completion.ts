@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import ErrorHandler from "../utils/error";
 import { db } from "../config/db";
+import { processCompletion } from "./streak";
 
 export const makeCompletion = async (
   req: Request,
@@ -24,23 +25,41 @@ export const makeCompletion = async (
       return next(new ErrorHandler("Unauthorized", 401));
     }
 
-    const userHabit = await db.userHabit.findUnique({
-      where: {
-        id: userHabitId,
-        userId: userId,
-        habit: {
-          daysOfWeek: { has: today.getDay() },
-        },
-      },
-    });
+    let userHabit;
+    let dailyChallenge;
 
-    if (!userHabit) {
-      return next(new ErrorHandler("User Habit not found", 404));
+    if (userHabitId) {
+      userHabit = await db.userHabit.findUnique({
+        where: {
+          id: userHabitId,
+          userId: userId,
+          habit: {
+            daysOfWeek: { has: today.getDay() },
+          },
+        },
+      });
     }
+
+    if (dailyChallengeId) {
+      dailyChallenge = await db.dailyChallenge.findUnique({
+        where: { id: dailyChallengeId },
+      });
+    }
+
+    console.log({ userHabitId, dailyChallengeId });
+
+    if (!userHabit && !dailyChallenge) {
+      return next(new ErrorHandler("Challenge or Habit not found", 404));
+    }
+
+    // if (!dailyChallenge) {
+    //   return next(new ErrorHandler("Daily Challenge not found", 404));
+    // }
 
     const existingCompletions = await db.completion.findMany({
       where: {
-        userHabitId: userHabitId,
+        userHabitId: userHabitId ? userHabitId : null,
+        userChallengeId: dailyChallengeId ? dailyChallengeId : null,
         userId: userId,
         date: today,
         day: today.getDay(),
@@ -57,8 +76,11 @@ export const makeCompletion = async (
         day: today.getDay(),
         userId: userId,
         userHabitId: userHabitId,
+        userChallengeId: dailyChallengeId,
       },
     });
+
+    await processCompletion(userId);
 
     return res.status(201).json({
       completion,

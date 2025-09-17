@@ -10,6 +10,9 @@ import { profileRouter } from "./routes/profile";
 import { habitRouter } from "./routes/habit";
 import { completionRouter } from "./routes/completion";
 import { challengeRouter } from "./routes/challenge";
+import { beltRouter } from "./routes/belt";
+import { streakRouter } from "./routes/streak";
+import { circleRouter } from "./routes/cirlce";
 
 const app: Application = express();
 
@@ -33,6 +36,9 @@ app.use("/api/v1/rest-password", forgotPasswordRouter);
 app.use("/api/v1/habit", habitRouter);
 app.use("/api/v1/challenge", challengeRouter);
 app.use("/api/v1/completion", completionRouter);
+app.use("/api/v1/belt", beltRouter);
+app.use("/api/v1/streak", streakRouter);
+app.use("/api/v1/circle", circleRouter);
 app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/presigned", urlRouter);

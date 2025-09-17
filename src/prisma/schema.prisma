@@ -8,23 +8,34 @@ datasource db {
 }
 
 model User {
-  id          String       @id @default(uuid())
-  name        String?
-  email       String       @unique
-  password    String
-  imageUrl    String?
-  fcmToken    String?
-  providerId  String?      @unique
-  provider    Provider     @default(EMAIL)
-  role        Role         @default(USER)
-  habits      Habit[]
-  userHabits  UserHabit[]
-  completions Completion[]
+  id         String   @id @default(uuid())
+  name       String?
+  email      String   @unique
+  password   String
+  imageUrl   String?
+  fcmToken   String?
+  providerId String?  @unique
+  provider   Provider @default(EMAIL)
+  role       Role     @default(USER)
 
-  createdAt                 DateTime                    @default(now())
-  updatedAt                 DateTime                    @updatedAt
-  WeeklyChallengeCompletion WeeklyChallengeCompletion[]
-  UserDailyChallenge        UserDailyChallenge[]
+  beltProgress       Int       @default(0) // 👈 progress in current belt cycle
+  currentBeltId      String?
+  currentBelt        Belt?     @relation(fields: [currentBeltId], references: [id], onDelete: SetNull)
+  lastCompletionDate DateTime?
+
+  circle   Circle? @relation(fields: [circleId], references: [id])
+  circleId String?
+
+  habits                     Habit[]
+  userHabits                 UserHabit[]
+  completions                Completion[]
+  userBelts                  UserBelt[]
+  circles                    Circle[]                    @relation("CircleOwner")
+  userDailyChallenges        UserDailyChallenge[]
+  weeklyChallengeCompletions WeeklyChallengeCompletion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Habit {
@@ -184,6 +195,46 @@ model Category {
   habits           Habit[]
   weeklyChallenges WeeklyChallenge[]
   dailyChallenges  DailyChallenge[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Belt {
+  id       String  @id @default(uuid())
+  name     String
+  duration Int
+  imageUrl String?
+
+  userBelts UserBelt[]
+  users     User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserBelt {
+  id       String   @id @default(uuid())
+  userId   String
+  beltId   String
+  earnedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  belt Belt @relation(fields: [beltId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, beltId])
+}
+
+model Circle {
+  id     String   @id @default(uuid())
+  name   String
+  goal   String?
+  colors String[]
+
+  ownerId String
+  owner   User   @relation("CircleOwner", fields: [ownerId], references: [id])
+
+  members User[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
