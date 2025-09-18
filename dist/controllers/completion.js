@@ -14,6 +14,7 @@ const makeCompletion = async (req, res, next) => {
         return next(new error_1.default("Unauthorized", 401));
     }
     const today = new Date();
+    console.log(today);
     // today.setHours(0, 0, 0, 0); // normalize to midnight
     try {
         const self = await db_1.db.user.findUnique({ where: { id: userId } });
@@ -66,7 +67,17 @@ const makeCompletion = async (req, res, next) => {
                 userChallengeId: dailyChallengeId,
             },
         });
-        await (0, streak_1.processCompletion)(userId);
+        const data = await (0, streak_1.processCompletion)(self.id, today);
+        console.log(data);
+        // Save updates to DB
+        // await db.user.update({
+        //   where: { id: userId },
+        //   data: {
+        //     streak: data.streak,
+        //     beltProgress: data.beltProgress,
+        //     lastCompletionDate: data.lastCompletionDate,
+        //   },
+        // });
         return res.status(201).json({
             completion,
             msg: "Completion Created Successfully",

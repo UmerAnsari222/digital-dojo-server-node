@@ -20,6 +20,7 @@ export const createBelt = async (
   }
 
   try {
+    // 1. Create the new belt
     const belt = await db.belt.create({
       data: {
         name,
@@ -27,6 +28,32 @@ export const createBelt = async (
         imageUrl: key,
       },
     });
+
+    // 2. Find all users who already earned the latest belt before this one
+    const users = await db.user.findMany({
+      include: {
+        userBelts: {
+          include: { belt: true },
+        },
+        currentBelt: true,
+      },
+    });
+
+    // 3. For each user, check if their current belt is the last one they earned
+    for (const user of users) {
+      const earnedBeltIds = user.userBelts.map((b) => b.beltId);
+
+      // if the user has the previous "last belt" and currentBelt = that belt
+      if (earnedBeltIds.includes(user.currentBelt?.id)) {
+        // ✅ Move the user to the new belt
+        await db.user.update({
+          where: { id: user.id },
+          data: {
+            currentBeltId: belt.id,
+          },
+        });
+      }
+    }
 
     return res.status(201).json({
       belt,

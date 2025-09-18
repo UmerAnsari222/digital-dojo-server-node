@@ -16,6 +16,8 @@ export const makeCompletion = async (
   }
 
   const today = new Date();
+  console.log(today);
+
   // today.setHours(0, 0, 0, 0); // normalize to midnight
 
   try {
@@ -80,7 +82,19 @@ export const makeCompletion = async (
       },
     });
 
-    await processCompletion(userId);
+    const data = await processCompletion(self.id, today);
+
+    console.log(data);
+
+    // Save updates to DB
+    // await db.user.update({
+    //   where: { id: userId },
+    //   data: {
+    //     streak: data.streak,
+    //     beltProgress: data.beltProgress,
+    //     lastCompletionDate: data.lastCompletionDate,
+    //   },
+    // });
 
     return res.status(201).json({
       completion,

@@ -11,3 +11,21 @@ exports.circleRouter.post("/", auth_1.authMiddleware, async (req, res, next) => 
 exports.circleRouter.get("/all", async (req, res, next) => {
     await (0, circle_1.getAllCircle)(req, res, next);
 });
+exports.circleRouter.get("/me/all", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, circle_1.getUserAllCircle)(req, res, next);
+});
+exports.circleRouter.patch("/:circleId", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, circle_1.addMemberInCircle)(req, res, next);
+});
+exports.circleRouter.patch("/:circleId/leave", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, circle_1.leaveMemberFromCircle)(req, res, next);
+});
+exports.circleRouter.post("/challenge/create", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, circle_1.createCircleChallenge)(req, res, next);
+});
+exports.circleRouter.get("/challenge/:challengeId", async (req, res, next) => {
+    await (0, circle_1.getActiveCircleChallenges)(req, res, next);
+});
+exports.circleRouter.patch("/challenge/mark", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, circle_1.markCircleChallenge)(req, res, next);
+});

@@ -25,7 +25,7 @@ app.use(express_1.default.urlencoded({ extended: true, limit: "50mb" }));
 // set view engine for html and ejs files
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
-console.log(Date.now());
+console.log(new Date("2025-09-18T23:59:59.000Z"));
 app.get("/", (req, res) => {
     return res
         .status(200)

@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { db } from "../config/db";
 import ErrorHandler from "../utils/error";
-import { differenceInDays } from "date-fns";
+import { differenceInCalendarDays, differenceInDays } from "date-fns";
 
 export const getUserStreak = async (
   req: Request,
@@ -10,7 +10,7 @@ export const getUserStreak = async (
 ) => {
   const { userId } = req;
   try {
-    await processCompletion(userId);
+    // await processCompletion(userId);
 
     const self = await db.user.findUnique({
       where: { id: userId },
@@ -21,7 +21,8 @@ export const getUserStreak = async (
     });
 
     return res.status(200).json({
-      streak: self.beltProgress,
+      streak: self.streak,
+      beltProgress: self.beltProgress,
       currentBelt: self.currentBelt,
       belts: self.userBelts,
       msg: "Fetched Streak & Belt successfully",
@@ -60,62 +61,148 @@ export async function calculateUserStreak(userId: string) {
   return streak;
 }
 
-export async function processCompletion(userId: string) {
+// export async function processCompletion(userId: string, today: Date) {
+//   const user = await db.user.findUnique({
+//     where: { id: userId },
+//     include: { currentBelt: true },
+//   });
+//   if (!user) return;
+
+//   let currentBelt = user.currentBelt;
+
+//   // 1. Assign first belt if none
+//   if (!currentBelt) {
+//     currentBelt = await db.belt.findFirst({ orderBy: { duration: "asc" } });
+//     if (currentBelt) {
+//       await db.user.update({
+//         where: { id: userId },
+//         data: { currentBeltId: currentBelt.id, beltProgress: 0 },
+//       });
+//     }
+//   }
+
+//   if (!currentBelt) return;
+
+//   // 2. Calculate streak/belt progress
+//   const normalizedToday = normalizeDate(today);
+//   let beltProgress = 1;
+
+//   if (user.lastCompletionDate) {
+//     const last = normalizeDate(new Date(user.lastCompletionDate));
+//     const diffDays =
+//       (normalizedToday.getTime() - last.getTime()) / (1000 * 60 * 60 * 24);
+
+//     if (diffDays === 1) {
+//       beltProgress = user.beltProgress + 1; // ✅ consecutive day
+//     } else if (diffDays === 0) {
+//       beltProgress = user.beltProgress; // ✅ same day, don’t increment
+//     } else {
+//       beltProgress = 1; // ❌ streak broken
+//     }
+//   }
+
+//   // 3. Check belt achievement
+//   if (beltProgress >= currentBelt.duration) {
+//     await db.userBelt.create({
+//       data: { userId, beltId: currentBelt.id },
+//     });
+
+//     const nextBelt = await db.belt.findFirst({
+//       where: { duration: { gt: currentBelt.duration } },
+//       orderBy: { duration: "asc" },
+//     });
+
+//     await db.user.update({
+//       where: { id: userId },
+//       data: {
+//         beltProgress: 0,
+//         currentBeltId: nextBelt ? nextBelt.id : null,
+//         lastCompletionDate: normalizedToday,
+//       },
+//     });
+//   } else {
+//     await db.user.update({
+//       where: { id: userId },
+//       data: {
+//         beltProgress,
+//         lastCompletionDate: normalizedToday,
+//       },
+//     });
+//   }
+// }
+
+export async function processCompletion(
+  userId: string,
+  today: Date = new Date()
+) {
   const user = await db.user.findUnique({
     where: { id: userId },
     include: { currentBelt: true },
   });
 
-  if (!user) return;
+  if (!user) return null;
 
-  let currentBelt = user.currentBelt;
+  const todayNormalized = normalizeUTC(today);
+  const lastCompletionDate = user.lastCompletionDate
+    ? normalizeUTC(new Date(user.lastCompletionDate))
+    : null;
 
-  // 1. If no current belt → assign first belt
-  if (!currentBelt) {
-    currentBelt = await db.belt.findFirst({
-      orderBy: { duration: "asc" },
-    });
+  let streak = user.streak || 0;
 
-    if (currentBelt) {
-      await db.user.update({
-        where: { id: userId },
-        data: { currentBeltId: currentBelt.id, beltProgress: 0 },
-      });
-    }
-  }
-
-  if (!currentBelt) return; // no belts defined
-
-  // 2. Streak/belt progress calculation
-  const today = new Date();
-  let beltProgress = 1; // default (first completion day for this belt)
-
-  if (user.lastCompletionDate) {
-    const last = new Date(user.lastCompletionDate);
-    const diffDays = Math.floor(
-      (today.getTime() - last.getTime()) / (1000 * 60 * 60 * 24)
+  // 🔹 Handle streak increment/reset
+  if (!lastCompletionDate) {
+    streak = 1;
+  } else {
+    const diffDays = differenceInCalendarDays(
+      todayNormalized,
+      lastCompletionDate
     );
 
     if (diffDays === 1) {
-      // consecutive day
-      beltProgress = user.beltProgress + 1;
-    } else {
-      // streak broken → reset
-      beltProgress = 1;
+      streak += 1; // ✅ consecutive
+    } else if (diffDays > 1) {
+      streak = 1; // ❌ reset streak
     }
+    // diffDays === 0 → same day → no change
   }
 
-  // 3. Check if belt earned
-  if (beltProgress >= currentBelt.duration) {
-    // award belt
-    await db.userBelt.create({
-      data: {
-        userId,
-        beltId: currentBelt.id,
-      },
+  // 🔹 Ensure user has a belt
+  let currentBelt = user.currentBelt;
+  if (!currentBelt) {
+    currentBelt = await db.belt.findFirst({ orderBy: { duration: "asc" } });
+    if (currentBelt) {
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          currentBeltId: currentBelt.id,
+          streak,
+          beltProgress: 0,
+          lastCompletionDate: todayNormalized,
+        },
+      });
+    }
+  }
+  if (!currentBelt) return null;
+
+  // 🔹 Belt progress = streak count within this belt
+  let beltProgress = streak;
+
+  let beltAchieved = false;
+
+  // ✅ Check if current belt is earned
+  if (streak >= currentBelt.duration) {
+    // Award current belt if not already awarded
+    const alreadyEarned = await db.userBelt.findFirst({
+      where: { userId, beltId: currentBelt.id },
     });
 
-    // find next belt
+    if (!alreadyEarned) {
+      await db.userBelt.create({
+        data: { userId, beltId: currentBelt.id },
+      });
+    }
+
+    // Find the next belt
     const nextBelt = await db.belt.findFirst({
       where: { duration: { gt: currentBelt.duration } },
       orderBy: { duration: "asc" },
@@ -124,19 +211,36 @@ export async function processCompletion(userId: string) {
     await db.user.update({
       where: { id: userId },
       data: {
-        beltProgress: 0,
-        currentBeltId: nextBelt ? nextBelt.id : null,
-        lastCompletionDate: today,
+        streak,
+        beltProgress: 0, // reset for new belt
+        lastCompletionDate: todayNormalized,
+        currentBeltId: nextBelt ? nextBelt.id : currentBelt.id,
       },
     });
+
+    beltAchieved = true;
+    currentBelt = nextBelt || currentBelt;
   } else {
-    // just update progress
+    // Just update streak & progress
     await db.user.update({
       where: { id: userId },
       data: {
+        streak,
         beltProgress,
-        lastCompletionDate: today,
+        lastCompletionDate: todayNormalized,
       },
     });
   }
+
+  return {
+    streak,
+    beltProgress,
+    lastCompletionDate: todayNormalized,
+  };
+}
+
+function normalizeUTC(date: Date): Date {
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+  );
 }
