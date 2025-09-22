@@ -4,6 +4,10 @@ set -e
 
 echo "Deployment started..."
 
+echo "Running deploy.sh on $(hostname)"
+whoami
+pwd
+
 # Pull the latest version of the app
 GIT_SSH_COMMAND="ssh -i ~/.ssh/digital_dojo_ed25519 -o StrictHostKeyChecking=no" git pull origin main
 echo "New changes copied to server !"
