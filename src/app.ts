@@ -31,6 +31,7 @@ app.get("/", (req, res) => {
     .status(200)
     .json({ msg: "Welcome to DigitalDojo API", success: true });
 });
+
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/rest-password", forgotPasswordRouter);
 app.use("/api/v1/habit", habitRouter);
