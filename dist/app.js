@@ -26,11 +26,11 @@ app.use(express_1.default.urlencoded({ extended: true, limit: "50mb" }));
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 console.log(new Date("2025-09-18T23:59:59.000Z"));
-// app.get("/", (req, res) => {
-//   return res
-//     .status(200)
-//     .json({ msg: "Welcome to DigitalDojo API", success: true });
-// });
+app.get("/", (req, res) => {
+    return res
+        .status(200)
+        .json({ msg: "Welcome to DigitalDojo API", success: true });
+});
 app.use("/api/v1/auth", auth_1.authRouter);
 app.use("/api/v1/rest-password", forgot_password_1.forgotPasswordRouter);
 app.use("/api/v1/habit", habit_1.habitRouter);
