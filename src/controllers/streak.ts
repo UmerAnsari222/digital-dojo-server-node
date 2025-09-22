@@ -10,21 +10,37 @@ export const getUserStreak = async (
 ) => {
   const { userId } = req;
   try {
-    // await processCompletion(userId);
+    const today = new Date();
+
+    await processCompletion(userId, today);
 
     const self = await db.user.findUnique({
       where: { id: userId },
       include: {
         currentBelt: true,
-        userBelts: true,
+        userBelts: {
+          select: {
+            belt: {
+              select: {
+                id: true,
+                name: true,
+                duration: true,
+                imageUrl: true,
+              },
+            },
+          },
+        },
       },
     });
+    const belts = self.userBelts.map((ub) => ub.belt);
+
+    // Optional: Attach to self if needed
 
     return res.status(200).json({
       streak: self.streak,
       beltProgress: self.beltProgress,
       currentBelt: self.currentBelt,
-      belts: self.userBelts,
+      belts: belts,
       msg: "Fetched Streak & Belt successfully",
       success: true,
     });
@@ -159,9 +175,9 @@ export async function processCompletion(
     );
 
     if (diffDays === 1) {
-      streak += 1; // ✅ consecutive
+      streak += 1; // consecutive
     } else if (diffDays > 1) {
-      streak = 1; // ❌ reset streak
+      streak = 1; // reset
     }
     // diffDays === 0 → same day → no change
   }
@@ -184,14 +200,25 @@ export async function processCompletion(
   }
   if (!currentBelt) return null;
 
-  // 🔹 Belt progress = streak count within this belt
-  let beltProgress = streak;
+  // 🔹 Calculate belt progress relative to *this belt*
+  // Belt progress = streak - total required days of all previous belts
+  const previousBelts = await db.belt.findMany({
+    where: { duration: { lt: currentBelt.duration } },
+    orderBy: { duration: "asc" },
+  });
+
+  const previousTotal = previousBelts.reduce(
+    (sum, belt) => Math.max(sum, belt.duration),
+    0
+  );
+
+  let beltProgress = streak - previousTotal;
+  if (beltProgress < 0) beltProgress = 0;
 
   let beltAchieved = false;
 
-  // ✅ Check if current belt is earned
-  if (streak >= currentBelt.duration) {
-    // Award current belt if not already awarded
+  // ✅ Check if belt is earned
+  if (beltProgress >= currentBelt.duration) {
     const alreadyEarned = await db.userBelt.findFirst({
       where: { userId, beltId: currentBelt.id },
     });
@@ -202,7 +229,6 @@ export async function processCompletion(
       });
     }
 
-    // Find the next belt
     const nextBelt = await db.belt.findFirst({
       where: { duration: { gt: currentBelt.duration } },
       orderBy: { duration: "asc" },
@@ -212,7 +238,7 @@ export async function processCompletion(
       where: { id: userId },
       data: {
         streak,
-        beltProgress: 0, // reset for new belt
+        beltProgress: 0,
         lastCompletionDate: todayNormalized,
         currentBeltId: nextBelt ? nextBelt.id : currentBelt.id,
       },
@@ -221,7 +247,6 @@ export async function processCompletion(
     beltAchieved = true;
     currentBelt = nextBelt || currentBelt;
   } else {
-    // Just update streak & progress
     await db.user.update({
       where: { id: userId },
       data: {
@@ -236,6 +261,8 @@ export async function processCompletion(
     streak,
     beltProgress,
     lastCompletionDate: todayNormalized,
+    currentBelt,
+    beltAchieved,
   };
 }
 

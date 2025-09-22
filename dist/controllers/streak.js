@@ -12,19 +12,33 @@ const date_fns_1 = require("date-fns");
 const getUserStreak = async (req, res, next) => {
     const { userId } = req;
     try {
-        // await processCompletion(userId);
+        const today = new Date();
+        await processCompletion(userId, today);
         const self = await db_1.db.user.findUnique({
             where: { id: userId },
             include: {
                 currentBelt: true,
-                userBelts: true,
+                userBelts: {
+                    select: {
+                        belt: {
+                            select: {
+                                id: true,
+                                name: true,
+                                duration: true,
+                                imageUrl: true,
+                            },
+                        },
+                    },
+                },
             },
         });
+        const belts = self.userBelts.map((ub) => ub.belt);
+        // Optional: Attach to self if needed
         return res.status(200).json({
             streak: self.streak,
             beltProgress: self.beltProgress,
             currentBelt: self.currentBelt,
-            belts: self.userBelts,
+            belts: belts,
             msg: "Fetched Streak & Belt successfully",
             success: true,
         });
@@ -135,10 +149,10 @@ async function processCompletion(userId, today = new Date()) {
     else {
         const diffDays = (0, date_fns_1.differenceInCalendarDays)(todayNormalized, lastCompletionDate);
         if (diffDays === 1) {
-            streak += 1; // ✅ consecutive
+            streak += 1; // consecutive
         }
         else if (diffDays > 1) {
-            streak = 1; // ❌ reset streak
+            streak = 1; // reset
         }
         // diffDays === 0 → same day → no change
     }
@@ -160,12 +174,19 @@ async function processCompletion(userId, today = new Date()) {
     }
     if (!currentBelt)
         return null;
-    // 🔹 Belt progress = streak count within this belt
-    let beltProgress = streak;
+    // 🔹 Calculate belt progress relative to *this belt*
+    // Belt progress = streak - total required days of all previous belts
+    const previousBelts = await db_1.db.belt.findMany({
+        where: { duration: { lt: currentBelt.duration } },
+        orderBy: { duration: "asc" },
+    });
+    const previousTotal = previousBelts.reduce((sum, belt) => Math.max(sum, belt.duration), 0);
+    let beltProgress = streak - previousTotal;
+    if (beltProgress < 0)
+        beltProgress = 0;
     let beltAchieved = false;
-    // ✅ Check if current belt is earned
-    if (streak >= currentBelt.duration) {
-        // Award current belt if not already awarded
+    // ✅ Check if belt is earned
+    if (beltProgress >= currentBelt.duration) {
         const alreadyEarned = await db_1.db.userBelt.findFirst({
             where: { userId, beltId: currentBelt.id },
         });
@@ -174,7 +195,6 @@ async function processCompletion(userId, today = new Date()) {
                 data: { userId, beltId: currentBelt.id },
             });
         }
-        // Find the next belt
         const nextBelt = await db_1.db.belt.findFirst({
             where: { duration: { gt: currentBelt.duration } },
             orderBy: { duration: "asc" },
@@ -183,7 +203,7 @@ async function processCompletion(userId, today = new Date()) {
             where: { id: userId },
             data: {
                 streak,
-                beltProgress: 0, // reset for new belt
+                beltProgress: 0,
                 lastCompletionDate: todayNormalized,
                 currentBeltId: nextBelt ? nextBelt.id : currentBelt.id,
             },
@@ -192,7 +212,6 @@ async function processCompletion(userId, today = new Date()) {
         currentBelt = nextBelt || currentBelt;
     }
     else {
-        // Just update streak & progress
         await db_1.db.user.update({
             where: { id: userId },
             data: {
@@ -206,6 +225,8 @@ async function processCompletion(userId, today = new Date()) {
         streak,
         beltProgress,
         lastCompletionDate: todayNormalized,
+        currentBelt,
+        beltAchieved,
     };
 }
 function normalizeUTC(date) {
