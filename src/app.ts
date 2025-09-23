@@ -29,7 +29,7 @@ console.log(new Date("2025-09-18T23:59:59.000Z"));
 app.get("/", (req, res) => {
   return res
     .status(200)
-    .json({ msg: "Welcome to DigitalDojo API 2", success: true });
+    .json({ msg: "Welcome to DigitalDojo API", success: true });
 });
 
 app.use("/api/v1/auth", authRouter);
