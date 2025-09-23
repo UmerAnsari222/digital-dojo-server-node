@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { db } from "../config/db";
 import ErrorHandler from "../utils/error";
 import { differenceInCalendarDays, differenceInDays } from "date-fns";
+import { normalizeUTC } from "../utils/dateTimeFormatter";
 
 export const getUserStreak = async (
   req: Request,
@@ -12,7 +13,7 @@ export const getUserStreak = async (
   try {
     const today = new Date();
 
-    await processCompletion(userId, today);
+    const preview = await calculateStreakPreview(userId, today);
 
     const self = await db.user.findUnique({
       where: { id: userId },
@@ -147,7 +148,7 @@ export async function calculateUserStreak(userId: string) {
 //   }
 // }
 
-export async function processCompletion(
+export async function calculateStreakPreview(
   userId: string,
   today: Date = new Date()
 ) {
@@ -164,110 +165,44 @@ export async function processCompletion(
     : null;
 
   let streak = user.streak || 0;
+  let beltProgress = user.beltProgress || 0;
 
-  // 🔹 Handle streak increment/reset
   if (!lastCompletionDate) {
-    streak = 1;
+    // Never completed before → nothing to update
+    streak = 0;
+    beltProgress = 0;
   } else {
     const diffDays = differenceInCalendarDays(
       todayNormalized,
       lastCompletionDate
     );
 
-    if (diffDays === 1) {
-      streak += 1; // consecutive
+    if (diffDays === 0) {
+      // ✅ Already completed today → no change
+      streak = user.streak;
+      beltProgress = user.beltProgress;
+    } else if (diffDays === 1) {
+      // ✅ If they complete today → would increment (preview only, no DB write)
+      streak = user.streak + 1;
+      beltProgress = user.beltProgress + 1;
     } else if (diffDays > 1) {
-      streak = 1; // reset
-    }
-    // diffDays === 0 → same day → no change
-  }
+      // ❌ Streak broken → reset and update DB
+      streak = 0;
+      beltProgress = 0;
 
-  // 🔹 Ensure user has a belt
-  let currentBelt = user.currentBelt;
-  if (!currentBelt) {
-    currentBelt = await db.belt.findFirst({ orderBy: { duration: "asc" } });
-    if (currentBelt) {
       await db.user.update({
         where: { id: userId },
         data: {
-          currentBeltId: currentBelt.id,
           streak,
-          beltProgress: 0,
-          lastCompletionDate: todayNormalized,
+          beltProgress,
         },
       });
     }
-  }
-  if (!currentBelt) return null;
-
-  // 🔹 Calculate belt progress relative to *this belt*
-  // Belt progress = streak - total required days of all previous belts
-  const previousBelts = await db.belt.findMany({
-    where: { duration: { lt: currentBelt.duration } },
-    orderBy: { duration: "asc" },
-  });
-
-  const previousTotal = previousBelts.reduce(
-    (sum, belt) => Math.max(sum, belt.duration),
-    0
-  );
-
-  let beltProgress = streak - previousTotal;
-  if (beltProgress < 0) beltProgress = 0;
-
-  let beltAchieved = false;
-
-  // ✅ Check if belt is earned
-  if (beltProgress >= currentBelt.duration) {
-    const alreadyEarned = await db.userBelt.findFirst({
-      where: { userId, beltId: currentBelt.id },
-    });
-
-    if (!alreadyEarned) {
-      await db.userBelt.create({
-        data: { userId, beltId: currentBelt.id },
-      });
-    }
-
-    const nextBelt = await db.belt.findFirst({
-      where: { duration: { gt: currentBelt.duration } },
-      orderBy: { duration: "asc" },
-    });
-
-    await db.user.update({
-      where: { id: userId },
-      data: {
-        streak,
-        beltProgress: 0,
-        lastCompletionDate: todayNormalized,
-        currentBeltId: nextBelt ? nextBelt.id : currentBelt.id,
-      },
-    });
-
-    beltAchieved = true;
-    currentBelt = nextBelt || currentBelt;
-  } else {
-    await db.user.update({
-      where: { id: userId },
-      data: {
-        streak,
-        beltProgress,
-        lastCompletionDate: todayNormalized,
-      },
-    });
   }
 
   return {
     streak,
     beltProgress,
-    lastCompletionDate: todayNormalized,
-    currentBelt,
-    beltAchieved,
+    currentBelt: user.currentBelt,
   };
-}
-
-function normalizeUTC(date: Date): Date {
-  return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
-  );
 }

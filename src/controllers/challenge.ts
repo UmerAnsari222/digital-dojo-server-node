@@ -429,33 +429,36 @@ export const getTodayDailyChallenge = async (
     const self = await db.user.findUnique({ where: { id: userId } });
     if (!self) return next(new ErrorHandler("User not found", 404));
 
-    // ✅ First challenge
-    const firstChallenge = await db.dailyChallenge.findFirst({
+    const challenges = await db.dailyChallenge.findMany({
       orderBy: { createdAt: "asc" },
     });
 
-    if (!firstChallenge) {
+    console.log("Total challenges:", challenges.length);
+    console.log(
+      "All challenges IDs:",
+      challenges.map((c) => c.id)
+    );
+
+    if (challenges.length === 0) {
       return res.status(200).json({
         challenge: null,
-        msg: "No daily challenges available",
+        msg: "No challenges in DB",
         success: true,
       });
     }
 
-    // ✅ Start from whichever is later
+    const firstChallengeDate = new Date(challenges[0].createdAt);
     const startDate = new Date(
-      Math.max(
-        new Date(self.createdAt).getTime(),
-        new Date(firstChallenge.createdAt).getTime()
-      )
+      Math.max(new Date(self.createdAt).getTime(), firstChallengeDate.getTime())
     );
 
     const daysSince = differenceInCalendarDays(new Date(), startDate);
 
-    // ✅ Get total challenges
-    const totalChallenges = await db.dailyChallenge.count();
+    console.log("startDate:", startDate);
+    console.log("daysSince:", daysSince);
+    console.log("index we want:", daysSince, "of", challenges.length);
 
-    if (daysSince < 0 || daysSince >= totalChallenges) {
+    if (daysSince < 0 || daysSince >= challenges.length) {
       return res.status(200).json({
         challenge: null,
         msg: "No challenge for today",
@@ -463,12 +466,7 @@ export const getTodayDailyChallenge = async (
       });
     }
 
-    // ✅ Fetch the correct challenge
-    const daily = await db.dailyChallenge.findFirst({
-      skip: daysSince,
-      take: 1,
-      orderBy: { createdAt: "asc" },
-    });
+    const daily = challenges[daysSince];
 
     return res.status(200).json({
       challenge: daily,
@@ -477,6 +475,54 @@ export const getTodayDailyChallenge = async (
     });
   } catch (e) {
     console.log("[GET_TODAY_DAILY_CHALLENGE_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const getDailyChallenges = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId, role } = req;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
+
+  try {
+    const self = await db.user.findUnique({
+      where: { id: userId, role: Role.ADMIN },
+    });
+
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    if (role !== self.role && role !== Role.ADMIN) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    const challenges = await db.challenge.findMany({
+      where: {
+        challengeType: "DAILY",
+      },
+      include: {
+        dailyChallenges: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+      },
+    });
+
+    return res.status(201).json({
+      challenges,
+      msg: "Challenges Fetched Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[DAILY_CHALLENGES_ERROR]", e);
     next(new ErrorHandler("Something went wrong", 500));
   }
 };

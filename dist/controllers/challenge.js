@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getWeeklyChallengeProgress = exports.getTodayWeeklyChallenge = exports.getTodayDailyChallenge = exports.makePublishWeeklyChallenge = exports.updateWeeklyChallengeById = exports.getAllWeeklyChallenges = exports.createWeeklyChallenge = exports.createDailyChallenge = exports.createDailyChallengePlan = void 0;
+exports.getWeeklyChallengeProgress = exports.getTodayWeeklyChallenge = exports.getDailyChallenges = exports.getTodayDailyChallenge = exports.makePublishWeeklyChallenge = exports.updateWeeklyChallengeById = exports.getAllWeeklyChallenges = exports.createWeeklyChallenge = exports.createDailyChallenge = exports.createDailyChallengePlan = void 0;
 const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
 const client_1 = require("@prisma/client");
@@ -324,35 +324,32 @@ const getTodayDailyChallenge = async (req, res, next) => {
         const self = await db_1.db.user.findUnique({ where: { id: userId } });
         if (!self)
             return next(new error_1.default("User not found", 404));
-        // ✅ First challenge
-        const firstChallenge = await db_1.db.dailyChallenge.findFirst({
+        const challenges = await db_1.db.dailyChallenge.findMany({
             orderBy: { createdAt: "asc" },
         });
-        if (!firstChallenge) {
+        console.log("Total challenges:", challenges.length);
+        console.log("All challenges IDs:", challenges.map((c) => c.id));
+        if (challenges.length === 0) {
             return res.status(200).json({
                 challenge: null,
-                msg: "No daily challenges available",
+                msg: "No challenges in DB",
                 success: true,
             });
         }
-        // ✅ Start from whichever is later
-        const startDate = new Date(Math.max(new Date(self.createdAt).getTime(), new Date(firstChallenge.createdAt).getTime()));
+        const firstChallengeDate = new Date(challenges[0].createdAt);
+        const startDate = new Date(Math.max(new Date(self.createdAt).getTime(), firstChallengeDate.getTime()));
         const daysSince = (0, date_fns_1.differenceInCalendarDays)(new Date(), startDate);
-        // ✅ Get total challenges
-        const totalChallenges = await db_1.db.dailyChallenge.count();
-        if (daysSince < 0 || daysSince >= totalChallenges) {
+        console.log("startDate:", startDate);
+        console.log("daysSince:", daysSince);
+        console.log("index we want:", daysSince, "of", challenges.length);
+        if (daysSince < 0 || daysSince >= challenges.length) {
             return res.status(200).json({
                 challenge: null,
                 msg: "No challenge for today",
                 success: true,
             });
         }
-        // ✅ Fetch the correct challenge
-        const daily = await db_1.db.dailyChallenge.findFirst({
-            skip: daysSince,
-            take: 1,
-            orderBy: { createdAt: "asc" },
-        });
+        const daily = challenges[daysSince];
         return res.status(200).json({
             challenge: daily,
             msg: "Today's Challenge Fetched Successfully",
@@ -365,6 +362,45 @@ const getTodayDailyChallenge = async (req, res, next) => {
     }
 };
 exports.getTodayDailyChallenge = getTodayDailyChallenge;
+const getDailyChallenges = async (req, res, next) => {
+    const { userId, role } = req;
+    if (!userId) {
+        return next(new error_1.default("Unauthorized", 401));
+    }
+    try {
+        const self = await db_1.db.user.findUnique({
+            where: { id: userId, role: client_1.Role.ADMIN },
+        });
+        if (!self) {
+            return next(new error_1.default("Unauthorized", 401));
+        }
+        if (role !== self.role && role !== client_1.Role.ADMIN) {
+            return next(new error_1.default("Unauthorized", 401));
+        }
+        const challenges = await db_1.db.challenge.findMany({
+            where: {
+                challengeType: "DAILY",
+            },
+            include: {
+                dailyChallenges: {
+                    orderBy: {
+                        createdAt: "asc",
+                    },
+                },
+            },
+        });
+        return res.status(201).json({
+            challenges,
+            msg: "Challenges Fetched Successfully",
+            success: true,
+        });
+    }
+    catch (e) {
+        console.log("[DAILY_CHALLENGES_ERROR]", e);
+        next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.getDailyChallenges = getDailyChallenges;
 const getTodayWeeklyChallenge = async (req, res, next) => {
     const { userId } = req;
     if (!userId) {

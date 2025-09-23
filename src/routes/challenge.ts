@@ -6,6 +6,7 @@ import {
   createDailyChallengePlan,
   createWeeklyChallenge,
   getAllWeeklyChallenges,
+  getDailyChallenges,
   getTodayDailyChallenge,
   getTodayWeeklyChallenge,
   getWeeklyChallengeProgress,
@@ -44,6 +45,14 @@ challengeRouter.get(
   authAdminMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await getAllWeeklyChallenges(req, res, next);
+  }
+);
+
+challengeRouter.get(
+  "/daily/all",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await getDailyChallenges(req, res, next);
   }
 );
 

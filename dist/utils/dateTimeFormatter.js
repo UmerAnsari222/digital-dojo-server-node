@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isTodayInChallengeWeek = isTodayInChallengeWeek;
 exports.getRelativeDayIndex = getRelativeDayIndex;
+exports.normalizeUTC = normalizeUTC;
 const date_fns_1 = require("date-fns");
 function isTodayInChallengeWeek(startDateStr) {
     const startDate = (0, date_fns_1.startOfDay)(new Date(startDateStr)); // strip time
@@ -17,4 +18,7 @@ function getRelativeDayIndex(startDateStr, todayStr) {
         return null; // today is not inside the 7-day window
     }
     return diff; // 0..6
+}
+function normalizeUTC(date) {
+    return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }

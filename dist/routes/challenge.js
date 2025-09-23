@@ -17,6 +17,9 @@ exports.challengeRouter.post("/weekly", auth_1.authAdminMiddleware, async (req, 
 exports.challengeRouter.get("/weekly/all", auth_1.authAdminMiddleware, async (req, res, next) => {
     await (0, challenge_1.getAllWeeklyChallenges)(req, res, next);
 });
+exports.challengeRouter.get("/daily/all", auth_1.authAdminMiddleware, async (req, res, next) => {
+    await (0, challenge_1.getDailyChallenges)(req, res, next);
+});
 exports.challengeRouter.get("/daily/today", auth_1.authMiddleware, async (req, res, next) => {
     await (0, challenge_1.getTodayDailyChallenge)(req, res, next);
 });

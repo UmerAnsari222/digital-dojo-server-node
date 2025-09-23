@@ -27,3 +27,10 @@ export function getRelativeDayIndex(
   }
   return diff; // 0..6
 }
+
+
+export function normalizeUTC(date: Date): Date {
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+  );
+}
