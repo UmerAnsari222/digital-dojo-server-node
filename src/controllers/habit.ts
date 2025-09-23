@@ -207,6 +207,48 @@ export const getUserHabits = async (
   }
 };
 
+export const getAdminHabits = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
+
+  const today = new Date().getDay();
+
+  console.log(today);
+
+  try {
+    const self = await db.user.findUnique({ where: { id: userId } });
+
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    const habits = await db.habit.findMany({
+      where: {
+        userId: null,
+        user: {
+          role: "ADMIN",
+        },
+      },
+    });
+
+    return res.status(200).json({
+      habits,
+      msg: "Habit Fetched Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[CREATE_USER_HABIT_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
 export const getUserHabitsProgress = async (
   req: Request,
   res: Response,

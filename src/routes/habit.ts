@@ -8,6 +8,7 @@ import {
 import {
   createHabit,
   deleteUserHabit,
+  getAdminHabits,
   getHabitOfSelection,
   getUserHabits,
   getUserHabitsProgress,
@@ -38,6 +39,14 @@ habitRouter.get(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await getHabitOfSelection(req, res, next);
+  }
+);
+
+habitRouter.get(
+  "/",
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await getAdminHabits(req, res, next);
   }
 );
 
