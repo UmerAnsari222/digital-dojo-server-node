@@ -24,6 +24,7 @@ export const getProfile = async (
         imageUrl: true,
         createdAt: true,
         updatedAt: true,
+        role: true,
       },
     });
 

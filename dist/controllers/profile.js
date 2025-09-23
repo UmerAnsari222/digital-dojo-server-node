@@ -23,6 +23,7 @@ const getProfile = async (req, res, next) => {
                 imageUrl: true,
                 createdAt: true,
                 updatedAt: true,
+                role: true,
             },
         });
         if (!user) {
