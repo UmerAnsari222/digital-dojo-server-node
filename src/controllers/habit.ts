@@ -518,3 +518,45 @@ export const deleteUserHabit = async (
     next(new ErrorHandler("Something went wrong", 500));
   }
 };
+
+export const deleteHabit = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req;
+  const { habitId } = req.params;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
+
+  try {
+    const self = await db.user.findUnique({ where: { id: userId } });
+
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    const existingHabit = await db.habit.findUnique({
+      where: { id: habitId, userId: null },
+    });
+
+    if (!existingHabit) {
+      return next(new ErrorHandler("Habit not found", 404));
+    }
+
+    const habit = await db.habit.delete({
+      where: { id: habitId },
+    });
+
+    return res.status(200).json({
+      habit,
+      msg: "Habit Deleted Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[DELETE_ADMIN_HABIT_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};

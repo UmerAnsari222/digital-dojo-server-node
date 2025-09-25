@@ -7,6 +7,7 @@ import {
 } from "../middlewares/auth";
 import {
   createHabit,
+  deleteHabit,
   deleteUserHabit,
   getAdminHabits,
   getHabitOfSelection,
@@ -88,5 +89,13 @@ habitRouter.delete(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await deleteUserHabit(req, res, next);
+  }
+);
+
+habitRouter.delete(
+  "/delete/:habitId/admin",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await deleteHabit(req, res, next);
   }
 );

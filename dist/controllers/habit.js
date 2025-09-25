@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUserHabit = exports.updateUserHabit = exports.updateAdminHabit = exports.getUserHabitsProgress = exports.getAdminHabits = exports.getUserHabits = exports.getHabitOfSelection = exports.saveUserHabit = exports.createHabit = void 0;
+exports.deleteHabit = exports.deleteUserHabit = exports.updateUserHabit = exports.updateAdminHabit = exports.getUserHabitsProgress = exports.getAdminHabits = exports.getUserHabits = exports.getHabitOfSelection = exports.saveUserHabit = exports.createHabit = void 0;
 const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
 const client_1 = require("@prisma/client");
@@ -426,3 +426,35 @@ const deleteUserHabit = async (req, res, next) => {
     }
 };
 exports.deleteUserHabit = deleteUserHabit;
+const deleteHabit = async (req, res, next) => {
+    const { userId } = req;
+    const { habitId } = req.params;
+    if (!userId) {
+        return next(new error_1.default("Unauthorized", 401));
+    }
+    try {
+        const self = await db_1.db.user.findUnique({ where: { id: userId } });
+        if (!self) {
+            return next(new error_1.default("Unauthorized", 401));
+        }
+        const existingHabit = await db_1.db.habit.findUnique({
+            where: { id: habitId, userId: null },
+        });
+        if (!existingHabit) {
+            return next(new error_1.default("Habit not found", 404));
+        }
+        const habit = await db_1.db.habit.delete({
+            where: { id: habitId },
+        });
+        return res.status(200).json({
+            habit,
+            msg: "Habit Deleted Successfully",
+            success: true,
+        });
+    }
+    catch (e) {
+        console.log("[DELETE_ADMIN_HABIT_ERROR]", e);
+        next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.deleteHabit = deleteHabit;

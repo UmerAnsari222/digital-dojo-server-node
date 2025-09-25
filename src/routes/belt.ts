@@ -13,9 +13,12 @@ beltRouter.post(
   }
 );
 
-beltRouter.get("/", async (req: Request, res: Response, next: NextFunction) => {
-  await getAllBelts(req, res, next);
-});
+beltRouter.get(
+  "/all",
+  async (req: Request, res: Response, next: NextFunction) => {
+    await getAllBelts(req, res, next);
+  }
+);
 
 beltRouter.patch(
   "/:beltId",
