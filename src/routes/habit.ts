@@ -13,6 +13,7 @@ import {
   getUserHabits,
   getUserHabitsProgress,
   saveUserHabit,
+  updateAdminHabit,
   updateUserHabit,
 } from "../controllers/habit";
 
@@ -71,6 +72,14 @@ habitRouter.patch(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await updateUserHabit(req, res, next);
+  }
+);
+
+habitRouter.patch(
+  "/update/:habitId/admin",
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await updateAdminHabit(req, res, next);
   }
 );
 

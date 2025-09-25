@@ -67,9 +67,9 @@ const updateCategory = async (req, res, next) => {
     if (!title) {
         return next(new error_1.default("Title is required", 400));
     }
-    if (!key) {
-        return next(new error_1.default("Image is required", 400));
-    }
+    // if (!key) {
+    //   return next(new ErrorHandler("Image is required", 400));
+    // }
     try {
         const isExisting = await db_1.db.category.findUnique({
             where: { id: categoryId },

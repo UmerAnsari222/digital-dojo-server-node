@@ -356,6 +356,57 @@ export const getUserHabitsProgress = async (
   }
 };
 
+export const updateAdminHabit = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req;
+  const { habitId } = req.params;
+  const { title, daysOfWeek, categoryId } = req.body;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
+
+  try {
+    const self = await db.user.findUnique({ where: { id: userId } });
+
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    const existingHabit = await db.habit.findUnique({
+      where: { id: habitId, userId: null },
+    });
+    if (!existingHabit) {
+      return next(new ErrorHandler("Habit not found", 404));
+    }
+
+    if (existingHabit.userId !== null && self.role !== "ADMIN") {
+      return next(new ErrorHandler("Forbidden", 403));
+    }
+
+    const updatedHabit = await db.habit.update({
+      where: { id: habitId },
+      data: {
+        title: title ?? existingHabit.title,
+        daysOfWeek: daysOfWeek ?? existingHabit.daysOfWeek,
+        categoryId: categoryId ?? existingHabit.categoryId,
+      },
+    });
+
+    return res.status(200).json({
+      habit: updatedHabit,
+      msg: "Habit Updated Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[UPDATE_HABIT_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
 export const updateUserHabit = async (
   req: Request,
   res: Response,

@@ -83,9 +83,9 @@ export const updateCategory = async (
     return next(new ErrorHandler("Title is required", 400));
   }
 
-  if (!key) {
-    return next(new ErrorHandler("Image is required", 400));
-  }
+  // if (!key) {
+  //   return next(new ErrorHandler("Image is required", 400));
+  // }
 
   try {
     const isExisting = await db.category.findUnique({

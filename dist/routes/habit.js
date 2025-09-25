@@ -26,6 +26,9 @@ exports.habitRouter.get("/progress", auth_1.authMiddleware, async (req, res, nex
 exports.habitRouter.patch("/update/:habitId", auth_1.authMiddleware, async (req, res, next) => {
     await (0, habit_1.updateUserHabit)(req, res, next);
 });
+exports.habitRouter.patch("/update/:habitId/admin", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, habit_1.updateAdminHabit)(req, res, next);
+});
 exports.habitRouter.delete("/delete/:habitId", auth_1.authMiddleware, async (req, res, next) => {
     await (0, habit_1.deleteUserHabit)(req, res, next);
 });

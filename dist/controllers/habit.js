@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUserHabit = exports.updateUserHabit = exports.getUserHabitsProgress = exports.getAdminHabits = exports.getUserHabits = exports.getHabitOfSelection = exports.saveUserHabit = exports.createHabit = void 0;
+exports.deleteUserHabit = exports.updateUserHabit = exports.updateAdminHabit = exports.getUserHabitsProgress = exports.getAdminHabits = exports.getUserHabits = exports.getHabitOfSelection = exports.saveUserHabit = exports.createHabit = void 0;
 const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
 const client_1 = require("@prisma/client");
@@ -294,6 +294,47 @@ const getUserHabitsProgress = async (req, res, next) => {
     }
 };
 exports.getUserHabitsProgress = getUserHabitsProgress;
+const updateAdminHabit = async (req, res, next) => {
+    const { userId } = req;
+    const { habitId } = req.params;
+    const { title, daysOfWeek, categoryId } = req.body;
+    if (!userId) {
+        return next(new error_1.default("Unauthorized", 401));
+    }
+    try {
+        const self = await db_1.db.user.findUnique({ where: { id: userId } });
+        if (!self) {
+            return next(new error_1.default("Unauthorized", 401));
+        }
+        const existingHabit = await db_1.db.habit.findUnique({
+            where: { id: habitId, userId: null },
+        });
+        if (!existingHabit) {
+            return next(new error_1.default("Habit not found", 404));
+        }
+        if (existingHabit.userId !== null && self.role !== "ADMIN") {
+            return next(new error_1.default("Forbidden", 403));
+        }
+        const updatedHabit = await db_1.db.habit.update({
+            where: { id: habitId },
+            data: {
+                title: title ?? existingHabit.title,
+                daysOfWeek: daysOfWeek ?? existingHabit.daysOfWeek,
+                categoryId: categoryId ?? existingHabit.categoryId,
+            },
+        });
+        return res.status(200).json({
+            habit: updatedHabit,
+            msg: "Habit Updated Successfully",
+            success: true,
+        });
+    }
+    catch (e) {
+        console.log("[UPDATE_HABIT_ERROR]", e);
+        next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.updateAdminHabit = updateAdminHabit;
 const updateUserHabit = async (req, res, next) => {
     const { userId } = req;
     const { habitId } = req.params;
