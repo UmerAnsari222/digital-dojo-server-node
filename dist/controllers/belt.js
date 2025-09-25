@@ -69,6 +69,14 @@ exports.createBelt = createBelt;
 const getAllBelts = async (req, res, next) => {
     try {
         const belts = await db_1.db.belt.findMany();
+        await Promise.all(belts.map(async (belt) => {
+            if (belt.imageUrl != null) {
+                belt.imageUrl = await (0, aws_1.getObjectUrl)({
+                    bucket: dotEnv_1.AWS_BUCKET_NAME,
+                    key: belt.imageUrl,
+                });
+            }
+        }));
         return res.status(200).json({
             belts,
             msg: "Fetched all belts successfully",

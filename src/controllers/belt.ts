@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { db } from "../config/db";
 import ErrorHandler from "../utils/error";
-import { deleteFromAwsStorage } from "../utils/aws";
+import { deleteFromAwsStorage, getObjectUrl } from "../utils/aws";
 import { AWS_BUCKET_NAME } from "../config/dotEnv";
 
 export const createBelt = async (
@@ -81,6 +81,18 @@ export const getAllBelts = async (
 ) => {
   try {
     const belts = await db.belt.findMany();
+
+    await Promise.all(
+      belts.map(async (belt) => {
+        if (belt.imageUrl != null) {
+          belt.imageUrl = await getObjectUrl({
+            bucket: AWS_BUCKET_NAME,
+            key: belt.imageUrl,
+          });
+        }
+      })
+    );
+
     return res.status(200).json({
       belts,
       msg: "Fetched all belts successfully",
