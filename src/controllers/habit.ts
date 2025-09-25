@@ -236,6 +236,14 @@ export const getAdminHabits = async (
         //   role: "ADMIN",
         // },
       },
+      include: {
+        category: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
     });
 
     return res.status(200).json({

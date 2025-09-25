@@ -194,6 +194,14 @@ const getAdminHabits = async (req, res, next) => {
                 //   role: "ADMIN",
                 // },
             },
+            include: {
+                category: {
+                    select: {
+                        id: true,
+                        title: true,
+                    },
+                },
+            },
         });
         return res.status(200).json({
             habits,

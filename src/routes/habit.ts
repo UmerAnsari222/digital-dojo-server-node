@@ -44,7 +44,7 @@ habitRouter.get(
 );
 
 habitRouter.get(
-  "/",
+  "/all",
   authAdminMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await getAdminHabits(req, res, next);

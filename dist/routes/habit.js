@@ -14,7 +14,7 @@ exports.habitRouter.post("/save", auth_1.authMiddleware, async (req, res, next) 
 exports.habitRouter.get("/selection", auth_1.authMiddleware, async (req, res, next) => {
     await (0, habit_1.getHabitOfSelection)(req, res, next);
 });
-exports.habitRouter.get("/", auth_1.authAdminMiddleware, async (req, res, next) => {
+exports.habitRouter.get("/all", auth_1.authAdminMiddleware, async (req, res, next) => {
     await (0, habit_1.getAdminHabits)(req, res, next);
 });
 exports.habitRouter.get("/today", auth_1.authMiddleware, async (req, res, next) => {
