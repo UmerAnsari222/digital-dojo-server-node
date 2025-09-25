@@ -232,9 +232,9 @@ export const getAdminHabits = async (
     const habits = await db.habit.findMany({
       where: {
         userId: null,
-        user: {
-          role: "ADMIN",
-        },
+        // user: {
+        //   role: "ADMIN",
+        // },
       },
     });
 

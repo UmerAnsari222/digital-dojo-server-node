@@ -190,9 +190,9 @@ const getAdminHabits = async (req, res, next) => {
         const habits = await db_1.db.habit.findMany({
             where: {
                 userId: null,
-                user: {
-                    role: "ADMIN",
-                },
+                // user: {
+                //   role: "ADMIN",
+                // },
             },
         });
         return res.status(200).json({
