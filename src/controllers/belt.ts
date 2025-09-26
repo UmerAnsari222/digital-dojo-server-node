@@ -153,3 +153,39 @@ export const updateBelt = async (
     next(new ErrorHandler("Something went wrong", 500));
   }
 };
+
+export const deleteBelt = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { beltId } = req.params;
+
+  try {
+    const isExisting = await db.belt.findUnique({ where: { id: beltId } });
+
+    if (!isExisting) {
+      return next(new ErrorHandler("Belt not found", 404));
+    }
+
+    if (isExisting.imageUrl) {
+      await deleteFromAwsStorage({
+        Bucket: AWS_BUCKET_NAME,
+        Key: isExisting.imageUrl,
+      });
+    }
+
+    const belt = await db.belt.delete({
+      where: { id: beltId },
+    });
+
+    return res.status(200).json({
+      belt,
+      msg: "Delete Belt Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[BELT_DELETE_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};

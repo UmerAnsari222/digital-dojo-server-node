@@ -1,7 +1,12 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { login, register } from "../controllers/auth";
 import { authAdminMiddleware } from "../middlewares/auth";
-import { createBelt, getAllBelts, updateBelt } from "../controllers/belt";
+import {
+  createBelt,
+  deleteBelt,
+  getAllBelts,
+  updateBelt,
+} from "../controllers/belt";
 
 export const beltRouter = Router();
 
@@ -25,5 +30,13 @@ beltRouter.patch(
   authAdminMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await updateBelt(req, res, next);
+  }
+);
+
+beltRouter.delete(
+  "/:beltId",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await deleteBelt(req, res, next);
   }
 );

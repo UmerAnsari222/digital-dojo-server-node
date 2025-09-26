@@ -35,3 +35,9 @@ exports.challengeRouter.patch("/weekly/:weeklyChallengeId", auth_1.authAdminMidd
 exports.challengeRouter.patch("/weekly/:challengeId/publish", auth_1.authAdminMiddleware, async (req, res, next) => {
     await (0, challenge_1.makePublishWeeklyChallenge)(req, res, next);
 });
+exports.challengeRouter.delete("/weekly/:weeklyChallengeId", auth_1.authAdminMiddleware, async (req, res, next) => {
+    await (0, challenge_1.deleteWeeklyChallengeById)(req, res, next);
+});
+exports.challengeRouter.delete("/daily/:dailyChallengeId", auth_1.authAdminMiddleware, async (req, res, next) => {
+    await (0, challenge_1.deleteDailyChallengeById)(req, res, next);
+});

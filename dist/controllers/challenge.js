@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getWeeklyChallengeProgress = exports.getTodayWeeklyChallenge = exports.getDailyChallenges = exports.getTodayDailyChallenge = exports.makePublishWeeklyChallenge = exports.updateWeeklyChallengeById = exports.getAllWeeklyChallenges = exports.createWeeklyChallenge = exports.createDailyChallenge = exports.createDailyChallengePlan = void 0;
+exports.deleteDailyChallengeById = exports.deleteWeeklyChallengeById = exports.getWeeklyChallengeProgress = exports.getTodayWeeklyChallenge = exports.getDailyChallenges = exports.getTodayDailyChallenge = exports.makePublishWeeklyChallenge = exports.updateWeeklyChallengeById = exports.getAllWeeklyChallenges = exports.createWeeklyChallenge = exports.createDailyChallenge = exports.createDailyChallengePlan = void 0;
 const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
 const client_1 = require("@prisma/client");
@@ -508,3 +508,81 @@ const getWeeklyChallengeProgress = async (req, res, next) => {
     }
 };
 exports.getWeeklyChallengeProgress = getWeeklyChallengeProgress;
+const deleteWeeklyChallengeById = async (req, res, next) => {
+    const { userId, role } = req;
+    const { weeklyChallengeId } = req.params;
+    if (!userId) {
+        return next(new error_1.default("Unauthorized", 401));
+    }
+    try {
+        const self = await db_1.db.user.findUnique({
+            where: { id: userId, role: client_1.Role.ADMIN },
+        });
+        if (!self) {
+            return next(new error_1.default("Unauthorized", 401));
+        }
+        if (role !== self.role && role !== client_1.Role.ADMIN) {
+            return next(new error_1.default("Unauthorized", 401));
+        }
+        const weeklyChallenge = await db_1.db.weeklyChallenge.findUnique({
+            where: {
+                id: weeklyChallengeId,
+            },
+        });
+        if (!weeklyChallenge) {
+            return next(new error_1.default("Challenge not found", 404));
+        }
+        const challenge = await db_1.db.weeklyChallenge.delete({
+            where: { id: weeklyChallengeId },
+        });
+        return res.status(200).json({
+            challenge: challenge,
+            msg: "Challenge Delete Successfully",
+            success: true,
+        });
+    }
+    catch (e) {
+        console.log("[DELETE_WEEKLY_CHALLENGE_ERROR]", e);
+        next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.deleteWeeklyChallengeById = deleteWeeklyChallengeById;
+const deleteDailyChallengeById = async (req, res, next) => {
+    const { userId, role } = req;
+    const { dailyChallengeId } = req.params;
+    if (!userId) {
+        return next(new error_1.default("Unauthorized", 401));
+    }
+    try {
+        const self = await db_1.db.user.findUnique({
+            where: { id: userId, role: client_1.Role.ADMIN },
+        });
+        if (!self) {
+            return next(new error_1.default("Unauthorized", 401));
+        }
+        if (role !== self.role && role !== client_1.Role.ADMIN) {
+            return next(new error_1.default("Unauthorized", 401));
+        }
+        const weeklyChallenge = await db_1.db.dailyChallenge.findUnique({
+            where: {
+                id: dailyChallengeId,
+            },
+        });
+        if (!weeklyChallenge) {
+            return next(new error_1.default("Challenge not found", 404));
+        }
+        const challenge = await db_1.db.weeklyChallenge.delete({
+            where: { id: dailyChallengeId },
+        });
+        return res.status(200).json({
+            challenge: challenge,
+            msg: "Challenge Delete Successfully",
+            success: true,
+        });
+    }
+    catch (e) {
+        console.log("[DELETE_DAILY_CHALLENGE_ERROR]", e);
+        next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.deleteDailyChallengeById = deleteDailyChallengeById;

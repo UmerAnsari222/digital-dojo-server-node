@@ -671,3 +671,103 @@ export const getWeeklyChallengeProgress = async (
     next(new ErrorHandler("Something went wrong", 500));
   }
 };
+
+export const deleteWeeklyChallengeById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId, role } = req;
+  const { weeklyChallengeId } = req.params;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
+
+  try {
+    const self = await db.user.findUnique({
+      where: { id: userId, role: Role.ADMIN },
+    });
+
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    if (role !== self.role && role !== Role.ADMIN) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    const weeklyChallenge = await db.weeklyChallenge.findUnique({
+      where: {
+        id: weeklyChallengeId,
+      },
+    });
+
+    if (!weeklyChallenge) {
+      return next(new ErrorHandler("Challenge not found", 404));
+    }
+
+    const challenge = await db.weeklyChallenge.delete({
+      where: { id: weeklyChallengeId },
+    });
+
+    return res.status(200).json({
+      challenge: challenge,
+      msg: "Challenge Delete Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[DELETE_WEEKLY_CHALLENGE_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const deleteDailyChallengeById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId, role } = req;
+  const { dailyChallengeId } = req.params;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
+
+  try {
+    const self = await db.user.findUnique({
+      where: { id: userId, role: Role.ADMIN },
+    });
+
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    if (role !== self.role && role !== Role.ADMIN) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    const weeklyChallenge = await db.dailyChallenge.findUnique({
+      where: {
+        id: dailyChallengeId,
+      },
+    });
+
+    if (!weeklyChallenge) {
+      return next(new ErrorHandler("Challenge not found", 404));
+    }
+
+    const challenge = await db.weeklyChallenge.delete({
+      where: { id: dailyChallengeId },
+    });
+
+    return res.status(200).json({
+      challenge: challenge,
+      msg: "Challenge Delete Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[DELETE_DAILY_CHALLENGE_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};

@@ -14,3 +14,6 @@ exports.beltRouter.get("/all", async (req, res, next) => {
 exports.beltRouter.patch("/:beltId", auth_1.authAdminMiddleware, async (req, res, next) => {
     await (0, belt_1.updateBelt)(req, res, next);
 });
+exports.beltRouter.delete("/:beltId", auth_1.authAdminMiddleware, async (req, res, next) => {
+    await (0, belt_1.deleteBelt)(req, res, next);
+});

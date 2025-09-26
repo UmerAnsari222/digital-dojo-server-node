@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateBelt = exports.getAllBelts = exports.createBelt = void 0;
+exports.deleteBelt = exports.updateBelt = exports.getAllBelts = exports.createBelt = void 0;
 const db_1 = require("../config/db");
 const error_1 = __importDefault(require("../utils/error"));
 const aws_1 = require("../utils/aws");
@@ -129,3 +129,31 @@ const updateBelt = async (req, res, next) => {
     }
 };
 exports.updateBelt = updateBelt;
+const deleteBelt = async (req, res, next) => {
+    const { beltId } = req.params;
+    try {
+        const isExisting = await db_1.db.belt.findUnique({ where: { id: beltId } });
+        if (!isExisting) {
+            return next(new error_1.default("Belt not found", 404));
+        }
+        if (isExisting.imageUrl) {
+            await (0, aws_1.deleteFromAwsStorage)({
+                Bucket: dotEnv_1.AWS_BUCKET_NAME,
+                Key: isExisting.imageUrl,
+            });
+        }
+        const belt = await db_1.db.belt.delete({
+            where: { id: beltId },
+        });
+        return res.status(200).json({
+            belt,
+            msg: "Delete Belt Successfully",
+            success: true,
+        });
+    }
+    catch (e) {
+        console.log("[BELT_DELETE_ERROR]", e);
+        next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.deleteBelt = deleteBelt;
