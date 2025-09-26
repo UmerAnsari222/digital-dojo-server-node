@@ -67,7 +67,7 @@ export const updateProfile = async (
       return next(new ErrorHandler("User not found", 404));
     }
 
-    if (isExisting.imageUrl && isExisting.imageUrl !== key) {
+    if (key && isExisting.imageUrl && isExisting.imageUrl !== key) {
       await deleteFromAwsStorage({
         Bucket: AWS_BUCKET_NAME,
         Key: isExisting.imageUrl,
