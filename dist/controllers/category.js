@@ -64,6 +64,7 @@ exports.getAllCategories = getAllCategories;
 const updateCategory = async (req, res, next) => {
     const { categoryId } = req.params;
     const { title, key } = req.body;
+    console.log(title, key);
     if (!title) {
         return next(new error_1.default("Title is required", 400));
     }
@@ -77,7 +78,7 @@ const updateCategory = async (req, res, next) => {
         if (!isExisting) {
             return next(new error_1.default("Category not found", 404));
         }
-        if (isExisting.imageUrl && isExisting.imageUrl !== key) {
+        if (key && isExisting.imageUrl && isExisting.imageUrl !== key) {
             await (0, aws_1.deleteFromAwsStorage)({
                 Bucket: dotEnv_1.AWS_BUCKET_NAME,
                 Key: isExisting.imageUrl,

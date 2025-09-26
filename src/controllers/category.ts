@@ -79,6 +79,8 @@ export const updateCategory = async (
   const { categoryId } = req.params;
   const { title, key } = req.body;
 
+  console.log(title, key);
+
   if (!title) {
     return next(new ErrorHandler("Title is required", 400));
   }
@@ -96,7 +98,7 @@ export const updateCategory = async (
       return next(new ErrorHandler("Category not found", 404));
     }
 
-    if (isExisting.imageUrl && isExisting.imageUrl !== key) {
+    if (key && isExisting.imageUrl && isExisting.imageUrl !== key) {
       await deleteFromAwsStorage({
         Bucket: AWS_BUCKET_NAME,
         Key: isExisting.imageUrl,

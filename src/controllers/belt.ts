@@ -127,7 +127,7 @@ export const updateBelt = async (
       return next(new ErrorHandler("Belt not found", 404));
     }
 
-    if (isExisting.imageUrl && isExisting.imageUrl !== key) {
+    if (key && isExisting.imageUrl && isExisting.imageUrl !== key) {
       await deleteFromAwsStorage({
         Bucket: AWS_BUCKET_NAME,
         Key: isExisting.imageUrl,
