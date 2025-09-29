@@ -7,6 +7,7 @@ import {
   createWeeklyChallenge,
   deleteDailyChallengeById,
   deleteWeeklyChallengeById,
+  deleteWeeklyChallengePlainById,
   getAllWeeklyChallenges,
   getDailyChallenges,
   getTodayDailyChallenge,
@@ -87,6 +88,14 @@ challengeRouter.patch(
   authAdminMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await updateWeeklyChallengeById(req, res, next);
+  }
+);
+
+challengeRouter.patch(
+  "/weekly/:challengeId/plain",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await deleteWeeklyChallengePlainById(req, res, next);
   }
 );
 
