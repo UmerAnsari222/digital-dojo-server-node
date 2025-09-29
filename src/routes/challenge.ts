@@ -91,7 +91,7 @@ challengeRouter.patch(
   }
 );
 
-challengeRouter.patch(
+challengeRouter.delete(
   "/weekly/:challengeId/plain",
   authAdminMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {

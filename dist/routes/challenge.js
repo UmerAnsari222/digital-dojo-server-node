@@ -32,7 +32,7 @@ exports.challengeRouter.get("/weekly/progress", auth_1.authMiddleware, async (re
 exports.challengeRouter.patch("/weekly/:weeklyChallengeId", auth_1.authAdminMiddleware, async (req, res, next) => {
     await (0, challenge_1.updateWeeklyChallengeById)(req, res, next);
 });
-exports.challengeRouter.patch("/weekly/:challengeId/plain", auth_1.authAdminMiddleware, async (req, res, next) => {
+exports.challengeRouter.delete("/weekly/:challengeId/plain", auth_1.authAdminMiddleware, async (req, res, next) => {
     await (0, challenge_1.deleteWeeklyChallengePlainById)(req, res, next);
 });
 exports.challengeRouter.patch("/weekly/:challengeId/publish", auth_1.authAdminMiddleware, async (req, res, next) => {
