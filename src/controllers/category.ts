@@ -3,6 +3,7 @@ import ErrorHandler from "../utils/error";
 import { db } from "../config/db";
 import { deleteFromAwsStorage, getObjectUrl } from "../utils/aws";
 import { AWS_BUCKET_NAME } from "../config/dotEnv";
+import logger from "../config/logger";
 
 export const createCategory = async (
   req: Request,
@@ -120,6 +121,7 @@ export const updateCategory = async (
     });
   } catch (e) {
     console.log("[UPDATE_CATEGORY_ERROR]", e);
+    logger.error(e);
     next(new ErrorHandler("Something went wrong", 500));
   }
 };

@@ -16,6 +16,7 @@ import {
   getRelativeDayIndex,
   isTodayInChallengeWeek,
 } from "../utils/dateTimeFormatter";
+import logger from "../config/logger";
 
 export const createDailyChallengePlan = async (
   req: Request,
@@ -721,6 +722,7 @@ export const deleteWeeklyChallengePlainById = async (
     });
   } catch (e) {
     console.log("[DELETE_WEEKLY_CHALLENGE_PLAIN_ERROR]", e);
+    logger.error(e);
     next(new ErrorHandler("Something went wrong", 500));
   }
 };

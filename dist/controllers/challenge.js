@@ -9,6 +9,7 @@ const db_1 = require("../config/db");
 const client_1 = require("@prisma/client");
 const date_fns_1 = require("date-fns");
 const dateTimeFormatter_1 = require("../utils/dateTimeFormatter");
+const logger_1 = __importDefault(require("../config/logger"));
 const createDailyChallengePlan = async (req, res, next) => {
     const { userId, role } = req;
     const { title, challengeType } = req.body;
@@ -546,6 +547,7 @@ const deleteWeeklyChallengePlainById = async (req, res, next) => {
     }
     catch (e) {
         console.log("[DELETE_WEEKLY_CHALLENGE_PLAIN_ERROR]", e);
+        logger_1.default.error(e);
         next(new error_1.default("Something went wrong", 500));
     }
 };

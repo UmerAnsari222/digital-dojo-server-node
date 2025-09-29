@@ -8,6 +8,7 @@ const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
 const aws_1 = require("../utils/aws");
 const dotEnv_1 = require("../config/dotEnv");
+const logger_1 = __importDefault(require("../config/logger"));
 const createCategory = async (req, res, next) => {
     const { title, key } = req.body;
     if (!title) {
@@ -99,6 +100,7 @@ const updateCategory = async (req, res, next) => {
     }
     catch (e) {
         console.log("[UPDATE_CATEGORY_ERROR]", e);
+        logger_1.default.error(e);
         next(new error_1.default("Something went wrong", 500));
     }
 };
