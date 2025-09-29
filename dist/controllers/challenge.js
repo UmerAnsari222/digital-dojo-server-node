@@ -527,6 +527,9 @@ const deleteWeeklyChallengePlainById = async (req, res, next) => {
         const weeklyChallenge = await db_1.db.challenge.findUnique({
             where: {
                 id: challengeId,
+                status: {
+                    not: "RUNNING",
+                },
             },
         });
         if (!weeklyChallenge) {

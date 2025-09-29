@@ -700,6 +700,9 @@ export const deleteWeeklyChallengePlainById = async (
     const weeklyChallenge = await db.challenge.findUnique({
       where: {
         id: challengeId,
+        status: {
+          not: "RUNNING",
+        },
       },
     });
 
