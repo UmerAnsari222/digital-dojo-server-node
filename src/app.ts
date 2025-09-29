@@ -1,5 +1,7 @@
 import express, { Application } from "express";
 import cors from "cors";
+import morgan from "morgan";
+
 import { PORT } from "./config/dotEnv";
 import errorMiddleware from "./middlewares/error";
 import { authRouter } from "./routes/auth";
@@ -16,6 +18,8 @@ import { circleRouter } from "./routes/cirlce";
 
 const app: Application = express();
 
+// Use Morgan middleware
+app.use(morgan("combined")); // 'dev' is a pre-defined format string
 app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
