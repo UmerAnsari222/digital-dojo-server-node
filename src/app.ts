@@ -15,11 +15,19 @@ import { challengeRouter } from "./routes/challenge";
 import { beltRouter } from "./routes/belt";
 import { streakRouter } from "./routes/streak";
 import { circleRouter } from "./routes/cirlce";
+import logger from "./config/logger";
 
 const app: Application = express();
 
 // Use Morgan middleware
-app.use(morgan("combined")); // 'dev' is a pre-defined format string
+app.use(
+  morgan("combined", {
+    stream: {
+      write: (message: string) => logger.http(message.trim()),
+    },
+  })
+); // 'dev' is a pre-defined format string
+
 app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));

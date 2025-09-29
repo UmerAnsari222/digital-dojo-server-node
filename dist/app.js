@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const morgan_1 = __importDefault(require("morgan"));
 const dotEnv_1 = require("./config/dotEnv");
 const error_1 = __importDefault(require("./middlewares/error"));
 const auth_1 = require("./routes/auth");
@@ -18,7 +19,14 @@ const challenge_1 = require("./routes/challenge");
 const belt_1 = require("./routes/belt");
 const streak_1 = require("./routes/streak");
 const cirlce_1 = require("./routes/cirlce");
+const logger_1 = __importDefault(require("./config/logger"));
 const app = (0, express_1.default)();
+// Use Morgan middleware
+app.use((0, morgan_1.default)("combined", {
+    stream: {
+        write: (message) => logger_1.default.http(message.trim()),
+    },
+})); // 'dev' is a pre-defined format string
 app.use((0, cors_1.default)({ origin: "*" }));
 app.use(express_1.default.json({ limit: "50mb" }));
 app.use(express_1.default.urlencoded({ extended: true, limit: "50mb" }));
