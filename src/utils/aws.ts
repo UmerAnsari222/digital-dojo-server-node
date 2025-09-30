@@ -17,6 +17,7 @@ import cron from "node-cron";
 import path from "node:path";
 import { exec } from "child_process";
 import fs from "fs";
+import { parse } from "pg-connection-string";
 
 const s3Client = new S3Client({
   region: AWS_REGION,
@@ -121,14 +122,22 @@ export const deleteFromAwsStorage = async ({
   }
 };
 
+const dbConfig = parse(DATABASE_URL);
+
 function backupDBAndUploadOnS3() {
   const date = new Date().toISOString().split("T")[0];
-  const filename = `${DATABASE_URL}_backup_${date}.sql.gz`;
+  const dbName = dbConfig.database; // ✅ only use database name
+  const filename = `${dbName}_backup_${date}.sql.gz`;
   const filepath = path.join("/tmp", filename);
 
   console.log({ date, filename, filepath });
 
-  const dumpCmd = `PGPASSWORD="root" pg_dump -U postgres -h localhost -p 5432 digital_dojo | gzip > "${filepath}"`;
+  const dumpCmd = `PGPASSWORD="${dbConfig.password}" pg_dump -U ${
+    dbConfig.user
+  } -h ${dbConfig.host} -p ${
+    dbConfig.port || 5432
+  } ${dbName} | gzip > "${filepath}"`;
+
   console.log("⏳ Starting backup...");
 
   exec(dumpCmd, async (err) => {
@@ -156,4 +165,4 @@ function backupDBAndUploadOnS3() {
   });
 }
 
-cron.schedule("* * * * *", backupDBAndUploadOnS3);
+cron.schedule("0 3 */15 * *", backupDBAndUploadOnS3);

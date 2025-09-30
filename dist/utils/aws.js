@@ -14,6 +14,7 @@ const node_cron_1 = __importDefault(require("node-cron"));
 const node_path_1 = __importDefault(require("node:path"));
 const child_process_1 = require("child_process");
 const fs_1 = __importDefault(require("fs"));
+const pg_connection_string_1 = require("pg-connection-string");
 const s3Client = new client_s3_1.S3Client({
     region: dotEnv_1.AWS_REGION,
     credentials: {
@@ -93,12 +94,14 @@ const deleteFromAwsStorage = async ({ Bucket, Key, }) => {
     }
 };
 exports.deleteFromAwsStorage = deleteFromAwsStorage;
+const dbConfig = (0, pg_connection_string_1.parse)(dotEnv_1.DATABASE_URL);
 function backupDBAndUploadOnS3() {
     const date = new Date().toISOString().split("T")[0];
-    const filename = `${dotEnv_1.DATABASE_URL}_backup_${date}.sql.gz`;
+    const dbName = dbConfig.database; // ✅ only use database name
+    const filename = `${dbName}_backup_${date}.sql.gz`;
     const filepath = node_path_1.default.join("/tmp", filename);
     console.log({ date, filename, filepath });
-    const dumpCmd = `PGPASSWORD="root" pg_dump -U postgres -h localhost -p 5432 digital_dojo | gzip > "${filepath}"`;
+    const dumpCmd = `PGPASSWORD="${dbConfig.password}" pg_dump -U ${dbConfig.user} -h ${dbConfig.host} -p ${dbConfig.port || 5432} ${dbName} | gzip > "${filepath}"`;
     console.log("⏳ Starting backup...");
     (0, child_process_1.exec)(dumpCmd, async (err) => {
         if (err) {
@@ -124,4 +127,4 @@ function backupDBAndUploadOnS3() {
         }
     });
 }
-node_cron_1.default.schedule("* * * * *", backupDBAndUploadOnS3);
+node_cron_1.default.schedule("0 3 */15 * *", backupDBAndUploadOnS3);
