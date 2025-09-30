@@ -6,6 +6,7 @@ import {
   createDailyChallengePlan,
   createWeeklyChallenge,
   deleteDailyChallengeById,
+  deleteDailyChallengePlainById,
   deleteWeeklyChallengeById,
   deleteWeeklyChallengePlainById,
   getAllWeeklyChallenges,
@@ -91,14 +92,6 @@ challengeRouter.patch(
   }
 );
 
-challengeRouter.delete(
-  "/weekly/:challengeId/plain",
-  authAdminMiddleware,
-  async (req: Request, res: Response, next: NextFunction) => {
-    await deleteWeeklyChallengePlainById(req, res, next);
-  }
-);
-
 challengeRouter.patch(
   "/weekly/:challengeId/publish",
   authAdminMiddleware,
@@ -120,5 +113,21 @@ challengeRouter.delete(
   authAdminMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await deleteDailyChallengeById(req, res, next);
+  }
+);
+
+challengeRouter.delete(
+  "/weekly/:challengeId/plain",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await deleteWeeklyChallengePlainById(req, res, next);
+  }
+);
+
+challengeRouter.delete(
+  "/daily/:challengeId/plain",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await deleteDailyChallengePlainById(req, res, next);
   }
 );
