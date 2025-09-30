@@ -49,6 +49,10 @@ export const createDailyChallengePlan = async (
         challengeType: "DAILY",
         // challengeType: challengeType,
       },
+      include: {
+        dailyChallenges: true,
+        weeklyChallenges: true,
+      },
     });
 
     // const weeklyChallenges = Array.from({ length: 7 }, (_, i) => ({
@@ -215,6 +219,9 @@ export const getAllWeeklyChallenges = async (
             dayOfWeek: "asc",
           },
         },
+      },
+      orderBy: {
+        createdAt: "asc",
       },
     });
 
@@ -402,6 +409,9 @@ export const makePublishWeeklyChallenge = async (
     const updateChallenge = await db.challenge.update({
       where: { id: challengeId },
       data: { status: "SCHEDULE", startDate: startDate },
+      include: {
+        weeklyChallenges: true,
+      },
     });
 
     return res.status(200).json({
