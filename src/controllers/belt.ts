@@ -80,7 +80,11 @@ export const getAllBelts = async (
   next: NextFunction
 ) => {
   try {
-    const belts = await db.belt.findMany();
+    const belts = await db.belt.findMany({
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
 
     await Promise.all(
       belts.map(async (belt) => {

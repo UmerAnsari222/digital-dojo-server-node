@@ -68,7 +68,11 @@ const createBelt = async (req, res, next) => {
 exports.createBelt = createBelt;
 const getAllBelts = async (req, res, next) => {
     try {
-        const belts = await db_1.db.belt.findMany();
+        const belts = await db_1.db.belt.findMany({
+            orderBy: {
+                createdAt: "asc",
+            },
+        });
         await Promise.all(belts.map(async (belt) => {
             if (belt.imageUrl != null) {
                 belt.imageUrl = await (0, aws_1.getObjectUrl)({
