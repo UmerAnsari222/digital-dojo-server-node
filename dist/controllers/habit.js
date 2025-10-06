@@ -105,17 +105,20 @@ const getHabitOfSelection = async (req, res, next) => {
         if (!self) {
             return next(new error_1.default("Unauthorized", 401));
         }
-        const habits = await db_1.db.userHabit.findMany({
+        const habits = await db_1.db.habit.findMany({
             where: {
-                OR: [{ userId: userId }],
+                OR: [{ userId: userId }, { userId: null }],
             },
+            // include: {
+            //   habit: {
+            //     include: {
+            //       category: true,
+            //     },
+            //   },
+            //   completions: true,
+            // },
             include: {
-                habit: {
-                    include: {
-                        category: true,
-                    },
-                },
-                completions: true,
+                category: true,
             },
         });
         return res.status(200).json({

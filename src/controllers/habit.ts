@@ -127,17 +127,20 @@ export const getHabitOfSelection = async (
       return next(new ErrorHandler("Unauthorized", 401));
     }
 
-    const habits = await db.userHabit.findMany({
+    const habits = await db.habit.findMany({
       where: {
-        OR: [{ userId: userId }],
+        OR: [{ userId: userId }, { userId: null }],
       },
+      // include: {
+      //   habit: {
+      //     include: {
+      //       category: true,
+      //     },
+      //   },
+      //   completions: true,
+      // },
       include: {
-        habit: {
-          include: {
-            category: true,
-          },
-        },
-        completions: true,
+        category: true,
       },
     });
 
