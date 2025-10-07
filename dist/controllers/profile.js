@@ -54,18 +54,20 @@ const getProfile = async (req, res, next) => {
                 key: user.imageUrl,
             });
         }
-        if (user.currentBelt.imageUrl != null) {
+        if (user.currentBelt?.imageUrl != null) {
             user.imageUrl = await (0, aws_1.getObjectUrl)({
                 bucket: dotEnv_1.AWS_BUCKET_NAME,
-                key: user.currentBelt.imageUrl,
+                key: user.currentBelt?.imageUrl,
             });
         }
-        if (user.userBelts.length > 0) {
+        if (user.userBelts?.length > 0) {
             for (const uBelt of user.userBelts) {
-                uBelt.belt.imageUrl = await (0, aws_1.getObjectUrl)({
-                    bucket: dotEnv_1.AWS_BUCKET_NAME,
-                    key: uBelt.belt.imageUrl,
-                });
+                if (uBelt.belt.imageUrl != null) {
+                    uBelt.belt.imageUrl = await (0, aws_1.getObjectUrl)({
+                        bucket: dotEnv_1.AWS_BUCKET_NAME,
+                        key: uBelt.belt.imageUrl,
+                    });
+                }
             }
         }
         return res
