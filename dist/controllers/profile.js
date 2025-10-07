@@ -24,6 +24,25 @@ const getProfile = async (req, res, next) => {
                 createdAt: true,
                 updatedAt: true,
                 role: true,
+                currentBelt: {
+                    select: {
+                        id: true,
+                        imageUrl: true,
+                        name: true,
+                    },
+                },
+                userBelts: {
+                    select: {
+                        id: true,
+                        belt: {
+                            select: {
+                                name: true,
+                                imageUrl: true,
+                                id: true,
+                            },
+                        },
+                    },
+                },
             },
         });
         if (!user) {
@@ -34,6 +53,20 @@ const getProfile = async (req, res, next) => {
                 bucket: dotEnv_1.AWS_BUCKET_NAME,
                 key: user.imageUrl,
             });
+        }
+        if (user.currentBelt.imageUrl != null) {
+            user.imageUrl = await (0, aws_1.getObjectUrl)({
+                bucket: dotEnv_1.AWS_BUCKET_NAME,
+                key: user.currentBelt.imageUrl,
+            });
+        }
+        if (user.userBelts.length > 0) {
+            for (const uBelt of user.userBelts) {
+                uBelt.belt.imageUrl = await (0, aws_1.getObjectUrl)({
+                    bucket: dotEnv_1.AWS_BUCKET_NAME,
+                    key: uBelt.belt.imageUrl,
+                });
+            }
         }
         return res
             .status(200)
