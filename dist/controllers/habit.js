@@ -149,8 +149,8 @@ const getUserHabits = async (req, res, next) => {
     }
     const today = new Date().getDay();
     const now = new Date();
-    const weekStart = (0, date_fns_1.startOfWeek)(now, { weekStartsOn: 1 });
-    const weekEnd = (0, date_fns_1.endOfWeek)(now, { weekStartsOn: 1 });
+    const weekStart = (0, date_fns_1.startOfWeek)(now, { weekStartsOn: 0 });
+    const weekEnd = (0, date_fns_1.endOfWeek)(now, { weekStartsOn: 0 });
     console.log(today);
     try {
         const self = await db_1.db.user.findUnique({ where: { id: userId } });
