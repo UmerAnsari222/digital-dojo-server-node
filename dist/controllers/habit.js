@@ -148,8 +148,9 @@ const getUserHabits = async (req, res, next) => {
         return next(new error_1.default("Unauthorized", 401));
     }
     const today = new Date().getDay();
-    const weekStart = (0, date_fns_1.startOfWeek)(today, { weekStartsOn: 1 });
-    const weekEnd = (0, date_fns_1.endOfWeek)(today, { weekStartsOn: 1 });
+    const now = new Date();
+    const weekStart = (0, date_fns_1.startOfWeek)(now, { weekStartsOn: 1 });
+    const weekEnd = (0, date_fns_1.endOfWeek)(now, { weekStartsOn: 1 });
     console.log(today);
     try {
         const self = await db_1.db.user.findUnique({ where: { id: userId } });
@@ -206,7 +207,7 @@ const getUserHabits = async (req, res, next) => {
                 id: habit.id,
                 title: habit.habit.title,
                 habit: habit.habit,
-                category: habit.habit.category,
+                // category: habit.habit.category,
                 userId: userId,
                 habitId: habit.habit.id,
                 week,
@@ -221,7 +222,7 @@ const getUserHabits = async (req, res, next) => {
         });
     }
     catch (e) {
-        console.log("[CREATE_USER_HABIT_ERROR]", e);
+        console.log("[GET_USER_HABIT_ERROR]", e);
         next(new error_1.default("Something went wrong", 500));
     }
 };

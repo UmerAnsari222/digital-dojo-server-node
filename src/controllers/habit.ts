@@ -177,8 +177,9 @@ export const getUserHabits = async (
   }
 
   const today = new Date().getDay();
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+  const now = new Date();
+  const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
 
   console.log(today);
 
@@ -244,7 +245,7 @@ export const getUserHabits = async (
         id: habit.id,
         title: habit.habit.title,
         habit: habit.habit,
-        category: habit.habit.category,
+        // category: habit.habit.category,
         userId: userId,
         habitId: habit.habit.id,
         week,
@@ -260,7 +261,7 @@ export const getUserHabits = async (
       success: true,
     });
   } catch (e) {
-    console.log("[CREATE_USER_HABIT_ERROR]", e);
+    console.log("[GET_USER_HABIT_ERROR]", e);
     next(new ErrorHandler("Something went wrong", 500));
   }
 };
