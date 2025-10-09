@@ -10,6 +10,7 @@ const client_1 = require("@prisma/client");
 const date_fns_1 = require("date-fns");
 const createHabit = async (req, res, next) => {
     const { userId, role } = req;
+    const { flow } = req.query;
     const { title, daysOfWeek, categoryId } = req.body;
     if (!userId) {
         return next(new error_1.default("Unauthorized", 401));
@@ -38,6 +39,14 @@ const createHabit = async (req, res, next) => {
                     categoryId,
                 },
             });
+            if (flow === "inner") {
+                const saveHabits = await db_1.db.userHabit.create({
+                    data: {
+                        habitId: habit.id,
+                        userId: userId,
+                    },
+                });
+            }
         }
         return res.status(201).json({
             habit,
@@ -139,6 +148,8 @@ const getUserHabits = async (req, res, next) => {
         return next(new error_1.default("Unauthorized", 401));
     }
     const today = new Date().getDay();
+    const weekStart = (0, date_fns_1.startOfWeek)(today, { weekStartsOn: 1 });
+    const weekEnd = (0, date_fns_1.endOfWeek)(today, { weekStartsOn: 1 });
     console.log(today);
     try {
         const self = await db_1.db.user.findUnique({ where: { id: userId } });
@@ -164,10 +175,47 @@ const getUserHabits = async (req, res, next) => {
                         category: true,
                     },
                 },
+                completions: {
+                    where: {
+                        userId: userId,
+                        date: {
+                            gte: weekStart,
+                            lte: weekEnd,
+                        },
+                    },
+                },
             },
         });
+        const days = (0, date_fns_1.eachDayOfInterval)({ start: weekStart, end: weekEnd });
+        const mapHabitToWeekly = (habit) => {
+            const week = days.map((day) => {
+                const normalizedDay = new Date(day);
+                normalizedDay.setHours(0, 0, 0, 0);
+                const done = habit.completions.some((c) => {
+                    const d = new Date(c.date);
+                    d.setHours(0, 0, 0, 0);
+                    return d.getTime() === normalizedDay.getTime();
+                });
+                return {
+                    day: (0, date_fns_1.format)(day, "EEEEE"), // e.g. "Mon"
+                    date: (0, date_fns_1.format)(day, "yyyy-MM-dd"), // e.g. "2025-09-01"
+                    done,
+                };
+            });
+            return {
+                id: habit.id,
+                title: habit.habit.title,
+                habit: habit.habit,
+                category: habit.habit.category,
+                userId: userId,
+                habitId: habit.habit.id,
+                week,
+            };
+        };
+        const result = habits.map(mapHabitToWeekly);
         return res.status(200).json({
-            habits,
+            // habits,
+            habits: result,
             msg: "Habit Fetched Successfully",
             success: true,
         });

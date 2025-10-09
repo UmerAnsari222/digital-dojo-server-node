@@ -10,6 +10,7 @@ export const createHabit = async (
   next: NextFunction
 ) => {
   const { userId, role } = req;
+  const { flow } = req.query;
   const { title, daysOfWeek, categoryId } = req.body;
 
   if (!userId) {
@@ -42,6 +43,15 @@ export const createHabit = async (
           categoryId,
         },
       });
+
+      if (flow === "inner") {
+        const saveHabits = await db.userHabit.create({
+          data: {
+            habitId: habit.id,
+            userId: userId,
+          },
+        });
+      }
     }
 
     return res.status(201).json({
@@ -167,6 +177,8 @@ export const getUserHabits = async (
   }
 
   const today = new Date().getDay();
+  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 
   console.log(today);
 
@@ -196,11 +208,54 @@ export const getUserHabits = async (
             category: true,
           },
         },
+        completions: {
+          where: {
+            userId: userId,
+            date: {
+              gte: weekStart,
+              lte: weekEnd,
+            },
+          },
+        },
       },
     });
 
+    const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
+    const mapHabitToWeekly = (habit: any) => {
+      const week = days.map((day) => {
+        const normalizedDay = new Date(day);
+        normalizedDay.setHours(0, 0, 0, 0);
+
+        const done = habit.completions.some((c) => {
+          const d = new Date(c.date);
+          d.setHours(0, 0, 0, 0);
+          return d.getTime() === normalizedDay.getTime();
+        });
+
+        return {
+          day: format(day, "EEEEE"), // e.g. "Mon"
+          date: format(day, "yyyy-MM-dd"), // e.g. "2025-09-01"
+          done,
+        };
+      });
+
+      return {
+        id: habit.id,
+        title: habit.habit.title,
+        habit: habit.habit,
+        category: habit.habit.category,
+        userId: userId,
+        habitId: habit.habit.id,
+        week,
+      };
+    };
+
+    const result = habits.map(mapHabitToWeekly);
+
     return res.status(200).json({
-      habits,
+      // habits,
+      habits: result,
       msg: "Habit Fetched Successfully",
       success: true,
     });
