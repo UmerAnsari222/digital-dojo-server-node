@@ -306,10 +306,10 @@ async function calculateUserGrowthScore(user: {
   return Math.round(1000 * (completedDays / availableDays)) / 10;
 }
 
-// cron.schedule(
-//   "* * * * *",
-//   () => {
-//     recalculateGrowthScores().catch(console.error);
-//   },
-//   { timezone: "America/New_York" }
-// );
+cron.schedule(
+  "* * * * *",
+  () => {
+    recalculateGrowthScores().catch(console.error);
+  },
+  { timezone: "America/New_York" }
+);

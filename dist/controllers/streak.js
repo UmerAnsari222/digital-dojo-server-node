@@ -11,6 +11,7 @@ const error_1 = __importDefault(require("../utils/error"));
 const date_fns_1 = require("date-fns");
 const dateTimeFormatter_1 = require("../utils/dateTimeFormatter");
 const luxon_1 = require("luxon");
+const node_cron_1 = __importDefault(require("node-cron"));
 const BATCH_SIZE = 200;
 const getUserStreak = async (req, res, next) => {
     const { userId } = req;
@@ -252,10 +253,6 @@ async function calculateUserGrowthScore(user) {
     const completedDays = completedDaysSet.size;
     return Math.round(1000 * (completedDays / availableDays)) / 10;
 }
-// cron.schedule(
-//   "* * * * *",
-//   () => {
-//     recalculateGrowthScores().catch(console.error);
-//   },
-//   { timezone: "America/New_York" }
-// );
+node_cron_1.default.schedule("* * * * *", () => {
+    recalculateGrowthScores().catch(console.error);
+}, { timezone: "America/New_York" });
