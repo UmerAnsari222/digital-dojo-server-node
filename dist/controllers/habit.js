@@ -20,7 +20,7 @@ const createHabit = async (req, res, next) => {
         if (!self) {
             return next(new error_1.default("Unauthorized", 401));
         }
-        if (daysOfWeek.length > 0) {
+        if (daysOfWeek.length === 0) {
             return next(new error_1.default("Week of days is required", 400));
         }
         let habit;

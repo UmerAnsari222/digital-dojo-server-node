@@ -28,7 +28,7 @@ export const createHabit = async (
       return next(new ErrorHandler("Unauthorized", 401));
     }
 
-    if (daysOfWeek.length > 0) {
+    if (daysOfWeek.length === 0) {
       return next(new ErrorHandler("Week of days is required", 400));
     }
 
