@@ -18,6 +18,9 @@ model User {
   provider   Provider @default(EMAIL)
   role       Role     @default(USER)
 
+  timezone    String @default("UTC")
+  growthScore Float  @default(0.0)
+
   beltProgress       Int       @default(0) // 👈 progress in current belt cycle
   streak             Int       @default(0)
   currentBeltId      String?

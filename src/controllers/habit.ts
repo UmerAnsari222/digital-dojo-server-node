@@ -11,7 +11,11 @@ export const createHabit = async (
 ) => {
   const { userId, role } = req;
   const { flow } = req.query;
-  const { title, daysOfWeek, categoryId } = req.body;
+  const {
+    title,
+    daysOfWeek,
+    categoryId,
+  }: { title: string; daysOfWeek: number[]; categoryId: string } = req.body;
 
   if (!userId) {
     return next(new ErrorHandler("Unauthorized", 401));
@@ -22,6 +26,10 @@ export const createHabit = async (
 
     if (!self) {
       return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    if (daysOfWeek.length > 0) {
+      return next(new ErrorHandler("Week of days is required", 400));
     }
 
     let habit: Habit;

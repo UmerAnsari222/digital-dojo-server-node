@@ -3,6 +3,10 @@ import { db } from "../config/db";
 import ErrorHandler from "../utils/error";
 import { differenceInCalendarDays, differenceInDays } from "date-fns";
 import { normalizeUTC } from "../utils/dateTimeFormatter";
+import { DateTime } from "luxon";
+import cron from "node-cron";
+
+const BATCH_SIZE = 200;
 
 export const getUserStreak = async (
   req: Request,
@@ -206,3 +210,106 @@ export async function calculateStreakPreview(
     currentBelt: user.currentBelt,
   };
 }
+
+async function recalculateGrowthScores() {
+  let page = 0;
+  let totalUpdated = 0;
+
+  console.log("Starting Growth Score recalculation...");
+
+  while (true) {
+    const users = await db.user.findMany({
+      take: BATCH_SIZE,
+      skip: page * BATCH_SIZE,
+      orderBy: { createdAt: "asc" },
+      select: {
+        id: true,
+        timezone: true,
+        growthScore: true,
+        createdAt: true,
+      },
+    });
+
+    if (users.length === 0) break;
+
+    const updates: { id: string; newScore: number }[] = [];
+
+    for (const user of users) {
+      try {
+        const newScore = await calculateUserGrowthScore(user);
+        const roundedExisting = Math.round(user.growthScore * 10) / 10;
+
+        if (newScore !== roundedExisting) {
+          updates.push({ id: user.id, newScore });
+        }
+      } catch (err) {
+        console.error(`Error calculating score for user ${user.id}:`, err);
+      }
+    }
+
+    if (updates.length > 0) {
+      await Promise.all(
+        updates.map(({ id, newScore }) =>
+          db.user.update({
+            where: { id },
+            data: { growthScore: newScore },
+          })
+        )
+      );
+      totalUpdated += updates.length;
+      console.log(`Updated ${updates.length} users in batch ${page + 1}`);
+    }
+
+    page++;
+  }
+
+  console.log(
+    `Growth Score recalculation completed. Total users updated: ${totalUpdated}`
+  );
+}
+
+async function calculateUserGrowthScore(user: {
+  id: string;
+  createdAt: Date;
+  timezone: string;
+}): Promise<number> {
+  const userTz = user.timezone || "UTC";
+  const now = DateTime.now().setZone(userTz);
+  const daysSinceSignup =
+    Math.floor(
+      now.diff(DateTime.fromJSDate(user.createdAt).setZone(userTz), "days").days
+    ) + 1;
+  const availableDays = Math.min(14, daysSinceSignup);
+  const startDate = now.minus({ days: availableDays - 1 }).startOf("day");
+
+  const completions = await db.completion.findMany({
+    where: {
+      userId: user.id,
+      date: {
+        gte: startDate.toJSDate(),
+        lte: now.endOf("day").toJSDate(),
+      },
+      OR: [{ userHabitId: { not: null } }, { userChallengeId: { not: null } }],
+    },
+    select: { date: true },
+  });
+
+  const completedDaysSet = new Set<string>();
+  completions.forEach((c) => {
+    const localDateStr = DateTime.fromJSDate(c.date)
+      .setZone(userTz)
+      .toISODate();
+    completedDaysSet.add(localDateStr);
+  });
+
+  const completedDays = completedDaysSet.size;
+  return Math.round(1000 * (completedDays / availableDays)) / 10;
+}
+
+// cron.schedule(
+//   "* * * * *",
+//   () => {
+//     recalculateGrowthScores().catch(console.error);
+//   },
+//   { timezone: "America/New_York" }
+// );

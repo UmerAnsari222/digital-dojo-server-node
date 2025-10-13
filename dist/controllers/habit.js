@@ -11,7 +11,7 @@ const date_fns_1 = require("date-fns");
 const createHabit = async (req, res, next) => {
     const { userId, role } = req;
     const { flow } = req.query;
-    const { title, daysOfWeek, categoryId } = req.body;
+    const { title, daysOfWeek, categoryId, } = req.body;
     if (!userId) {
         return next(new error_1.default("Unauthorized", 401));
     }
@@ -19,6 +19,9 @@ const createHabit = async (req, res, next) => {
         const self = await db_1.db.user.findUnique({ where: { id: userId } });
         if (!self) {
             return next(new error_1.default("Unauthorized", 401));
+        }
+        if (daysOfWeek.length > 0) {
+            return next(new error_1.default("Week of days is required", 400));
         }
         let habit;
         if (role == client_1.Role.ADMIN) {
