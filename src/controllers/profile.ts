@@ -59,7 +59,7 @@ export const getProfile = async (
     }
 
     if (user.currentBelt?.imageUrl != null) {
-      user.imageUrl = await getObjectUrl({
+      user.currentBelt.imageUrl = await getObjectUrl({
         bucket: AWS_BUCKET_NAME,
         key: user.currentBelt?.imageUrl,
       });

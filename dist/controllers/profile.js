@@ -55,7 +55,7 @@ const getProfile = async (req, res, next) => {
             });
         }
         if (user.currentBelt?.imageUrl != null) {
-            user.imageUrl = await (0, aws_1.getObjectUrl)({
+            user.currentBelt.imageUrl = await (0, aws_1.getObjectUrl)({
                 bucket: dotEnv_1.AWS_BUCKET_NAME,
                 key: user.currentBelt?.imageUrl,
             });
