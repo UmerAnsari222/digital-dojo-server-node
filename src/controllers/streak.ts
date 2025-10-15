@@ -25,6 +25,7 @@ export const getUserStreak = async (
         currentBelt: true,
         userBelts: {
           select: {
+            earnedAt: true,
             belt: {
               select: {
                 id: true,
@@ -37,9 +38,12 @@ export const getUserStreak = async (
         },
       },
     });
-    const belts = self.userBelts.map((ub) => ub.belt);
+    const belts = self.userBelts.map((ub) => ({
+      earnedAt: ub.earnedAt,
+      ...ub.belt,
+    }));
 
-    // Optional: Attach to self if needed
+    // Optional: Attach to self if needed signedUrl
 
     return res.status(200).json({
       streak: self.streak,

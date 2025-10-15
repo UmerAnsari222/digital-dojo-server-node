@@ -24,6 +24,7 @@ const getUserStreak = async (req, res, next) => {
                 currentBelt: true,
                 userBelts: {
                     select: {
+                        earnedAt: true,
                         belt: {
                             select: {
                                 id: true,
@@ -36,8 +37,11 @@ const getUserStreak = async (req, res, next) => {
                 },
             },
         });
-        const belts = self.userBelts.map((ub) => ub.belt);
-        // Optional: Attach to self if needed
+        const belts = self.userBelts.map((ub) => ({
+            earnedAt: ub.earnedAt,
+            ...ub.belt,
+        }));
+        // Optional: Attach to self if needed signedUrl
         return res.status(200).json({
             streak: self.streak,
             beltProgress: self.beltProgress,
