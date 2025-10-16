@@ -276,8 +276,8 @@ const getUserHabitsProgress = async (req, res, next) => {
         return next(new error_1.default("Unauthorized", 401));
     }
     const today = new Date();
-    const weekStart = (0, date_fns_1.startOfWeek)(today, { weekStartsOn: 1 });
-    const weekEnd = (0, date_fns_1.endOfWeek)(today, { weekStartsOn: 1 });
+    const weekStart = (0, date_fns_1.startOfWeek)(today, { weekStartsOn: 0 });
+    const weekEnd = (0, date_fns_1.endOfWeek)(today, { weekStartsOn: 0 });
     // console.log({ weekStart, weekEnd });
     try {
         const self = await db_1.db.user.findUnique({ where: { id: userId } });

@@ -336,8 +336,8 @@ export const getUserHabitsProgress = async (
   }
 
   const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
+  const weekStart = startOfWeek(today, { weekStartsOn: 0 });
+  const weekEnd = endOfWeek(today, { weekStartsOn: 0 });
 
   // console.log({ weekStart, weekEnd });
 
@@ -384,7 +384,7 @@ export const getUserHabitsProgress = async (
 
     // console.log(JSON.stringify(habits, null, 2));
 
-    const mapHabitToWeekly = (habit: any) => {
+    const mapHabitToWeekly = (habit) => {
       const week = days.map((day) => {
         const normalizedDay = new Date(day);
         normalizedDay.setHours(0, 0, 0, 0);
