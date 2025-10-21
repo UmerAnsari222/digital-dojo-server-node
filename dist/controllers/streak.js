@@ -92,35 +92,29 @@ async function calculateStreakPreview(userId, today = new Date()) {
     let streak = user.streak || 0;
     let beltProgress = user.beltProgress || 0;
     if (!lastCompletionDate) {
-        // No previous completions, new streak starts today
-        streak = 1;
-        beltProgress = 1;
+        // No completions yet — no active streak or belt progress
+        streak = 0;
+        beltProgress = 0;
     }
     else {
         const diffDays = (0, date_fns_1.differenceInCalendarDays)(todayNormalized, lastCompletionDate);
         if (diffDays === 0) {
-            // Completed already today, no change
+            // Completed today — streak and belt progress remain unchanged
             streak = user.streak;
             beltProgress = user.beltProgress;
         }
         else if (diffDays === 1) {
-            // Consecutive day, increment streak and progress
-            streak = user.streak + 1;
-            beltProgress = user.beltProgress + 1;
+            // Last completion was yesterday — streak is still active, belt progress remains the same
+            streak = user.streak;
+            beltProgress = user.beltProgress;
         }
-        else {
-            // Streak broken, reset to 1 (today counts as new streak start)
-            streak = 1;
-            beltProgress = 1;
+        else if (diffDays >= 2) {
+            // Last completion was more than 1 day ago — streak and belt progress are reset to 0
+            streak = 0;
+            beltProgress = 0;
         }
     }
-    await db_1.db.user.update({
-        where: { id: user.id },
-        data: {
-            streak,
-            beltProgress,
-        },
-    });
+    // ⚠️ No database update in preview function; this is just a preview of the user's streak
     return {
         streak,
         beltProgress,

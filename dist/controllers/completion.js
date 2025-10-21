@@ -183,20 +183,9 @@ async function processCompletion(userId, today = new Date()) {
     else {
         const diffDays = (0, date_fns_1.differenceInCalendarDays)(todayNormalized, lastCompletionDate);
         console.log("[processCompletion] diffDays:", diffDays);
-        if (diffDays === 1) {
-            // Consecutive day
-            streak += 1;
-            beltProgress += 1;
-        }
-        else if (diffDays > 1) {
-            // Streak broken, reset to 1
-            streak = 1;
-            beltProgress = 1;
-        }
-        else if (diffDays === 0) {
-            // Same day - no changes to streak or beltProgress
+        if (diffDays === 0) {
+            // Same day completion, no changes to streak or beltProgress
             console.log("[processCompletion] Same day completion, no changes.");
-            // Return current state without DB update (optional)
             return {
                 streak,
                 beltProgress,
@@ -205,12 +194,22 @@ async function processCompletion(userId, today = new Date()) {
                 beltAchieved: false,
             };
         }
+        else if (diffDays === 1) {
+            // Consecutive day (yesterday), increment streak and beltProgress
+            streak += 1;
+            beltProgress += 1;
+        }
+        else if (diffDays > 1) {
+            // Streak is broken, reset streak to 0 and belt progress to 1
+            streak = 0; // Streak is broken after 2+ days
+            beltProgress = 1; // Start progress at 1 after break
+        }
     }
     // --- Ensure user has a belt ---
     if (!currentBelt) {
         currentBelt = await db_1.db.belt.findFirst({ orderBy: { duration: "asc" } });
         if (!currentBelt) {
-            // No belts defined in DB
+            // No belts defined in DB, return null
             return null;
         }
         // Assign first belt to user
@@ -231,7 +230,7 @@ async function processCompletion(userId, today = new Date()) {
             beltAchieved: false,
         };
     }
-    // --- Reset beltProgress if belt changed since last completion ---
+    // --- Reset beltProgress if belt has changed since last completion ---
     if (user.currentBeltId !== currentBelt.id) {
         console.log("[processCompletion] Belt changed, reset progress to 1");
         beltProgress = 1; // start progress at 1 on new belt
