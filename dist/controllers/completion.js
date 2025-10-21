@@ -182,26 +182,35 @@ async function processCompletion(userId, today = new Date()) {
     }
     else {
         const diffDays = (0, date_fns_1.differenceInCalendarDays)(todayNormalized, lastCompletionDate);
+        console.log("[processCompletion] diffDays:", diffDays);
         if (diffDays === 1) {
             // Consecutive day
             streak += 1;
             beltProgress += 1;
         }
         else if (diffDays > 1) {
-            // Streak broken
+            // Streak broken, reset to 1
             streak = 1;
             beltProgress = 1;
         }
         else if (diffDays === 0) {
-            // Same day, no change to streak or beltProgress
-            // You might want to handle this differently if needed
+            // Same day - no changes to streak or beltProgress
+            console.log("[processCompletion] Same day completion, no changes.");
+            // Return current state without DB update (optional)
+            return {
+                streak,
+                beltProgress,
+                lastCompletionDate,
+                currentBelt,
+                beltAchieved: false,
+            };
         }
     }
     // --- Ensure user has a belt ---
     if (!currentBelt) {
         currentBelt = await db_1.db.belt.findFirst({ orderBy: { duration: "asc" } });
         if (!currentBelt) {
-            // No belts defined in DB? Return null
+            // No belts defined in DB
             return null;
         }
         // Assign first belt to user
@@ -222,9 +231,10 @@ async function processCompletion(userId, today = new Date()) {
             beltAchieved: false,
         };
     }
-    // --- Reset beltProgress if belt has changed since last completion ---
+    // --- Reset beltProgress if belt changed since last completion ---
     if (user.currentBeltId !== currentBelt.id) {
-        beltProgress = 1; // start progress for new belt
+        console.log("[processCompletion] Belt changed, reset progress to 1");
+        beltProgress = 1; // start progress at 1 on new belt
     }
     let beltAchieved = false;
     // --- Check if belt is earned ---
@@ -243,12 +253,12 @@ async function processCompletion(userId, today = new Date()) {
             where: { duration: { gt: currentBelt.duration } },
             orderBy: { duration: "asc" },
         });
-        // Update user with new belt and reset beltProgress
+        // Update user with new belt and reset beltProgress to 1 (start new belt progress)
         await db_1.db.user.update({
             where: { id: userId },
             data: {
                 streak,
-                beltProgress: 0,
+                beltProgress: 1,
                 lastCompletionDate: todayNormalized,
                 currentBeltId: nextBelt ? nextBelt.id : currentBelt.id,
             },
@@ -267,6 +277,13 @@ async function processCompletion(userId, today = new Date()) {
             },
         });
     }
+    console.log("[processCompletion] Result:", {
+        streak,
+        beltProgress,
+        lastCompletionDate: todayNormalized,
+        currentBelt,
+        beltAchieved,
+    });
     return {
         streak,
         beltProgress,

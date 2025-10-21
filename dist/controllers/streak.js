@@ -92,26 +92,26 @@ async function calculateStreakPreview(userId, today = new Date()) {
     let streak = user.streak || 0;
     let beltProgress = user.beltProgress || 0;
     if (!lastCompletionDate) {
-        streak = 0;
-        beltProgress = 0;
+        // No previous completions, new streak starts today
+        streak = 1;
+        beltProgress = 1;
     }
     else {
         const diffDays = (0, date_fns_1.differenceInCalendarDays)(todayNormalized, lastCompletionDate);
         if (diffDays === 0) {
+            // Completed already today, no change
             streak = user.streak;
             beltProgress = user.beltProgress;
         }
         else if (diffDays === 1) {
+            // Consecutive day, increment streak and progress
             streak = user.streak + 1;
             beltProgress = user.beltProgress + 1;
         }
         else {
-            streak = 0;
-            beltProgress = 0;
-            await db_1.db.user.update({
-                where: { id: userId },
-                data: { streak, beltProgress },
-            });
+            // Streak broken, reset to 1 (today counts as new streak start)
+            streak = 1;
+            beltProgress = 1;
         }
     }
     return {
