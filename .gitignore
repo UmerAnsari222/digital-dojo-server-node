@@ -6,3 +6,5 @@ node_modules
 
 digitalDojoKey.pem
 logs/
+test.ts
+test.js

@@ -195,6 +195,8 @@ export async function processCompletion(
   userId: string,
   today: Date = new Date()
 ) {
+  console.log({ userId, today });
+
   const user = await db.user.findUnique({
     where: { id: userId },
     include: { currentBelt: true },
@@ -241,7 +243,7 @@ export async function processCompletion(
     } else if (diffDays > 1) {
       // Streak is broken, reset streak to 0 and belt progress to 1
       streak = 0; // Streak is broken after 2+ days
-      beltProgress = 1; // Start progress at 1 after break
+      beltProgress = 0; // Start progress at 1 after break
     }
   }
 
@@ -303,7 +305,8 @@ export async function processCompletion(
       where: { id: userId },
       data: {
         streak,
-        beltProgress: 1,
+        // beltProgress: 1,
+        beltProgress: 0,
         lastCompletionDate: todayNormalized,
         currentBeltId: nextBelt ? nextBelt.id : currentBelt.id,
       },
@@ -323,13 +326,13 @@ export async function processCompletion(
     });
   }
 
-  console.log("[processCompletion] Result:", {
-    streak,
-    beltProgress,
-    lastCompletionDate: todayNormalized,
-    currentBelt,
-    beltAchieved,
-  });
+  // console.log("[processCompletion] Result:", {
+  //   streak,
+  //   beltProgress,
+  //   lastCompletionDate: todayNormalized,
+  //   currentBelt,
+  //   beltAchieved,
+  // });
 
   return {
     streak,
