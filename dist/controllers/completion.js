@@ -204,16 +204,21 @@ async function processCompletion(userId, today = new Date()) {
     }
     if (!currentBelt)
         return null;
-    // 🔹 Calculate belt progress relative to *this belt*
-    // Belt progress = streak - total required days of all previous belts
-    const previousBelts = await db_1.db.belt.findMany({
-        where: { duration: { lt: currentBelt.duration } },
-        orderBy: { duration: "asc" },
-    });
-    const previousTotal = previousBelts.reduce((sum, belt) => Math.max(sum, belt.duration), 0);
-    let beltProgress = streak - previousTotal;
-    if (beltProgress < 0)
-        beltProgress = 0;
+    // 🔹 Calculate belt progress for current belt only
+    let beltProgress = user.currentBeltId !== currentBelt.id ? 0 : user.beltProgress || 0;
+    if (!lastCompletionDate) {
+        beltProgress = 1;
+    }
+    else {
+        const diffDays = (0, date_fns_1.differenceInCalendarDays)(todayNormalized, lastCompletionDate);
+        if (diffDays === 1) {
+            beltProgress += 1;
+        }
+        else if (diffDays > 1) {
+            beltProgress = 1;
+        }
+        // If diffDays === 0, beltProgress stays unchanged
+    }
     let beltAchieved = false;
     // ✅ Check if belt is earned
     if (beltProgress >= currentBelt.duration) {
@@ -233,7 +238,7 @@ async function processCompletion(userId, today = new Date()) {
             where: { id: userId },
             data: {
                 streak,
-                beltProgress: 0,
+                beltProgress: 0, // reset for new belt
                 lastCompletionDate: todayNormalized,
                 currentBeltId: nextBelt ? nextBelt.id : currentBelt.id,
             },
