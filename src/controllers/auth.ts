@@ -37,6 +37,12 @@ export const register = async (
       return next(new ErrorHandler("User already exists with this email", 409));
     }
 
+    const firstBelt = await db.belt.findFirst({
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
     // hash the password
     const hashed = await hashedPassword(password);
 
@@ -46,6 +52,7 @@ export const register = async (
         password: hashed, // In a real application, ensure to hash the password before saving
         name: name,
         role: Role.USER,
+        currentBeltId: firstBelt ? firstBelt.id : null,
       },
     });
 

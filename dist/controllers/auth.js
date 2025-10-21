@@ -27,6 +27,11 @@ const register = async (req, res, next) => {
         if (isExisting) {
             return next(new error_1.default("User already exists with this email", 409));
         }
+        const firstBelt = await db_1.db.belt.findFirst({
+            orderBy: {
+                createdAt: "asc",
+            },
+        });
         // hash the password
         const hashed = await (0, hashPassword_1.hashedPassword)(password);
         const user = await db_1.db.user.create({
@@ -35,6 +40,7 @@ const register = async (req, res, next) => {
                 password: hashed, // In a real application, ensure to hash the password before saving
                 name: name,
                 role: client_1.Role.USER,
+                currentBeltId: firstBelt ? firstBelt.id : null,
             },
         });
         const token = (0, jwt_1.createToken)({ userId: user.id, role: user.role });
