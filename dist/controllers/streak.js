@@ -114,6 +114,13 @@ async function calculateStreakPreview(userId, today = new Date()) {
             beltProgress = 1;
         }
     }
+    await db_1.db.user.update({
+        where: { id: user.id },
+        data: {
+            streak,
+            beltProgress,
+        },
+    });
     return {
         streak,
         beltProgress,

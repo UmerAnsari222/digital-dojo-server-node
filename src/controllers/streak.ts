@@ -130,6 +130,14 @@ export async function calculateStreakPreview(
     }
   }
 
+  await db.user.update({
+    where: { id: user.id },
+    data: {
+      streak,
+      beltProgress,
+    },
+  });
+
   return {
     streak,
     beltProgress,
