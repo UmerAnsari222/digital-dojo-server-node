@@ -427,6 +427,12 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
                 weeklyChallenges: {
                     include: {
                         category: true,
+                        weeklyChallengeCompletions: {
+                            where: {
+                                userId: userId,
+                                date: new Date(),
+                            },
+                        },
                     },
                 },
             },

@@ -560,6 +560,12 @@ export const getTodayWeeklyChallenge = async (
         weeklyChallenges: {
           include: {
             category: true,
+            weeklyChallengeCompletions: {
+              where: {
+                userId: userId,
+                date: new Date(),
+              },
+            },
           },
         },
       },
