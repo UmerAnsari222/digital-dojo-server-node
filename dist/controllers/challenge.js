@@ -428,15 +428,6 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
                 weeklyChallenges: {
                     include: {
                         category: true,
-                        weeklyChallengeCompletions: {
-                            where: {
-                                userId: userId,
-                                // date: {
-                                //   gte: twentyFourHoursAgo,
-                                //   lte: new Date(),
-                                // },
-                            },
-                        },
                     },
                 },
             },
@@ -458,11 +449,22 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         }
         const todayWeekly = activeChallenge.weeklyChallenges.find((w) => w.dayOfWeek ===
             (0, dateTimeFormatter_1.getRelativeDayIndex)(activeChallenge.startDate.toString(), today.toString()));
+        const weeklyCompletion = await db_1.db.weeklyChallengeCompletion.findFirst({
+            where: {
+                userId: userId,
+                weeklyChallengeId: todayWeekly.id,
+                date: {
+                    gte: twentyFourHoursAgo,
+                    lte: new Date(),
+                },
+            },
+        });
         return res.status(200).json({
             weeklyChallenge: {
                 ...todayWeekly,
                 startDate: activeChallenge.startDate,
                 planName: activeChallenge.title,
+                weeklyCompletion,
             },
             msg: todayWeekly
                 ? "Today's Challenge Fetched Successfully"

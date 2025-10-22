@@ -561,15 +561,6 @@ export const getTodayWeeklyChallenge = async (
         weeklyChallenges: {
           include: {
             category: true,
-            weeklyChallengeCompletions: {
-              where: {
-                userId: userId,
-                // date: {
-                //   gte: twentyFourHoursAgo,
-                //   lte: new Date(),
-                // },
-              },
-            },
           },
         },
       },
@@ -604,11 +595,23 @@ export const getTodayWeeklyChallenge = async (
         )
     );
 
+    const weeklyCompletion = await db.weeklyChallengeCompletion.findFirst({
+      where: {
+        userId: userId,
+        weeklyChallengeId: todayWeekly.id,
+        date: {
+          gte: twentyFourHoursAgo,
+          lte: new Date(),
+        },
+      },
+    });
+
     return res.status(200).json({
       weeklyChallenge: {
         ...todayWeekly,
         startDate: activeChallenge.startDate,
         planName: activeChallenge.title,
+        weeklyCompletion,
       },
       msg: todayWeekly
         ? "Today's Challenge Fetched Successfully"
