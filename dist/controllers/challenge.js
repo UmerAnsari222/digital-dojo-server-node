@@ -449,10 +449,10 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         }
         const todayWeekly = activeChallenge.weeklyChallenges.find((w) => w.dayOfWeek ===
             (0, dateTimeFormatter_1.getRelativeDayIndex)(activeChallenge.startDate.toString(), today.toString()));
-        const weeklyCompletion = await db_1.db.weeklyChallengeCompletion.findFirst({
+        const weeklyCompletion = await db_1.db.weeklyChallengeCompletion.findMany({
             where: {
                 userId: userId,
-                weeklyChallengeId: todayWeekly.id,
+                // weeklyChallengeId: todayWeekly.id,
                 // date: {
                 //   gte: twentyFourHoursAgo,
                 //   lte: new Date(),
