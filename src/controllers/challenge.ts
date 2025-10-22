@@ -600,7 +600,7 @@ export const getTodayWeeklyChallenge = async (
     const weeklyCompletion = await db.weeklyChallengeCompletion.findMany({
       where: {
         userId: userId,
-        weeklyChallengeId: todayWeekly.id,
+        // weeklyChallengeId: todayWeekly.id,
         date: {
           gte: today,
           lte: endOfToday,

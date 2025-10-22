@@ -454,7 +454,7 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         const weeklyCompletion = await db_1.db.weeklyChallengeCompletion.findMany({
             where: {
                 userId: userId,
-                weeklyChallengeId: todayWeekly.id,
+                // weeklyChallengeId: todayWeekly.id,
                 date: {
                     gte: today,
                     lte: endOfToday,
