@@ -454,11 +454,11 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         const weeklyCompletion = await db_1.db.weeklyChallengeCompletion.findMany({
             where: {
                 userId: userId,
-                // weeklyChallengeId: todayWeekly.id,
-                date: {
-                    gte: today,
-                    lte: endOfToday,
-                },
+                weeklyChallengeId: todayWeekly.id,
+                // date: {
+                //   gte: today,
+                //   lte: endOfToday,
+                // },
             },
         });
         return res.status(200).json({

@@ -600,11 +600,11 @@ export const getTodayWeeklyChallenge = async (
     const weeklyCompletion = await db.weeklyChallengeCompletion.findMany({
       where: {
         userId: userId,
-        // weeklyChallengeId: todayWeekly.id,
-        date: {
-          gte: today,
-          lte: endOfToday,
-        },
+        weeklyChallengeId: todayWeekly.id,
+        // date: {
+        //   gte: today,
+        //   lte: endOfToday,
+        // },
       },
     });
 
