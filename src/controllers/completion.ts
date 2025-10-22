@@ -183,7 +183,7 @@ export const makeWeeklyChallengeCompletion = async (
 
     return res.status(201).json({
       completion,
-      msg: "Week Challenge Completion Created Successfully",
+      msg: "Weekly Challenge Completed Successfully!",
       success: true,
     });
   } catch (e) {
