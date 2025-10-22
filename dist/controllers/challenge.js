@@ -453,10 +453,10 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
             where: {
                 userId: userId,
                 weeklyChallengeId: todayWeekly.id,
-                date: {
-                    gte: twentyFourHoursAgo,
-                    lte: new Date(),
-                },
+                // date: {
+                //   gte: twentyFourHoursAgo,
+                //   lte: new Date(),
+                // },
             },
         });
         return res.status(200).json({

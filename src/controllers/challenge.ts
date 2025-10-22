@@ -599,10 +599,10 @@ export const getTodayWeeklyChallenge = async (
       where: {
         userId: userId,
         weeklyChallengeId: todayWeekly.id,
-        date: {
-          gte: twentyFourHoursAgo,
-          lte: new Date(),
-        },
+        // date: {
+        //   gte: twentyFourHoursAgo,
+        //   lte: new Date(),
+        // },
       },
     });
 
