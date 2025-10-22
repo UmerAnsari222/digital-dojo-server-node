@@ -160,7 +160,7 @@ export const makeWeeklyChallengeCompletion = async (
 
     const isExisting = await db.weeklyChallengeCompletion.findFirst({
       where: {
-        challengeId: weeklyChallengeId,
+        weeklyChallengeId: weeklyChallengeId,
         userId,
         date: {
           gte: startOfToday,

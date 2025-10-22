@@ -130,7 +130,7 @@ const makeWeeklyChallengeCompletion = async (req, res, next) => {
         }
         const isExisting = await db_1.db.weeklyChallengeCompletion.findFirst({
             where: {
-                challengeId: weeklyChallengeId,
+                weeklyChallengeId: weeklyChallengeId,
                 userId,
                 date: {
                     gte: startOfToday,

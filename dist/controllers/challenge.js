@@ -418,7 +418,9 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         return next(new error_1.default("Unauthorized", 401));
     }
     const today = (0, date_fns_1.startOfDay)(new Date());
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    // const today = new Date();
+    // const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
     try {
         const challenges = await db_1.db.challenge.findMany({
             where: {
@@ -452,11 +454,11 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         const weeklyCompletion = await db_1.db.weeklyChallengeCompletion.findMany({
             where: {
                 userId: userId,
-                // weeklyChallengeId: todayWeekly.id,
-                // date: {
-                //   gte: twentyFourHoursAgo,
-                //   lte: new Date(),
-                // },
+                weeklyChallengeId: todayWeekly.id,
+                date: {
+                    gte: today,
+                    lte: endOfToday,
+                },
             },
         });
         return res.status(200).json({
