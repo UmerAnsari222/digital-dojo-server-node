@@ -550,6 +550,7 @@ export const getTodayWeeklyChallenge = async (
   }
 
   const today = startOfDay(new Date());
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   try {
     const challenges = await db.challenge.findMany({
@@ -563,7 +564,10 @@ export const getTodayWeeklyChallenge = async (
             weeklyChallengeCompletions: {
               where: {
                 userId: userId,
-                date: new Date(),
+                date: {
+                  gte: twentyFourHoursAgo,
+                  lte: new Date(),
+                },
               },
             },
           },
