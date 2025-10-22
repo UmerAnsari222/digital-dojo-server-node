@@ -173,8 +173,8 @@ export const makeWeeklyChallengeCompletion = async (
 
     const completion = await db.weeklyChallengeCompletion.create({
       data: {
-        challengeId: challengeId,
-        weeklyChallengeId: weeklyChallengeId,
+        challengeId: isChallengeExisting.id,
+        weeklyChallengeId: challenge.id,
         userId,
         date: new Date(),
         skip: skip,

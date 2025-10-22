@@ -142,8 +142,8 @@ const makeWeeklyChallengeCompletion = async (req, res, next) => {
         }
         const completion = await db_1.db.weeklyChallengeCompletion.create({
             data: {
-                challengeId: challengeId,
-                weeklyChallengeId: weeklyChallengeId,
+                challengeId: isChallengeExisting.id,
+                weeklyChallengeId: challenge.id,
                 userId,
                 date: new Date(),
                 skip: skip,
