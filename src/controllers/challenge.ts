@@ -647,13 +647,14 @@ export const getWeeklyChallengeProgress = async (
       return next(new ErrorHandler("Challenge not found", 404));
     }
 
-    console.log(activeChallenge.id);
-
     // Get all completions for this user + challenge
     const completions = await db.weeklyChallengeCompletion.findMany({
       where: {
         userId,
         challengeId: activeChallenge.id,
+        skip: {
+          not: true,
+        },
       },
     });
 

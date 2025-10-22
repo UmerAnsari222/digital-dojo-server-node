@@ -115,7 +115,7 @@ export const makeWeeklyChallengeCompletion = async (
   next: NextFunction
 ) => {
   const { userId } = req;
-  const { weeklyChallengeId, challengeId } = req.body;
+  const { weeklyChallengeId, challengeId, skip } = req.body;
 
   if (!userId) {
     return next(new ErrorHandler("Unauthorized", 401));
@@ -177,6 +177,7 @@ export const makeWeeklyChallengeCompletion = async (
         weeklyChallengeId: weeklyChallengeId,
         userId,
         date: new Date(),
+        skip: skip,
       },
     });
 

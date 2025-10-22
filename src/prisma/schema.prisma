@@ -188,6 +188,7 @@ model WeeklyChallengeCompletion {
   weeklyChallenge   WeeklyChallenge? @relation(fields: [weeklyChallengeId], references: [id], onDelete: SetNull)
 
   date DateTime @default(now())
+  skip Boolean  @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

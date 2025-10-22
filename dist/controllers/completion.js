@@ -95,7 +95,7 @@ const makeCompletion = async (req, res, next) => {
 exports.makeCompletion = makeCompletion;
 const makeWeeklyChallengeCompletion = async (req, res, next) => {
     const { userId } = req;
-    const { weeklyChallengeId, challengeId } = req.body;
+    const { weeklyChallengeId, challengeId, skip } = req.body;
     if (!userId) {
         return next(new error_1.default("Unauthorized", 401));
     }
@@ -146,6 +146,7 @@ const makeWeeklyChallengeCompletion = async (req, res, next) => {
                 weeklyChallengeId: weeklyChallengeId,
                 userId,
                 date: new Date(),
+                skip: skip,
             },
         });
         return res.status(201).json({

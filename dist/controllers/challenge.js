@@ -490,12 +490,14 @@ const getWeeklyChallengeProgress = async (req, res, next) => {
         if (!activeChallenge) {
             return next(new error_1.default("Challenge not found", 404));
         }
-        console.log(activeChallenge.id);
         // Get all completions for this user + challenge
         const completions = await db_1.db.weeklyChallengeCompletion.findMany({
             where: {
                 userId,
                 challengeId: activeChallenge.id,
+                skip: {
+                    not: true,
+                },
             },
         });
         // Normalize completion dates (strip time)
