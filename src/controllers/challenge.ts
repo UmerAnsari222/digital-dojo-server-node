@@ -595,7 +595,11 @@ export const getTodayWeeklyChallenge = async (
     );
 
     return res.status(200).json({
-      weeklyChallenge: { ...todayWeekly, startDate: activeChallenge.startDate },
+      weeklyChallenge: {
+        ...todayWeekly,
+        startDate: activeChallenge.startDate,
+        planName: activeChallenge.title,
+      },
       msg: todayWeekly
         ? "Today's Challenge Fetched Successfully"
         : "No challenge scheduled for today",

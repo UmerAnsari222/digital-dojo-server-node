@@ -449,7 +449,11 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         const todayWeekly = activeChallenge.weeklyChallenges.find((w) => w.dayOfWeek ===
             (0, dateTimeFormatter_1.getRelativeDayIndex)(activeChallenge.startDate.toString(), today.toString()));
         return res.status(200).json({
-            weeklyChallenge: { ...todayWeekly, startDate: activeChallenge.startDate },
+            weeklyChallenge: {
+                ...todayWeekly,
+                startDate: activeChallenge.startDate,
+                planName: activeChallenge.title,
+            },
             msg: todayWeekly
                 ? "Today's Challenge Fetched Successfully"
                 : "No challenge scheduled for today",
