@@ -117,6 +117,8 @@ export const makeWeeklyChallengeCompletion = async (
   const { userId } = req;
   const { weeklyChallengeId, challengeId, skip } = req.body;
 
+  console.log({ weeklyChallengeId, challengeId, skip });
+
   if (!userId) {
     return next(new ErrorHandler("Unauthorized", 401));
   }
