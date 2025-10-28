@@ -211,6 +211,8 @@ export const getAllWeeklyChallenges = async (
       return next(new ErrorHandler("Unauthorized", 401));
     }
 
+    const now = new Date();
+
     const weeklyChallenges = await db.challenge.findMany({
       where: {
         challengeType: "WEEKLY",
@@ -227,8 +229,46 @@ export const getAllWeeklyChallenges = async (
       },
     });
 
+    // ⚙️ Check if any SCHEDULED challenge should now be RUNNING
+    const updatedChallenges = await Promise.all(
+      weeklyChallenges.map(async (challenge) => {
+        if (
+          challenge.status === "SCHEDULE" &&
+          challenge.startDate &&
+          isAfter(now, new Date(challenge.startDate))
+        ) {
+          // Update the challenge to RUNNING
+          const updated = await db.challenge.update({
+            where: { id: challenge.id },
+            data: { status: "RUNNING" },
+            include: {
+              weeklyChallenges: {
+                orderBy: { dayOfWeek: "asc" },
+              },
+            },
+          });
+          return updated;
+        }
+
+        if (
+          challenge.status === "RUNNING" &&
+          challenge.startDate &&
+          isAfter(now, addDays(new Date(challenge.startDate), 7))
+        ) {
+          const updated = await db.challenge.update({
+            where: { id: challenge.id },
+            data: { status: "COMPLETED" },
+            include: { weeklyChallenges: { orderBy: { dayOfWeek: "asc" } } },
+          });
+          return updated;
+        }
+        return challenge; // leave as is if not ready to start
+      })
+    );
+
     return res.status(200).json({
-      challenges: weeklyChallenges,
+      // challenges: weeklyChallenges,
+      challenges: updatedChallenges,
       msg: "Challenges Fetched Successfully",
       success: true,
     });

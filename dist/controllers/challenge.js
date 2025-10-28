@@ -159,6 +159,7 @@ const getAllWeeklyChallenges = async (req, res, next) => {
         if (role !== self.role && role !== client_1.Role.ADMIN) {
             return next(new error_1.default("Unauthorized", 401));
         }
+        const now = new Date();
         const weeklyChallenges = await db_1.db.challenge.findMany({
             where: {
                 challengeType: "WEEKLY",
@@ -174,8 +175,38 @@ const getAllWeeklyChallenges = async (req, res, next) => {
                 createdAt: "asc",
             },
         });
+        // ⚙️ Check if any SCHEDULED challenge should now be RUNNING
+        const updatedChallenges = await Promise.all(weeklyChallenges.map(async (challenge) => {
+            if (challenge.status === "SCHEDULE" &&
+                challenge.startDate &&
+                (0, date_fns_1.isAfter)(now, new Date(challenge.startDate))) {
+                // Update the challenge to RUNNING
+                const updated = await db_1.db.challenge.update({
+                    where: { id: challenge.id },
+                    data: { status: "RUNNING" },
+                    include: {
+                        weeklyChallenges: {
+                            orderBy: { dayOfWeek: "asc" },
+                        },
+                    },
+                });
+                return updated;
+            }
+            if (challenge.status === "RUNNING" &&
+                challenge.startDate &&
+                (0, date_fns_1.isAfter)(now, (0, date_fns_1.addDays)(new Date(challenge.startDate), 7))) {
+                const updated = await db_1.db.challenge.update({
+                    where: { id: challenge.id },
+                    data: { status: "COMPLETED" },
+                    include: { weeklyChallenges: { orderBy: { dayOfWeek: "asc" } } },
+                });
+                return updated;
+            }
+            return challenge; // leave as is if not ready to start
+        }));
         return res.status(200).json({
-            challenges: weeklyChallenges,
+            // challenges: weeklyChallenges,
+            challenges: updatedChallenges,
             msg: "Challenges Fetched Successfully",
             success: true,
         });
