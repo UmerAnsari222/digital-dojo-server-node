@@ -7,6 +7,7 @@ import {
   differenceInCalendarDays,
   endOfDay,
   format,
+  isAfter,
   isSameDay,
   isWithinInterval,
   startOfDay,
@@ -17,6 +18,7 @@ import {
   isTodayInChallengeWeek,
 } from "../utils/dateTimeFormatter";
 import logger from "../config/logger";
+import cron from "node-cron";
 
 export const createDailyChallengePlan = async (
   req: Request,
@@ -597,7 +599,7 @@ export const getTodayWeeklyChallenge = async (
         )
     );
 
-    const weeklyCompletion = await db.weeklyChallengeCompletion.findMany({
+    const weeklyCompletion = await db.weeklyChallengeCompletion.findFirst({
       where: {
         userId: userId,
         weeklyChallengeId: todayWeekly.id,
@@ -907,3 +909,45 @@ export const deleteDailyChallengeById = async (
     next(new ErrorHandler("Something went wrong", 500));
   }
 };
+
+cron.schedule("*/10 * * * *", async () => {
+  console.log("[CRON] Checking scheduled challenges...");
+
+  try {
+    const now = new Date();
+
+    // 1️⃣ Move SCHEDULE → RUNNING if startDate <= now
+    const toStart = await db.challenge.findMany({
+      where: {
+        status: "SCHEDULE",
+        startDate: { lte: now },
+      },
+    });
+
+    for (const c of toStart) {
+      await db.challenge.update({
+        where: { id: c.id },
+        data: { status: "RUNNING" },
+      });
+      console.log(`[CRON] Challenge ${c.id} started!`);
+    }
+
+    // 2️⃣ Move RUNNING → COMPLETED if startDate + 7 days < now
+    const toComplete = await db.challenge.findMany({
+      where: { status: "RUNNING" },
+    });
+
+    for (const c of toComplete) {
+      const challengeEnd = addDays(c.startDate!, 7);
+      if (isAfter(now, challengeEnd)) {
+        await db.challenge.update({
+          where: { id: c.id },
+          data: { status: "COMPLETED" },
+        });
+        console.log(`[CRON] Challenge ${c.id} completed!`);
+      }
+    }
+  } catch (error) {
+    console.error("[CRON ERROR]", error);
+  }
+});

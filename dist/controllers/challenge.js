@@ -10,6 +10,7 @@ const client_1 = require("@prisma/client");
 const date_fns_1 = require("date-fns");
 const dateTimeFormatter_1 = require("../utils/dateTimeFormatter");
 const logger_1 = __importDefault(require("../config/logger"));
+const node_cron_1 = __importDefault(require("node-cron"));
 const createDailyChallengePlan = async (req, res, next) => {
     const { userId, role } = req;
     const { title, challengeType } = req.body;
@@ -451,7 +452,7 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         }
         const todayWeekly = activeChallenge.weeklyChallenges.find((w) => w.dayOfWeek ===
             (0, dateTimeFormatter_1.getRelativeDayIndex)(activeChallenge.startDate.toString(), today.toString()));
-        const weeklyCompletion = await db_1.db.weeklyChallengeCompletion.findMany({
+        const weeklyCompletion = await db_1.db.weeklyChallengeCompletion.findFirst({
             where: {
                 userId: userId,
                 weeklyChallengeId: todayWeekly.id,
@@ -700,3 +701,40 @@ const deleteDailyChallengeById = async (req, res, next) => {
     }
 };
 exports.deleteDailyChallengeById = deleteDailyChallengeById;
+node_cron_1.default.schedule("*/10 * * * *", async () => {
+    console.log("[CRON] Checking scheduled challenges...");
+    try {
+        const now = new Date();
+        // 1️⃣ Move SCHEDULE → RUNNING if startDate <= now
+        const toStart = await db_1.db.challenge.findMany({
+            where: {
+                status: "SCHEDULE",
+                startDate: { lte: now },
+            },
+        });
+        for (const c of toStart) {
+            await db_1.db.challenge.update({
+                where: { id: c.id },
+                data: { status: "RUNNING" },
+            });
+            console.log(`[CRON] Challenge ${c.id} started!`);
+        }
+        // 2️⃣ Move RUNNING → COMPLETED if startDate + 7 days < now
+        const toComplete = await db_1.db.challenge.findMany({
+            where: { status: "RUNNING" },
+        });
+        for (const c of toComplete) {
+            const challengeEnd = (0, date_fns_1.addDays)(c.startDate, 7);
+            if ((0, date_fns_1.isAfter)(now, challengeEnd)) {
+                await db_1.db.challenge.update({
+                    where: { id: c.id },
+                    data: { status: "COMPLETED" },
+                });
+                console.log(`[CRON] Challenge ${c.id} completed!`);
+            }
+        }
+    }
+    catch (error) {
+        console.error("[CRON ERROR]", error);
+    }
+});
