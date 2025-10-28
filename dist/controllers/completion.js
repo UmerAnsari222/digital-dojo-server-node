@@ -12,7 +12,7 @@ const date_fns_1 = require("date-fns");
 const dateTimeFormatter_1 = require("../utils/dateTimeFormatter");
 const makeCompletion = async (req, res, next) => {
     const { userId } = req;
-    const { userHabitId, dailyChallengeId } = req.body;
+    const { userHabitId, dailyChallengeId, skip } = req.body;
     if (!userId) {
         return next(new error_1.default("Unauthorized", 401));
     }
@@ -68,6 +68,7 @@ const makeCompletion = async (req, res, next) => {
                 userId: userId,
                 userHabitId: userHabitId,
                 userChallengeId: dailyChallengeId,
+                skip,
             },
         });
         const data = await processCompletion(self.id, today);

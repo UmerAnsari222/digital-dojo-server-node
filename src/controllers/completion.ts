@@ -11,7 +11,7 @@ export const makeCompletion = async (
   next: NextFunction
 ) => {
   const { userId } = req;
-  const { userHabitId, dailyChallengeId } = req.body;
+  const { userHabitId, dailyChallengeId, skip } = req.body;
 
   if (!userId) {
     return next(new ErrorHandler("Unauthorized", 401));
@@ -81,6 +81,7 @@ export const makeCompletion = async (
         userId: userId,
         userHabitId: userHabitId,
         userChallengeId: dailyChallengeId,
+        skip,
       },
     });
 
