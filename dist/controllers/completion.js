@@ -204,7 +204,7 @@ async function processCompletion(userId, today = new Date()) {
         }
         else if (diffDays > 1) {
             // Streak is broken, reset streak to 0 and belt progress to 1
-            streak = 0; // Streak is broken after 2+ days
+            streak = 1; // Streak is broken after 2+ days
             beltProgress = 0; // Start progress at 1 after break
         }
     }
