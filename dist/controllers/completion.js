@@ -260,8 +260,8 @@ async function processCompletion(userId, today = new Date()) {
             where: { id: userId },
             data: {
                 streak,
-                // beltProgress: 1,
-                beltProgress: 0,
+                beltProgress: 1,
+                // beltProgress: 0,
                 lastCompletionDate: todayNormalized,
                 currentBeltId: nextBelt ? nextBelt.id : currentBelt.id,
             },

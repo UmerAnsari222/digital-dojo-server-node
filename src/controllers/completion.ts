@@ -308,8 +308,8 @@ export async function processCompletion(
       where: { id: userId },
       data: {
         streak,
-        // beltProgress: 1,
-        beltProgress: 0,
+        beltProgress: 1,
+        // beltProgress: 0,
         lastCompletionDate: todayNormalized,
         currentBeltId: nextBelt ? nextBelt.id : currentBelt.id,
       },
