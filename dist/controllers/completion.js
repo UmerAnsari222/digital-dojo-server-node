@@ -153,7 +153,9 @@ const makeWeeklyChallengeCompletion = async (req, res, next) => {
         });
         return res.status(201).json({
             completion,
-            msg: "Weekly Challenge Completed Successfully!",
+            msg: skip
+                ? "Weekly Challenge Skipped Successfully!"
+                : "Weekly Challenge Completed Successfully!",
             success: true,
         });
     }
