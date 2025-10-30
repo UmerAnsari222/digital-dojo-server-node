@@ -782,11 +782,15 @@ export const getPastChallenges = async (
           userId,
         },
         select: {
+          skip: true,
           weeklyChallenge: {
             include: {
               category: true,
             },
           },
+        },
+        orderBy: {
+          createdAt: "desc",
         },
       });
     }

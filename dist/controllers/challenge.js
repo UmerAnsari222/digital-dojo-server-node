@@ -602,11 +602,15 @@ const getPastChallenges = async (req, res, next) => {
                     userId,
                 },
                 select: {
+                    skip: true,
                     weeklyChallenge: {
                         include: {
                             category: true,
                         },
                     },
+                },
+                orderBy: {
+                    createdAt: "desc",
                 },
             });
         }
