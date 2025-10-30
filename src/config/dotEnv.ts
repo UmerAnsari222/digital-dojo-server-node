@@ -17,3 +17,5 @@ export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY!;
 export const STRIPE_PRODUCT_ID = process.env.STRIPE_PRODUCT_ID!;
 export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
 export const DATABASE_URL = process.env.DATABASE_URL!;
+export const REDIS_HOST = process.env.REDIS_HOST!;
+export const REDIS_PORT = process.env.REDIS_PORT!;

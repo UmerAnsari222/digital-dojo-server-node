@@ -16,6 +16,7 @@ import { beltRouter } from "./routes/belt";
 import { streakRouter } from "./routes/streak";
 import { circleRouter } from "./routes/cirlce";
 import logger from "./config/logger";
+import { startScheduler } from "./jobs/scheduler";
 
 const app: Application = express();
 
@@ -36,7 +37,7 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 
-console.log(new Date("2025-09-18T23:59:59.000Z"));
+console.log(new Date(1761819827362));
 
 app.get("/", (req, res) => {
   return res
@@ -56,6 +57,9 @@ app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/presigned", urlRouter);
 
+startScheduler().then(() => {
+  console.log("Job Scheduler started.");
+});
 // Error handling middleware
 app.use(errorMiddleware);
 

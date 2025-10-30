@@ -20,6 +20,7 @@ const belt_1 = require("./routes/belt");
 const streak_1 = require("./routes/streak");
 const cirlce_1 = require("./routes/cirlce");
 const logger_1 = __importDefault(require("./config/logger"));
+const scheduler_1 = require("./jobs/scheduler");
 const app = (0, express_1.default)();
 // Use Morgan middleware
 app.use((0, morgan_1.default)("combined", {
@@ -33,7 +34,7 @@ app.use(express_1.default.urlencoded({ extended: true, limit: "50mb" }));
 // set view engine for html and ejs files
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
-console.log(new Date("2025-09-18T23:59:59.000Z"));
+console.log(new Date(1761819827362));
 app.get("/", (req, res) => {
     return res
         .status(200)
@@ -50,6 +51,9 @@ app.use("/api/v1/circle", cirlce_1.circleRouter);
 app.use("/api/v1/category", category_1.categoryRouter);
 app.use("/api/v1/profile", profile_1.profileRouter);
 app.use("/api/v1/presigned", presigned_1.urlRouter);
+(0, scheduler_1.startScheduler)().then(() => {
+    console.log("Job Scheduler started.");
+});
 // Error handling middleware
 app.use(error_1.default);
 app.listen(dotEnv_1.PORT, () => {

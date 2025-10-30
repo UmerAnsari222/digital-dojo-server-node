@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DATABASE_URL = exports.STRIPE_WEBHOOK_SECRET = exports.STRIPE_PRODUCT_ID = exports.STRIPE_SECRET_KEY = exports.AWS_BUCKET_NAME = exports.AWS_REGION = exports.AWS_ACCESS_SECRET_KEY = exports.AWS_ACCESS_KEY_ID = exports.HASH_SECRET = exports.EMAIL_HOST = exports.EMAIL_FROM_PASSWORD = exports.EMAIL_FROM = exports.EMAIL_PORT = exports.JWT_SECRET = exports.PORT = void 0;
+exports.REDIS_PORT = exports.REDIS_HOST = exports.DATABASE_URL = exports.STRIPE_WEBHOOK_SECRET = exports.STRIPE_PRODUCT_ID = exports.STRIPE_SECRET_KEY = exports.AWS_BUCKET_NAME = exports.AWS_REGION = exports.AWS_ACCESS_SECRET_KEY = exports.AWS_ACCESS_KEY_ID = exports.HASH_SECRET = exports.EMAIL_HOST = exports.EMAIL_FROM_PASSWORD = exports.EMAIL_FROM = exports.EMAIL_PORT = exports.JWT_SECRET = exports.PORT = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 exports.PORT = process.env.PORT || 4400;
@@ -21,3 +21,5 @@ exports.STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 exports.STRIPE_PRODUCT_ID = process.env.STRIPE_PRODUCT_ID;
 exports.STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 exports.DATABASE_URL = process.env.DATABASE_URL;
+exports.REDIS_HOST = process.env.REDIS_HOST;
+exports.REDIS_PORT = process.env.REDIS_PORT;
