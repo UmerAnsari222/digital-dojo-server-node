@@ -786,6 +786,12 @@ export const getPastChallenges = async (
           weeklyChallenge: {
             include: {
               category: true,
+              challenge: {
+                select: {
+                  id: true,
+                  title: true,
+                },
+              },
             },
           },
         },
@@ -796,7 +802,7 @@ export const getPastChallenges = async (
     }
 
     return res.status(200).json({
-      challenges,
+      pastChallenges: challenges,
       msg: "Fetched Past Challenges Successfully",
       success: true,
     });

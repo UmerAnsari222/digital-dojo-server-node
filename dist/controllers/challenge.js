@@ -606,6 +606,12 @@ const getPastChallenges = async (req, res, next) => {
                     weeklyChallenge: {
                         include: {
                             category: true,
+                            challenge: {
+                                select: {
+                                    id: true,
+                                    title: true,
+                                },
+                            },
                         },
                     },
                 },
@@ -615,7 +621,7 @@ const getPastChallenges = async (req, res, next) => {
             });
         }
         return res.status(200).json({
-            challenges,
+            pastChallenges: challenges,
             msg: "Fetched Past Challenges Successfully",
             success: true,
         });
