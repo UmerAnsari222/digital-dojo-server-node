@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteDailyChallengeById = exports.deleteWeeklyChallengeById = exports.deleteWeeklyChallengePlainById = exports.deleteDailyChallengePlainById = exports.getWeeklyChallengeProgress = exports.getTodayWeeklyChallenge = exports.getDailyChallenges = exports.getTodayDailyChallenge = exports.makePublishWeeklyChallenge = exports.updateWeeklyChallengeById = exports.getAllWeeklyChallenges = exports.createWeeklyChallenge = exports.createDailyChallenge = exports.createDailyChallengePlan = void 0;
+exports.deleteDailyChallengeById = exports.deleteWeeklyChallengeById = exports.deleteWeeklyChallengePlainById = exports.deleteDailyChallengePlainById = exports.getPastChallenges = exports.getWeeklyChallengeProgress = exports.getTodayWeeklyChallenge = exports.getDailyChallenges = exports.getTodayDailyChallenge = exports.makePublishWeeklyChallenge = exports.updateWeeklyChallengeById = exports.getAllWeeklyChallenges = exports.createWeeklyChallenge = exports.createDailyChallenge = exports.createDailyChallengePlan = void 0;
 const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
 const client_1 = require("@prisma/client");
@@ -571,6 +571,57 @@ const getWeeklyChallengeProgress = async (req, res, next) => {
     }
 };
 exports.getWeeklyChallengeProgress = getWeeklyChallengeProgress;
+const getPastChallenges = async (req, res, next) => {
+    const { userId } = req;
+    const type = req.query.type;
+    if (!userId) {
+        return next(new error_1.default("Unauthorized", 401));
+    }
+    try {
+        let challenges;
+        if (type === client_1.ChallengeType.DAILY) {
+            challenges = await db_1.db.completion.findMany({
+                where: {
+                    userId: userId,
+                    userChallengeId: {
+                        not: null,
+                    },
+                },
+                select: {
+                    userChallenge: {
+                        include: {
+                            category: true,
+                        },
+                    },
+                },
+            });
+        }
+        else if (type === client_1.ChallengeType.WEEKLY) {
+            challenges = await db_1.db.weeklyChallengeCompletion.findMany({
+                where: {
+                    userId,
+                },
+                select: {
+                    weeklyChallenge: {
+                        include: {
+                            category: true,
+                        },
+                    },
+                },
+            });
+        }
+        return res.status(200).json({
+            challenges,
+            msg: "Fetched Past Challenges Successfully",
+            success: true,
+        });
+    }
+    catch (e) {
+        console.log("[GET_PAST_CHALLENGE_ERROR]", e);
+        next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.getPastChallenges = getPastChallenges;
 const deleteDailyChallengePlainById = async (req, res, next) => {
     const { userId, role } = req;
     const { challengeId } = req.params;

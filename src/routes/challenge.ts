@@ -11,6 +11,7 @@ import {
   deleteWeeklyChallengePlainById,
   getAllWeeklyChallenges,
   getDailyChallenges,
+  getPastChallenges,
   getTodayDailyChallenge,
   getTodayWeeklyChallenge,
   getWeeklyChallengeProgress,
@@ -81,6 +82,14 @@ challengeRouter.get(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await getWeeklyChallengeProgress(req, res, next);
+  }
+);
+
+challengeRouter.get(
+  "/past",
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await getPastChallenges(req, res, next);
   }
 );
 

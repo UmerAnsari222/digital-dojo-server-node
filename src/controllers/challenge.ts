@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import ErrorHandler from "../utils/error";
 import { db } from "../config/db";
-import { Role } from "@prisma/client";
+import { ChallengeType, Role } from "@prisma/client";
 import {
   addDays,
   differenceInCalendarDays,
@@ -741,6 +741,63 @@ export const getWeeklyChallengeProgress = async (
     });
   } catch (e) {
     console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const getPastChallenges = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req;
+  const type = req.query.type as ChallengeType;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 401));
+  }
+
+  try {
+    let challenges;
+
+    if (type === ChallengeType.DAILY) {
+      challenges = await db.completion.findMany({
+        where: {
+          userId: userId,
+          userChallengeId: {
+            not: null,
+          },
+        },
+        select: {
+          userChallenge: {
+            include: {
+              category: true,
+            },
+          },
+        },
+      });
+    } else if (type === ChallengeType.WEEKLY) {
+      challenges = await db.weeklyChallengeCompletion.findMany({
+        where: {
+          userId,
+        },
+        select: {
+          weeklyChallenge: {
+            include: {
+              category: true,
+            },
+          },
+        },
+      });
+    }
+
+    return res.status(200).json({
+      challenges,
+      msg: "Fetched Past Challenges Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[GET_PAST_CHALLENGE_ERROR]", e);
     next(new ErrorHandler("Something went wrong", 500));
   }
 };

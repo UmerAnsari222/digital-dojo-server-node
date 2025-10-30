@@ -29,6 +29,9 @@ exports.challengeRouter.get("/weekly/today", auth_1.authMiddleware, async (req, 
 exports.challengeRouter.get("/weekly/progress", auth_1.authMiddleware, async (req, res, next) => {
     await (0, challenge_1.getWeeklyChallengeProgress)(req, res, next);
 });
+exports.challengeRouter.get("/past", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, challenge_1.getPastChallenges)(req, res, next);
+});
 exports.challengeRouter.patch("/weekly/:weeklyChallengeId", auth_1.authAdminMiddleware, async (req, res, next) => {
     await (0, challenge_1.updateWeeklyChallengeById)(req, res, next);
 });
