@@ -368,6 +368,10 @@ const getTodayDailyChallenge = async (req, res, next) => {
         if (!self)
             return next(new error_1.default("User not found", 404));
         const challenges = await db_1.db.dailyChallenge.findMany({
+            include: {
+                category: true,
+                challenge: true,
+            },
             orderBy: { createdAt: "asc" },
         });
         console.log("Total challenges:", challenges.length);
@@ -393,8 +397,14 @@ const getTodayDailyChallenge = async (req, res, next) => {
             });
         }
         const daily = challenges[daysSince];
+        const completion = await db_1.db.completion.findFirst({
+            where: {
+                userId,
+                userChallengeId: daily.id,
+            },
+        });
         return res.status(200).json({
-            challenge: daily,
+            challenge: { ...daily, completion },
             msg: "Today's Challenge Fetched Successfully",
             success: true,
         });

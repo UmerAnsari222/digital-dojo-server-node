@@ -483,6 +483,10 @@ export const getTodayDailyChallenge = async (
     if (!self) return next(new ErrorHandler("User not found", 404));
 
     const challenges = await db.dailyChallenge.findMany({
+      include: {
+        category: true,
+        challenge: true,
+      },
       orderBy: { createdAt: "asc" },
     });
 
@@ -521,8 +525,15 @@ export const getTodayDailyChallenge = async (
 
     const daily = challenges[daysSince];
 
+    const completion = await db.completion.findFirst({
+      where: {
+        userId,
+        userChallengeId: daily.id,
+      },
+    });
+
     return res.status(200).json({
-      challenge: daily,
+      challenge: { ...daily, completion },
       msg: "Today's Challenge Fetched Successfully",
       success: true,
     });
