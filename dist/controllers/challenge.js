@@ -598,9 +598,16 @@ const getPastChallenges = async (req, res, next) => {
                     },
                 },
                 select: {
+                    skip: true,
                     userChallenge: {
                         include: {
                             category: true,
+                            challenge: {
+                                select: {
+                                    id: true,
+                                    title: true,
+                                },
+                            },
                         },
                     },
                 },

@@ -780,9 +780,16 @@ export const getPastChallenges = async (
           },
         },
         select: {
+          skip: true,
           userChallenge: {
             include: {
               category: true,
+              challenge: {
+                select: {
+                  id: true,
+                  title: true,
+                },
+              },
             },
           },
         },
