@@ -79,14 +79,23 @@ export const getAllCircle = async (
         });
       }
 
-      circle.members.forEach(async (member) => {
+      // circle.members.forEach(async (member) => {
+      //   if (member.imageUrl) {
+      //     member.imageUrl = await getObjectUrl({
+      //       bucket: AWS_BUCKET_NAME,
+      //       key: member.imageUrl,
+      //     });
+      //   }
+      // });
+
+      for (const member of circle.members) {
         if (member.imageUrl) {
           member.imageUrl = await getObjectUrl({
             bucket: AWS_BUCKET_NAME,
             key: member.imageUrl,
           });
         }
-      });
+      }
     }
 
     return res.status(200).json({
@@ -138,14 +147,23 @@ export const getUserAllCircle = async (
         });
       }
 
-      circle.members.forEach(async (member) => {
+      // circle.members.forEach(async (member) => {
+      //   if (member.imageUrl) {
+      //     member.imageUrl = await getObjectUrl({
+      //       bucket: AWS_BUCKET_NAME,
+      //       key: member.imageUrl,
+      //     });
+      //   }
+      // });
+
+      for (const member of circle.members) {
         if (member.imageUrl) {
           member.imageUrl = await getObjectUrl({
             bucket: AWS_BUCKET_NAME,
             key: member.imageUrl,
           });
         }
-      });
+      }
     }
 
     return res.status(200).json({
