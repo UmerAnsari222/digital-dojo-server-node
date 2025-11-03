@@ -19,6 +19,8 @@ import {
 } from "../utils/dateTimeFormatter";
 import logger from "../config/logger";
 import cron from "node-cron";
+import { challengeSkipWorker } from "../jobs/workers/challengeSkip";
+import { challengeSkipQueue } from "../jobs/queues/challengeSkip";
 
 export const createDailyChallengePlan = async (
   req: Request,
@@ -1075,4 +1077,18 @@ cron.schedule("*/10 * * * *", async () => {
   } catch (error) {
     console.error("[CRON ERROR]", error);
   }
+});
+
+// cron.schedule("0 0 * * *", async () => {
+cron.schedule("0 0 * * *", async () => {
+  console.log("⏰ Triggering daily skip worker...");
+
+  await challengeSkipQueue.add(
+    "weeklyChallengeSkipJob",
+    {},
+    {
+      removeOnComplete: true,
+      removeOnFail: true,
+    }
+  );
 });

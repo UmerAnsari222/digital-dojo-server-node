@@ -11,6 +11,7 @@ const date_fns_1 = require("date-fns");
 const dateTimeFormatter_1 = require("../utils/dateTimeFormatter");
 const logger_1 = __importDefault(require("../config/logger"));
 const node_cron_1 = __importDefault(require("node-cron"));
+const challengeSkip_1 = require("../jobs/queues/challengeSkip");
 const createDailyChallengePlan = async (req, res, next) => {
     const { userId, role } = req;
     const { title, challengeType } = req.body;
@@ -846,4 +847,12 @@ node_cron_1.default.schedule("*/10 * * * *", async () => {
     catch (error) {
         console.error("[CRON ERROR]", error);
     }
+});
+// cron.schedule("0 0 * * *", async () => {
+node_cron_1.default.schedule("0 0 * * *", async () => {
+    console.log("⏰ Triggering daily skip worker...");
+    await challengeSkip_1.challengeSkipQueue.add("weeklyChallengeSkipJob", {}, {
+        removeOnComplete: true,
+        removeOnFail: true,
+    });
 });

@@ -1,5 +1,6 @@
 import { streakQueue } from "./queues/streak";
 import "../jobs/workers/streak";
+import "../jobs/workers/challengeSkip";
 
 export async function scheduleStreakJob() {
   console.log("[BullMQ] Scheduling streak reset job (daily 00:00)...");

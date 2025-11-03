@@ -53,9 +53,11 @@ async function getObjectUrl({ key, bucket, }) {
     };
     try {
         const command = new client_s3_1.GetObjectCommand(params);
-        const url = await (0, s3_request_presigner_1.getSignedUrl)(exports.s3Client, command, {
-            expiresIn: 60,
-        });
+        const url = await (0, s3_request_presigner_1.getSignedUrl)(exports.s3Client, command
+        //   {
+        //   expiresIn: 60,
+        // }
+        );
         // return addCacheBusting(url);
         // return url + `&cb=${Date.now()}`;
         // return url.includes("?")

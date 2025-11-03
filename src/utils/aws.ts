@@ -75,9 +75,13 @@ export async function getObjectUrl({
 
   try {
     const command = new GetObjectCommand(params);
-    const url = await getSignedUrl(s3Client, command, {
-      expiresIn: 60,
-    });
+    const url = await getSignedUrl(
+      s3Client,
+      command
+      //   {
+      //   expiresIn: 60,
+      // }
+    );
 
     // return addCacheBusting(url);
     // return url + `&cb=${Date.now()}`;

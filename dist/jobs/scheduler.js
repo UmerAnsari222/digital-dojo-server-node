@@ -4,6 +4,7 @@ exports.scheduleStreakJob = scheduleStreakJob;
 exports.startScheduler = startScheduler;
 const streak_1 = require("./queues/streak");
 require("../jobs/workers/streak");
+require("../jobs/workers/challengeSkip");
 async function scheduleStreakJob() {
     console.log("[BullMQ] Scheduling streak reset job (daily 00:00)...");
     await streak_1.streakQueue.removeJobScheduler("streak-reset-midnight");

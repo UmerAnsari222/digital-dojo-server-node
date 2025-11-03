@@ -94,7 +94,7 @@ const getUserAllCircle = async (req, res, next) => {
     const { userId } = req;
     try {
         const circles = await db_1.db.circle.findMany({
-            where: { id: userId },
+            where: { ownerId: userId },
             include: {
                 members: {
                     select: {

@@ -71,8 +71,10 @@ const makeCompletion = async (req, res, next) => {
                 skip,
             },
         });
-        const data = await processCompletion(self.id, today);
-        console.log(data);
+        if (!skip) {
+            const data = await processCompletion(self.id, today);
+            console.log(data);
+        }
         // Save updates to DB
         // await db.user.update({
         //   where: { id: userId },
@@ -84,7 +86,9 @@ const makeCompletion = async (req, res, next) => {
         // });
         return res.status(201).json({
             completion,
-            msg: "Completion Created Successfully",
+            msg: skip
+                ? "Challenge Skip Successfully"
+                : "Challenge Completion Successfully",
             success: true,
         });
     }
