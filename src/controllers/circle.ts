@@ -192,7 +192,7 @@ export const getCircleById = async (
   const { circleId } = req.params;
   try {
     const circle = await db.circle.findFirst({
-      where: { ownerId: userId, id: circleId },
+      where: { id: circleId },
       include: {
         members: {
           select: {
