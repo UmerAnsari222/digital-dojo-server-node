@@ -12,8 +12,9 @@ import {
   isWithinInterval,
   startOfDay,
   subDays,
+  parse,
 } from "date-fns";
-import { toZonedTime, format } from "date-fns-tz";
+import { toZonedTime, format, formatInTimeZone } from "date-fns-tz";
 import {
   convertToUserTime,
   formatTimeForUser,
@@ -706,7 +707,7 @@ export const getTodayWeeklyChallenge = async (
     const user = await db.user.findUnique({ where: { id: userId } });
     const userTimeZone = user?.timezone || "UTC";
 
-    const now = toZonedTime(new Date(), userTimeZone);
+    const now = new Date();
 
     const challenges = await db.challenge.findMany({
       where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
@@ -744,25 +745,33 @@ export const getTodayWeeklyChallenge = async (
     }
 
     // Convert challenge start/end times to user's timezone
-    const startTimeLocal = toZonedTime(todayWeekly.startTime, userTimeZone);
-    const endTimeLocal = toZonedTime(todayWeekly.endTime, userTimeZone);
+    const startTimeLocal = new Date(
+      formatInTimeZone(
+        todayWeekly.startTime,
+        userTimeZone,
+        "yyyy-MM-dd HH:mm:ss"
+      )
+    );
+    const endTimeLocal = new Date(
+      formatInTimeZone(todayWeekly.endTime, userTimeZone, "yyyy-MM-dd HH:mm:ss")
+    );
 
-    console.log({ startTimeLocal, endTimeLocal });
+    const nowLocal = new Date(
+      now.toLocaleString("en-US", { timeZone: userTimeZone })
+    );
 
     let message = "";
     let weeklyChallenge = null;
 
-    if (isBefore(now, startTimeLocal)) {
-      message = `Challenge will start at ${format(startTimeLocal, "h:mm a", {
-        timeZone: userTimeZone,
-      })}`;
-    } else if (isAfter(now, endTimeLocal)) {
+    if (nowLocal < startTimeLocal) {
+      message = `Challenge will start at ${format(startTimeLocal, "h:mm a")}`;
+    } else if (nowLocal > endTimeLocal) {
       message = "Challenge has ended for today";
     } else {
       weeklyChallenge = {
         ...todayWeekly,
-        startTime: format(startTimeLocal, "h:mm a", { timeZone: userTimeZone }),
-        endTime: format(endTimeLocal, "h:mm a", { timeZone: userTimeZone }),
+        startTime: format(startTimeLocal, "h:mm a"),
+        endTime: format(endTimeLocal, "h:mm a"),
         startDate: activeChallenge.startDate,
         planName: activeChallenge.title,
       };
