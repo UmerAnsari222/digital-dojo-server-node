@@ -3,15 +3,12 @@ import { redisConnection } from "../../utils/redis";
 import { WEEKLY_SKIP_QUEUE } from "../queues/challengeSkip";
 import { endOfDay, startOfDay, subDays } from "date-fns";
 import { db } from "../../config/db";
+import { toZonedTime } from "date-fns-tz";
 
 export const challengeSkipWorker = new Worker(
   WEEKLY_SKIP_QUEUE,
   async () => {
     console.log("⏰ Running daily skip job via worker...");
-
-    const yesterday = subDays(new Date(), 1);
-    const startOfYesterday = startOfDay(yesterday);
-    const endOfYesterday = endOfDay(yesterday);
 
     try {
       // 1️⃣ Get all running challenges with weekly challenges
@@ -22,39 +19,51 @@ export const challengeSkipWorker = new Worker(
 
       for (const challenge of runningChallenges) {
         for (const weekly of challenge.weeklyChallenges) {
-          // 2️⃣ Find users who do NOT have any completion (skipped or done) yesterday
-          const usersWhoDidNotComplete = await db.user.findMany({
-            where: {
-              weeklyChallengeCompletions: {
-                none: {
+          // 2️⃣ Get all users
+          const users = await db.user.findMany({
+            select: { id: true, timezone: true },
+          });
+
+          for (const user of users) {
+            const tz = user.timezone || "UTC";
+
+            // 3️⃣ Compute yesterday in user's timezone
+            const nowInTZ = toZonedTime(new Date(), tz);
+            const yesterdayInTZ = subDays(nowInTZ, 1);
+            const startOfYesterdayInTZ = startOfDay(yesterdayInTZ);
+            const endOfYesterdayInTZ = endOfDay(yesterdayInTZ);
+
+            // 4️⃣ Convert to UTC for DB
+            const startUTC = new Date(startOfYesterdayInTZ.toISOString());
+            const endUTC = new Date(endOfYesterdayInTZ.toISOString());
+
+            // 5️⃣ Check if user did not complete this weekly challenge yesterday
+            const didNotComplete = await db.weeklyChallengeCompletion.findFirst(
+              {
+                where: {
+                  userId: user.id,
                   weeklyChallengeId: weekly.id,
-                  date: {
-                    gte: startOfYesterday,
-                    lte: endOfYesterday,
-                  },
+                  date: { gte: startUTC, lte: endUTC },
                 },
-              },
-            },
-            select: { id: true },
-          });
+              }
+            );
 
-          if (usersWhoDidNotComplete.length === 0) continue;
-
-          // 3️⃣ Bulk create skip entries safely
-          await db.weeklyChallengeCompletion.createMany({
-            data: usersWhoDidNotComplete.map((user) => ({
-              challengeId: challenge.id,
-              weeklyChallengeId: weekly.id,
-              userId: user.id,
-              date: new Date(),
-              skip: true,
-            })),
-            skipDuplicates: true, // ensures no duplicate skips
-          });
-
-          console.log(
-            `✅ Marked ${usersWhoDidNotComplete.length} users as skipped for weekly challenge ${weekly.id}`
-          );
+            if (!didNotComplete) {
+              // 6️⃣ Mark skipped
+              await db.weeklyChallengeCompletion.create({
+                data: {
+                  challengeId: challenge.id,
+                  weeklyChallengeId: weekly.id,
+                  userId: user.id,
+                  date: new Date(), // UTC timestamp
+                  skip: true,
+                },
+              });
+              console.log(
+                `✅ Skipped user ${user.id} for weekly challenge ${weekly.id}`
+              );
+            }
+          }
         }
       }
 
