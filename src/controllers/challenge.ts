@@ -716,7 +716,13 @@ export const getTodayWeeklyChallenge = async (
 
     const challenges = await db.challenge.findMany({
       where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
-      include: { weeklyChallenges: true },
+      include: {
+        weeklyChallenges: {
+          include: {
+            category: true,
+          },
+        },
+      },
     });
 
     const activeChallenge = challenges.find(

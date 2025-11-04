@@ -553,7 +553,13 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         const nowLocal = (0, date_fns_tz_1.toZonedTime)(new Date(), userTimeZone);
         const challenges = await db_1.db.challenge.findMany({
             where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
-            include: { weeklyChallenges: true },
+            include: {
+                weeklyChallenges: {
+                    include: {
+                        category: true,
+                    },
+                },
+            },
         });
         const activeChallenge = challenges.find((c) => c.startDate &&
             (0, dateTimeFormatter_1.isTodayInChallengeWeek)(c.startDate.toString(), userTimeZone));
