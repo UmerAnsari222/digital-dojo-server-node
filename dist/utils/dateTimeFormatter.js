@@ -4,6 +4,7 @@ exports.isTodayInChallengeWeek = isTodayInChallengeWeek;
 exports.getRelativeDayIndex = getRelativeDayIndex;
 exports.normalizeUTC = normalizeUTC;
 exports.convertToUserTime = convertToUserTime;
+exports.formatTimeForUser = formatTimeForUser;
 const date_fns_1 = require("date-fns");
 const date_fns_tz_1 = require("date-fns-tz");
 // export function isTodayInChallengeWeek(startDateStr: string): boolean {
@@ -68,4 +69,18 @@ function convertToUserTime(utcDateStr, timeZone) {
 function convertToUtc(date, timeZone) {
     const local = (0, date_fns_tz_1.toZonedTime)(date, timeZone);
     return new Date(local.getTime() - local.getTimezoneOffset() * 60 * 1000);
+}
+/**
+ * Converts a UTC date or ISO string to user's timezone and formats as 12-hour time.
+ * @param time - Date object or ISO string in UTC
+ * @param timeZone - User's timezone, e.g., "Asia/Karachi"
+ * @returns Formatted time string like "4:00 PM"
+ */
+function formatTimeForUser(time, timeZone) {
+    // Convert to Date if string
+    const date = typeof time === "string" ? new Date(time) : time;
+    // Convert UTC date to user's timezone
+    const zonedDate = (0, date_fns_tz_1.toZonedTime)(date, timeZone);
+    // Format in 12-hour time
+    return (0, date_fns_tz_1.format)(zonedDate, "h:mm a");
 }

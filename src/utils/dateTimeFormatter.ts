@@ -102,3 +102,23 @@ function convertToUtc(date: Date, timeZone: string): Date {
   const local = toZonedTime(date, timeZone);
   return new Date(local.getTime() - local.getTimezoneOffset() * 60 * 1000);
 }
+
+/**
+ * Converts a UTC date or ISO string to user's timezone and formats as 12-hour time.
+ * @param time - Date object or ISO string in UTC
+ * @param timeZone - User's timezone, e.g., "Asia/Karachi"
+ * @returns Formatted time string like "4:00 PM"
+ */
+export function formatTimeForUser(
+  time: Date | string,
+  timeZone: string
+): string {
+  // Convert to Date if string
+  const date = typeof time === "string" ? new Date(time) : time;
+
+  // Convert UTC date to user's timezone
+  const zonedDate = toZonedTime(date, timeZone);
+
+  // Format in 12-hour time
+  return format(zonedDate, "h:mm a");
+}
