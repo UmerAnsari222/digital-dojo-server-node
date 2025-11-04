@@ -33,8 +33,7 @@ exports.challengeSkipWorker = new bullmq_1.Worker(challengeSkip_1.WEEKLY_SKIP_QU
                     },
                     select: { id: true },
                 });
-                for (const user of usersWhoDidNotComplete) {
-                    console.log(user.id);
+                if (usersWhoDidNotComplete.length > 0) {
                     await db_1.db.weeklyChallengeCompletion.createMany({
                         data: usersWhoDidNotComplete.map((user) => ({
                             challengeId: challenge.id,
@@ -46,6 +45,9 @@ exports.challengeSkipWorker = new bullmq_1.Worker(challengeSkip_1.WEEKLY_SKIP_QU
                         skipDuplicates: true,
                     });
                 }
+                // for (const user of usersWhoDidNotComplete) {
+                // console.log(user.id);
+                // }
             }
         }
     }

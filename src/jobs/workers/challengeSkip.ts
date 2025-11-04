@@ -37,8 +37,7 @@ export const challengeSkipWorker = new Worker(
             select: { id: true },
           });
 
-          for (const user of usersWhoDidNotComplete) {
-            console.log(user.id);
+          if (usersWhoDidNotComplete.length > 0) {
             await db.weeklyChallengeCompletion.createMany({
               data: usersWhoDidNotComplete.map((user) => ({
                 challengeId: challenge.id,
@@ -50,6 +49,11 @@ export const challengeSkipWorker = new Worker(
               skipDuplicates: true,
             });
           }
+
+          // for (const user of usersWhoDidNotComplete) {
+          // console.log(user.id);
+
+          // }
         }
       }
     } catch (error) {
