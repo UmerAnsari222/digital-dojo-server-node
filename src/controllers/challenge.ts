@@ -770,7 +770,7 @@ export const getTodayWeeklyChallenge = async (
       0
     );
 
-    console.log({ now, startTimeLocal, endTimeLocal });
+    console.log({ now, startTimeLocal, endTimeLocal, startTimeDB, endTimeDB });
 
     let message = "";
     let weeklyChallenge = null;

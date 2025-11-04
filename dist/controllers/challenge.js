@@ -580,7 +580,7 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         const endTimeDB = new Date(todayWeekly.endTime);
         const startTimeLocal = (0, date_fns_1.setSeconds)((0, date_fns_1.setMinutes)((0, date_fns_1.setHours)(todayInTZ, startTimeDB.getUTCHours()), startTimeDB.getUTCMinutes()), 0);
         const endTimeLocal = (0, date_fns_1.setSeconds)((0, date_fns_1.setMinutes)((0, date_fns_1.setHours)(todayInTZ, endTimeDB.getUTCHours()), endTimeDB.getUTCMinutes()), 0);
-        console.log({ now, startTimeLocal, endTimeLocal });
+        console.log({ now, startTimeLocal, endTimeLocal, startTimeDB, endTimeDB });
         let message = "";
         let weeklyChallenge = null;
         if (now < startTimeLocal) {
