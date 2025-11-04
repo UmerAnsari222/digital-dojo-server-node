@@ -935,8 +935,8 @@ node_cron_1.default.schedule("*/10 * * * *", async () => {
         console.error("[CRON ERROR]", error);
     }
 });
-node_cron_1.default.schedule("* * * * *", async () => {
-    // cron.schedule("0 0 * * *", async () => {
+// cron.schedule("* * * * *", async () => {
+node_cron_1.default.schedule("0 0 * * *", async () => {
     console.log("⏰ Triggering daily skip worker...");
     await challengeSkip_1.challengeSkipQueue.add("weeklyChallengeSkipJob", {}, {
         removeOnComplete: true,

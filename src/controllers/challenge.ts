@@ -1190,8 +1190,8 @@ cron.schedule("*/10 * * * *", async () => {
   }
 });
 
-cron.schedule("* * * * *", async () => {
-  // cron.schedule("0 0 * * *", async () => {
+// cron.schedule("* * * * *", async () => {
+cron.schedule("0 0 * * *", async () => {
   console.log("⏰ Triggering daily skip worker...");
 
   await challengeSkipQueue.add(
