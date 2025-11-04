@@ -33,11 +33,15 @@ function getRelativeDayIndex(startDateStr, todayStr) {
 function normalizeUTC(date) {
     return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }
-function getChallengeTimeForToday(timeStr, userTimeZone) {
+function getChallengeTimeForToday(challengeTime, timeZone) {
+    // 1️⃣ Get today's date in user's timezone
     const now = new Date();
-    const todayInTZ = (0, date_fns_tz_1.toZonedTime)(now, userTimeZone);
-    const timeDate = new Date(timeStr); // e.g., 1970-01-01T16:00:00Z
-    // Set today’s date but keep the hours/minutes/seconds from timeDate
-    const combined = (0, date_fns_1.setMilliseconds)((0, date_fns_1.setSeconds)((0, date_fns_1.setMinutes)((0, date_fns_1.setHours)(todayInTZ, timeDate.getUTCHours()), timeDate.getUTCMinutes()), timeDate.getUTCSeconds()), timeDate.getUTCMilliseconds());
-    return combined;
+    const todayInTZ = (0, date_fns_tz_1.toZonedTime)(now, timeZone);
+    // 2️⃣ Extract hours and minutes from challengeTime
+    const hours = challengeTime.getUTCHours();
+    const minutes = challengeTime.getUTCMinutes();
+    // 3️⃣ Set today's date with challenge hours/minutes
+    const challengeDateTime = (0, date_fns_1.setMinutes)((0, date_fns_1.setHours)(todayInTZ, hours), minutes);
+    // 4️⃣ Convert back to UTC ISO string for API
+    return challengeDateTime.toISOString();
 }

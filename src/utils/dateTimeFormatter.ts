@@ -58,25 +58,20 @@ export function normalizeUTC(date: Date): Date {
 }
 
 export function getChallengeTimeForToday(
-  timeStr: string,
-  userTimeZone: string
-) {
+  challengeTime: Date,
+  timeZone: string
+): string {
+  // 1️⃣ Get today's date in user's timezone
   const now = new Date();
-  const todayInTZ = toZonedTime(now, userTimeZone);
+  const todayInTZ = toZonedTime(now, timeZone);
 
-  const timeDate = new Date(timeStr); // e.g., 1970-01-01T16:00:00Z
+  // 2️⃣ Extract hours and minutes from challengeTime
+  const hours = challengeTime.getUTCHours();
+  const minutes = challengeTime.getUTCMinutes();
 
-  // Set today’s date but keep the hours/minutes/seconds from timeDate
-  const combined = setMilliseconds(
-    setSeconds(
-      setMinutes(
-        setHours(todayInTZ, timeDate.getUTCHours()),
-        timeDate.getUTCMinutes()
-      ),
-      timeDate.getUTCSeconds()
-    ),
-    timeDate.getUTCMilliseconds()
-  );
+  // 3️⃣ Set today's date with challenge hours/minutes
+  const challengeDateTime = setMinutes(setHours(todayInTZ, hours), minutes);
 
-  return combined;
+  // 4️⃣ Convert back to UTC ISO string for API
+  return challengeDateTime.toISOString();
 }

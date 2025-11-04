@@ -770,19 +770,19 @@ export const getTodayWeeklyChallenge = async (
 
     // 8️⃣ Convert start/end times to user's timezone for today
     const startTimeLocal = getChallengeTimeForToday(
-      todayWeekly.startTime.toISOString(),
+      todayWeekly.startTime,
       userTimeZone
     );
     const endTimeLocal = getChallengeTimeForToday(
-      todayWeekly.endTime.toISOString(),
+      todayWeekly.endTime,
       userTimeZone
     );
 
     return res.status(200).json({
       weeklyChallenge: {
         ...todayWeekly,
-        startTime: startTimeLocal.toISOString(),
-        endTime: endTimeLocal.toISOString(),
+        startTime: startTimeLocal,
+        endTime: endTimeLocal,
         startDate: activeChallenge.startDate,
         planName: activeChallenge.title,
         weeklyCompletion,
