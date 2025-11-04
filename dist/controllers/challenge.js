@@ -545,13 +545,11 @@ exports.getDailyChallenges = getDailyChallenges;
 const getTodayWeeklyChallenge = async (req, res, next) => {
     const { userId } = req;
     if (!userId)
-        return next(new error_1.default("Unauthorized", 401));
+        return next(new Error("Unauthorized"));
     try {
         const user = await db_1.db.user.findUnique({ where: { id: userId } });
         const userTimeZone = user?.timezone || "UTC";
-        // Get current time in user's timezone
         const now = (0, date_fns_tz_1.toZonedTime)(new Date(), userTimeZone);
-        // Fetch all active challenges
         const challenges = await db_1.db.challenge.findMany({
             where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
             include: { weeklyChallenges: true },
@@ -577,55 +575,35 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         // Convert challenge start/end times to user's timezone
         const startTimeLocal = (0, date_fns_tz_1.toZonedTime)(todayWeekly.startTime, userTimeZone);
         const endTimeLocal = (0, date_fns_tz_1.toZonedTime)(todayWeekly.endTime, userTimeZone);
-        // If current time is before the start time, don't show the challenge yet
+        let message = "";
+        let weeklyChallenge = null;
         if ((0, date_fns_1.isBefore)(now, startTimeLocal)) {
-            return res.status(200).json({
-                weeklyChallenge: null,
-                msg: `Challenge will start at ${(0, date_fns_tz_1.format)(startTimeLocal, "h:mm a", {
-                    timeZone: userTimeZone,
-                })}`,
-                success: true,
-            });
+            message = `Challenge will start at ${(0, date_fns_tz_1.format)(startTimeLocal, "h:mm a", {
+                timeZone: userTimeZone,
+            })}`;
         }
-        // Optionally, if current time is after end, you can hide it too
-        if ((0, date_fns_1.isAfter)(now, endTimeLocal)) {
-            return res.status(200).json({
-                weeklyChallenge: null,
-                msg: "Challenge has ended for today",
-                success: true,
-            });
+        else if ((0, date_fns_1.isAfter)(now, endTimeLocal)) {
+            message = "Challenge has ended for today";
         }
-        // Fetch completion if any
-        const weeklyCompletion = await db_1.db.weeklyChallengeCompletion.findFirst({
-            where: {
-                userId,
-                weeklyChallengeId: todayWeekly.id,
-                date: { gte: (0, date_fns_1.startOfDay)(now), lte: (0, date_fns_1.endOfDay)(now) },
-            },
-        });
-        // Format start/end times as strings like "4:00 PM"
-        const formattedStartTime = (0, date_fns_tz_1.format)(startTimeLocal, "h:mm a", {
-            timeZone: userTimeZone,
-        });
-        const formattedEndTime = (0, date_fns_tz_1.format)(endTimeLocal, "h:mm a", {
-            timeZone: userTimeZone,
-        });
-        return res.status(200).json({
-            weeklyChallenge: {
+        else {
+            weeklyChallenge = {
                 ...todayWeekly,
-                startTime: formattedStartTime,
-                endTime: formattedEndTime,
+                startTime: (0, date_fns_tz_1.format)(startTimeLocal, "h:mm a", { timeZone: userTimeZone }),
+                endTime: (0, date_fns_tz_1.format)(endTimeLocal, "h:mm a", { timeZone: userTimeZone }),
                 startDate: activeChallenge.startDate,
                 planName: activeChallenge.title,
-                weeklyCompletion,
-            },
-            msg: "Today's Challenge Fetched Successfully",
+            };
+            message = "Today's Challenge Fetched Successfully";
+        }
+        return res.status(200).json({
+            weeklyChallenge,
+            msg: message,
             success: true,
         });
     }
     catch (e) {
         console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
-        next(new error_1.default("Something went wrong", 500));
+        next(new Error("Something went wrong"));
     }
 };
 exports.getTodayWeeklyChallenge = getTodayWeeklyChallenge;

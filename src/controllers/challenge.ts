@@ -700,16 +700,14 @@ export const getTodayWeeklyChallenge = async (
   next: NextFunction
 ) => {
   const { userId } = req;
-  if (!userId) return next(new ErrorHandler("Unauthorized", 401));
+  if (!userId) return next(new Error("Unauthorized"));
 
   try {
     const user = await db.user.findUnique({ where: { id: userId } });
     const userTimeZone = user?.timezone || "UTC";
 
-    // Get current time in user's timezone
     const now = toZonedTime(new Date(), userTimeZone);
 
-    // Fetch all active challenges
     const challenges = await db.challenge.findMany({
       where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
       include: { weeklyChallenges: true },
@@ -749,58 +747,34 @@ export const getTodayWeeklyChallenge = async (
     const startTimeLocal = toZonedTime(todayWeekly.startTime, userTimeZone);
     const endTimeLocal = toZonedTime(todayWeekly.endTime, userTimeZone);
 
-    // If current time is before the start time, don't show the challenge yet
+    let message = "";
+    let weeklyChallenge = null;
+
     if (isBefore(now, startTimeLocal)) {
-      return res.status(200).json({
-        weeklyChallenge: null,
-        msg: `Challenge will start at ${format(startTimeLocal, "h:mm a", {
-          timeZone: userTimeZone,
-        })}`,
-        success: true,
-      });
-    }
-
-    // Optionally, if current time is after end, you can hide it too
-    if (isAfter(now, endTimeLocal)) {
-      return res.status(200).json({
-        weeklyChallenge: null,
-        msg: "Challenge has ended for today",
-        success: true,
-      });
-    }
-
-    // Fetch completion if any
-    const weeklyCompletion = await db.weeklyChallengeCompletion.findFirst({
-      where: {
-        userId,
-        weeklyChallengeId: todayWeekly.id,
-        date: { gte: startOfDay(now), lte: endOfDay(now) },
-      },
-    });
-
-    // Format start/end times as strings like "4:00 PM"
-    const formattedStartTime = format(startTimeLocal, "h:mm a", {
-      timeZone: userTimeZone,
-    });
-    const formattedEndTime = format(endTimeLocal, "h:mm a", {
-      timeZone: userTimeZone,
-    });
-
-    return res.status(200).json({
-      weeklyChallenge: {
+      message = `Challenge will start at ${format(startTimeLocal, "h:mm a", {
+        timeZone: userTimeZone,
+      })}`;
+    } else if (isAfter(now, endTimeLocal)) {
+      message = "Challenge has ended for today";
+    } else {
+      weeklyChallenge = {
         ...todayWeekly,
-        startTime: formattedStartTime,
-        endTime: formattedEndTime,
+        startTime: format(startTimeLocal, "h:mm a", { timeZone: userTimeZone }),
+        endTime: format(endTimeLocal, "h:mm a", { timeZone: userTimeZone }),
         startDate: activeChallenge.startDate,
         planName: activeChallenge.title,
-        weeklyCompletion,
-      },
-      msg: "Today's Challenge Fetched Successfully",
+      };
+      message = "Today's Challenge Fetched Successfully";
+    }
+
+    return res.status(200).json({
+      weeklyChallenge,
+      msg: message,
       success: true,
     });
   } catch (e) {
     console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
-    next(new ErrorHandler("Something went wrong", 500));
+    next(new Error("Something went wrong"));
   }
 };
 
