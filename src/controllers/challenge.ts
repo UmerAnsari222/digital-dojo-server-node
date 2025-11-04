@@ -760,6 +760,8 @@ export const getTodayWeeklyChallenge = async (
       now.toLocaleString("en-US", { timeZone: userTimeZone })
     );
 
+    console.log({ nowLocal, startTimeLocal, endTimeLocal });
+
     let message = "";
     let weeklyChallenge = null;
 
@@ -785,7 +787,7 @@ export const getTodayWeeklyChallenge = async (
     });
   } catch (e) {
     console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
-    next(new Error("Something went wrong"));
+    next(new ErrorHandler("Something went wrong", 500));
   }
 };
 

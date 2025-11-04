@@ -576,6 +576,7 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         const startTimeLocal = new Date((0, date_fns_tz_1.formatInTimeZone)(todayWeekly.startTime, userTimeZone, "yyyy-MM-dd HH:mm:ss"));
         const endTimeLocal = new Date((0, date_fns_tz_1.formatInTimeZone)(todayWeekly.endTime, userTimeZone, "yyyy-MM-dd HH:mm:ss"));
         const nowLocal = new Date(now.toLocaleString("en-US", { timeZone: userTimeZone }));
+        console.log({ nowLocal, startTimeLocal, endTimeLocal });
         let message = "";
         let weeklyChallenge = null;
         if (nowLocal < startTimeLocal) {
@@ -602,7 +603,7 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
     }
     catch (e) {
         console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
-        next(new Error("Something went wrong"));
+        next(new error_1.default("Something went wrong", 500));
     }
 };
 exports.getTodayWeeklyChallenge = getTodayWeeklyChallenge;
