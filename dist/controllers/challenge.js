@@ -544,30 +544,27 @@ exports.getDailyChallenges = getDailyChallenges;
 // };
 const getTodayWeeklyChallenge = async (req, res, next) => {
     const { userId } = req;
-    if (!userId) {
+    if (!userId)
         return next(new error_1.default("Unauthorized", 401));
-    }
     try {
         // 1️⃣ Get user info including timezone
         const user = await db_1.db.user.findUnique({ where: { id: userId } });
-        const userTimeZone = user?.timezone || "UTC"; // fallback to UTC
+        const userTimeZone = user?.timezone || "UTC";
         // 2️⃣ Get current date in user's timezone
         const now = (0, date_fns_tz_1.toZonedTime)(new Date(), userTimeZone);
         const startOfToday = (0, date_fns_1.startOfDay)(now);
         const endOfToday = (0, date_fns_1.endOfDay)(now);
-        // 3️⃣ Fetch active challenges (status SCHEDULE or RUNNING)
+        // Convert start/end to ISO string for DB query (DB expects UTC)
+        const startUtcISO = startOfToday.toISOString();
+        const endUtcISO = endOfToday.toISOString();
+        // 3️⃣ Fetch active challenges
         const challenges = await db_1.db.challenge.findMany({
-            where: {
-                OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }],
-            },
-            include: {
-                weeklyChallenges: {
-                    include: { category: true },
-                },
-            },
+            where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
+            include: { weeklyChallenges: { include: { category: true } } },
         });
-        // 4️⃣ Find the challenge active this week
-        const activeChallenge = challenges.find((c) => c.startDate && (0, dateTimeFormatter_1.isTodayInChallengeWeek)(c.startDate.toString()));
+        // 4️⃣ Find challenge active this week
+        const activeChallenge = challenges.find((c) => c.startDate &&
+            (0, dateTimeFormatter_1.isTodayInChallengeWeek)(c.startDate.toString(), userTimeZone));
         if (!activeChallenge) {
             return res.status(200).json({
                 challenge: null,
@@ -582,7 +579,7 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
                 data: { status: "RUNNING" },
             });
         }
-        // 6️⃣ Get today’s weekly challenge (considering user's timezone)
+        // 6️⃣ Determine today’s weekly challenge
         const todayDayIndex = (0, dateTimeFormatter_1.getRelativeDayIndex)(activeChallenge.startDate.toString(), now.toString());
         const todayWeekly = activeChallenge.weeklyChallenges.find((w) => w.dayOfWeek === todayDayIndex);
         if (!todayWeekly) {
@@ -592,18 +589,15 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
                 success: true,
             });
         }
-        // 7️⃣ Check if user has completed the weekly challenge today
+        // 7️⃣ Check if user has completed today's weekly challenge
         const weeklyCompletion = await db_1.db.weeklyChallengeCompletion.findFirst({
             where: {
                 userId,
                 weeklyChallengeId: todayWeekly.id,
-                date: {
-                    gte: startOfToday,
-                    lte: endOfToday,
-                },
+                date: { gte: startUtcISO, lte: endUtcISO },
             },
         });
-        // 8️⃣ Convert challenge start/end times from UTC → user local time
+        // 8️⃣ Convert challenge start/end times to user's timezone for response
         const startTimeLocal = (0, date_fns_tz_1.toZonedTime)(todayWeekly.startTime, userTimeZone);
         const endTimeLocal = (0, date_fns_tz_1.toZonedTime)(todayWeekly.endTime, userTimeZone);
         return res.status(200).json({
@@ -632,6 +626,9 @@ const getWeeklyChallengeProgress = async (req, res, next) => {
     }
     const today = (0, date_fns_1.startOfDay)(new Date());
     try {
+        // 1️⃣ Get user info including timezone
+        const user = await db_1.db.user.findUnique({ where: { id: userId } });
+        const userTimeZone = user?.timezone || "UTC";
         const challenges = await db_1.db.challenge.findMany({
             where: {
                 OR: [{ status: "RUNNING" }],
@@ -645,7 +642,8 @@ const getWeeklyChallengeProgress = async (req, res, next) => {
             },
         });
         // ✅ use helper function here
-        const activeChallenge = challenges.find((c) => c.startDate && (0, dateTimeFormatter_1.isTodayInChallengeWeek)(c.startDate.toString()));
+        const activeChallenge = challenges.find((c) => c.startDate &&
+            (0, dateTimeFormatter_1.isTodayInChallengeWeek)(c.startDate.toString(), userTimeZone));
         if (!activeChallenge) {
             return next(new error_1.default("Challenge not found", 404));
         }

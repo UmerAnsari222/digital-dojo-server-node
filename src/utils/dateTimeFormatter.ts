@@ -4,12 +4,31 @@ import {
   isWithinInterval,
   startOfDay,
 } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 
-export function isTodayInChallengeWeek(startDateStr: string): boolean {
-  const startDate = startOfDay(new Date(startDateStr)); // strip time
-  const today = startOfDay(new Date()); // strip time
+// export function isTodayInChallengeWeek(startDateStr: string): boolean {
+//   const startDate = startOfDay(new Date(startDateStr)); // strip time
+//   const today = startOfDay(new Date()); // strip time
 
-  const endDate = addDays(startDate, 6); // 7 days total
+//   const endDate = addDays(startDate, 6); // 7 days total
+
+//   return isWithinInterval(today, { start: startDate, end: endDate });
+// }
+
+export function isTodayInChallengeWeek(
+  startDateStr: string,
+  userTimeZone: string
+): boolean {
+  // Convert start date to user's timezone and strip time
+  const startDate = startOfDay(
+    toZonedTime(new Date(startDateStr), userTimeZone)
+  );
+
+  // Get today in user's timezone
+  const today = startOfDay(toZonedTime(new Date(), userTimeZone));
+
+  // 7-day week starting from startDate
+  const endDate = addDays(startDate, 6);
 
   return isWithinInterval(today, { start: startDate, end: endDate });
 }
