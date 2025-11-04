@@ -549,7 +549,8 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
     try {
         const user = await db_1.db.user.findUnique({ where: { id: userId } });
         const userTimeZone = user?.timezone || "UTC";
-        const now = new Date();
+        // Get current time in user's timezone
+        const now = (0, date_fns_tz_1.toZonedTime)(new Date(), userTimeZone);
         const challenges = await db_1.db.challenge.findMany({
             where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
             include: { weeklyChallenges: true },
@@ -572,17 +573,20 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
                 success: true,
             });
         }
-        // Convert challenge start/end times to user's timezone
-        const startTimeLocal = new Date((0, date_fns_tz_1.formatInTimeZone)(todayWeekly.startTime, userTimeZone, "yyyy-MM-dd HH:mm:ss"));
-        const endTimeLocal = new Date((0, date_fns_tz_1.formatInTimeZone)(todayWeekly.endTime, userTimeZone, "yyyy-MM-dd HH:mm:ss"));
-        const nowLocal = new Date(now.toLocaleString("en-US", { timeZone: userTimeZone }));
-        console.log({ nowLocal, startTimeLocal, endTimeLocal });
+        // Step 1️⃣: Get today's date in user's timezone
+        const todayInTZ = (0, date_fns_tz_1.toZonedTime)(new Date(), userTimeZone);
+        // Step 2️⃣: Build full datetime for start & end
+        const startTimeDB = new Date(todayWeekly.startTime); // UTC base
+        const endTimeDB = new Date(todayWeekly.endTime);
+        const startTimeLocal = (0, date_fns_1.setSeconds)((0, date_fns_1.setMinutes)((0, date_fns_1.setHours)(todayInTZ, startTimeDB.getUTCHours()), startTimeDB.getUTCMinutes()), 0);
+        const endTimeLocal = (0, date_fns_1.setSeconds)((0, date_fns_1.setMinutes)((0, date_fns_1.setHours)(todayInTZ, endTimeDB.getUTCHours()), endTimeDB.getUTCMinutes()), 0);
+        console.log({ now, startTimeLocal, endTimeLocal });
         let message = "";
         let weeklyChallenge = null;
-        if (nowLocal < startTimeLocal) {
+        if (now < startTimeLocal) {
             message = `Challenge will start at ${(0, date_fns_tz_1.format)(startTimeLocal, "h:mm a")}`;
         }
-        else if (nowLocal > endTimeLocal) {
+        else if (now > endTimeLocal) {
             message = "Challenge has ended for today";
         }
         else {
@@ -603,7 +607,7 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
     }
     catch (e) {
         console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
-        next(new error_1.default("Something went wrong", 500));
+        next(new Error("Something went wrong"));
     }
 };
 exports.getTodayWeeklyChallenge = getTodayWeeklyChallenge;

@@ -13,6 +13,9 @@ import {
   startOfDay,
   subDays,
   parse,
+  setSeconds,
+  setMinutes,
+  setHours,
 } from "date-fns";
 import { toZonedTime, format, formatInTimeZone } from "date-fns-tz";
 import {
@@ -707,7 +710,8 @@ export const getTodayWeeklyChallenge = async (
     const user = await db.user.findUnique({ where: { id: userId } });
     const userTimeZone = user?.timezone || "UTC";
 
-    const now = new Date();
+    // Get current time in user's timezone
+    const now = toZonedTime(new Date(), userTimeZone);
 
     const challenges = await db.challenge.findMany({
       where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
@@ -744,30 +748,36 @@ export const getTodayWeeklyChallenge = async (
       });
     }
 
-    // Convert challenge start/end times to user's timezone
-    const startTimeLocal = new Date(
-      formatInTimeZone(
-        todayWeekly.startTime,
-        userTimeZone,
-        "yyyy-MM-dd HH:mm:ss"
-      )
+    // Step 1️⃣: Get today's date in user's timezone
+    const todayInTZ = toZonedTime(new Date(), userTimeZone);
+
+    // Step 2️⃣: Build full datetime for start & end
+    const startTimeDB = new Date(todayWeekly.startTime); // UTC base
+    const endTimeDB = new Date(todayWeekly.endTime);
+
+    const startTimeLocal = setSeconds(
+      setMinutes(
+        setHours(todayInTZ, startTimeDB.getUTCHours()),
+        startTimeDB.getUTCMinutes()
+      ),
+      0
     );
-    const endTimeLocal = new Date(
-      formatInTimeZone(todayWeekly.endTime, userTimeZone, "yyyy-MM-dd HH:mm:ss")
+    const endTimeLocal = setSeconds(
+      setMinutes(
+        setHours(todayInTZ, endTimeDB.getUTCHours()),
+        endTimeDB.getUTCMinutes()
+      ),
+      0
     );
 
-    const nowLocal = new Date(
-      now.toLocaleString("en-US", { timeZone: userTimeZone })
-    );
-
-    console.log({ nowLocal, startTimeLocal, endTimeLocal });
+    console.log({ now, startTimeLocal, endTimeLocal });
 
     let message = "";
     let weeklyChallenge = null;
 
-    if (nowLocal < startTimeLocal) {
+    if (now < startTimeLocal) {
       message = `Challenge will start at ${format(startTimeLocal, "h:mm a")}`;
-    } else if (nowLocal > endTimeLocal) {
+    } else if (now > endTimeLocal) {
       message = "Challenge has ended for today";
     } else {
       weeklyChallenge = {
@@ -787,7 +797,7 @@ export const getTodayWeeklyChallenge = async (
     });
   } catch (e) {
     console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
-    next(new ErrorHandler("Something went wrong", 500));
+    next(new Error("Something went wrong"));
   }
 };
 
