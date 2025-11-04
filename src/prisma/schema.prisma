@@ -203,6 +203,7 @@ model Category {
   habits           Habit[]
   weeklyChallenges WeeklyChallenge[]
   dailyChallenges  DailyChallenge[]
+  circleChallenges CircleChallenge[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -262,6 +263,9 @@ model CircleChallenge {
 
   circleId String
   circle   Circle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   participants CircleChallengeParticipant[]
 

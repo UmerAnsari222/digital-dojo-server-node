@@ -211,7 +211,11 @@ export const getCircleById = async (
             circles: true,
           },
         },
-        circleChallenges: true,
+        circleChallenges: {
+          include: {
+            category: true,
+          },
+        },
       },
     });
 
@@ -382,12 +386,19 @@ export const createCircleChallenge = async (
   next: NextFunction
 ) => {
   const { userId } = req;
-  const { circleId, title, description, expireAt } = req.body;
+  const { circleId, title, description, expireAt, categoryId } = req.body;
 
   try {
     const self = await db.user.findUnique({ where: { id: userId } });
     if (!self) {
       return next(new ErrorHandler("Unauthorized", 403));
+    }
+
+    const category = await db.category.findUnique({
+      where: { id: categoryId },
+    });
+    if (!self) {
+      return next(new ErrorHandler("Category not found", 404));
     }
 
     const isAvailable = await db.circle.findUnique({
@@ -418,6 +429,7 @@ export const createCircleChallenge = async (
         circleId,
         ownerId: userId,
         expireAt: new Date(expireAt),
+        categoryId,
       },
     });
 
