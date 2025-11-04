@@ -888,9 +888,7 @@ export const getPastChallenges = async (
   const { userId } = req;
   const type = req.query.type as ChallengeType;
 
-  if (!userId) {
-    return next(new ErrorHandler("Unauthorized", 401));
-  }
+  if (!userId) return next(new ErrorHandler("Unauthorized", 401));
 
   try {
     let challenges;
@@ -898,48 +896,39 @@ export const getPastChallenges = async (
     if (type === ChallengeType.DAILY) {
       challenges = await db.completion.findMany({
         where: {
-          userId: userId,
-          userChallengeId: {
-            not: null,
-          },
+          userId,
+          userChallengeId: { not: null },
         },
         select: {
           skip: true,
+          createdAt: true,
           userChallenge: {
-            include: {
+            select: {
+              id: true,
+              title: true,
               category: true,
-              challenge: {
-                select: {
-                  id: true,
-                  title: true,
-                },
-              },
+              challenge: { select: { id: true, title: true } },
             },
           },
         },
+        orderBy: { createdAt: "desc" },
       });
     } else if (type === ChallengeType.WEEKLY) {
       challenges = await db.weeklyChallengeCompletion.findMany({
-        where: {
-          userId,
-        },
+        where: { userId },
         select: {
           skip: true,
+          createdAt: true,
           weeklyChallenge: {
-            include: {
+            select: {
+              id: true,
+              title: true,
               category: true,
-              challenge: {
-                select: {
-                  id: true,
-                  title: true,
-                },
-              },
+              challenge: { select: { id: true, title: true } },
             },
           },
         },
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: { createdAt: "desc" },
       });
     }
 
@@ -949,7 +938,7 @@ export const getPastChallenges = async (
       success: true,
     });
   } catch (e) {
-    console.log("[GET_PAST_CHALLENGE_ERROR]", e);
+    console.error("[GET_PAST_CHALLENGE_ERROR]", e);
     next(new ErrorHandler("Something went wrong", 500));
   }
 };

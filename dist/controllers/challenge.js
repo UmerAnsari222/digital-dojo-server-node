@@ -682,57 +682,47 @@ exports.getWeeklyChallengeProgress = getWeeklyChallengeProgress;
 const getPastChallenges = async (req, res, next) => {
     const { userId } = req;
     const type = req.query.type;
-    if (!userId) {
+    if (!userId)
         return next(new error_1.default("Unauthorized", 401));
-    }
     try {
         let challenges;
         if (type === client_1.ChallengeType.DAILY) {
             challenges = await db_1.db.completion.findMany({
                 where: {
-                    userId: userId,
-                    userChallengeId: {
-                        not: null,
-                    },
+                    userId,
+                    userChallengeId: { not: null },
                 },
                 select: {
                     skip: true,
+                    createdAt: true,
                     userChallenge: {
-                        include: {
+                        select: {
+                            id: true,
+                            title: true,
                             category: true,
-                            challenge: {
-                                select: {
-                                    id: true,
-                                    title: true,
-                                },
-                            },
+                            challenge: { select: { id: true, title: true } },
                         },
                     },
                 },
+                orderBy: { createdAt: "desc" },
             });
         }
         else if (type === client_1.ChallengeType.WEEKLY) {
             challenges = await db_1.db.weeklyChallengeCompletion.findMany({
-                where: {
-                    userId,
-                },
+                where: { userId },
                 select: {
                     skip: true,
+                    createdAt: true,
                     weeklyChallenge: {
-                        include: {
+                        select: {
+                            id: true,
+                            title: true,
                             category: true,
-                            challenge: {
-                                select: {
-                                    id: true,
-                                    title: true,
-                                },
-                            },
+                            challenge: { select: { id: true, title: true } },
                         },
                     },
                 },
-                orderBy: {
-                    createdAt: "desc",
-                },
+                orderBy: { createdAt: "desc" },
             });
         }
         return res.status(200).json({
@@ -742,7 +732,7 @@ const getPastChallenges = async (req, res, next) => {
         });
     }
     catch (e) {
-        console.log("[GET_PAST_CHALLENGE_ERROR]", e);
+        console.error("[GET_PAST_CHALLENGE_ERROR]", e);
         next(new error_1.default("Something went wrong", 500));
     }
 };
