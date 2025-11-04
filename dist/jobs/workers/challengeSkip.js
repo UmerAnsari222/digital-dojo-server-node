@@ -11,7 +11,6 @@ exports.challengeSkipWorker = new bullmq_1.Worker(challengeSkip_1.WEEKLY_SKIP_QU
     const yesterday = (0, date_fns_1.subDays)(new Date(), 1);
     const startOfYesterday = (0, date_fns_1.startOfDay)(yesterday);
     const endOfYesterday = (0, date_fns_1.endOfDay)(yesterday);
-    console.log({ yesterday, startOfYesterday, endOfYesterday });
     try {
         const runningChallenges = await db_1.db.challenge.findMany({
             where: { status: "RUNNING" },
@@ -28,6 +27,7 @@ exports.challengeSkipWorker = new bullmq_1.Worker(challengeSkip_1.WEEKLY_SKIP_QU
                                     gte: startOfYesterday,
                                     lte: endOfYesterday,
                                 },
+                                skip: false,
                             },
                         },
                     },

@@ -13,8 +13,6 @@ export const challengeSkipWorker = new Worker(
     const startOfYesterday = startOfDay(yesterday);
     const endOfYesterday = endOfDay(yesterday);
 
-    console.log({ yesterday, startOfYesterday, endOfYesterday });
-
     try {
       const runningChallenges = await db.challenge.findMany({
         where: { status: "RUNNING" },
@@ -32,6 +30,7 @@ export const challengeSkipWorker = new Worker(
                     gte: startOfYesterday,
                     lte: endOfYesterday,
                   },
+                  skip: false,
                 },
               },
             },
