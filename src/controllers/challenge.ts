@@ -798,14 +798,28 @@ export const getTodayWeeklyChallenge = async (
       });
     }
 
+    const weeklyCompletion = await db.weeklyChallengeCompletion.findFirst({
+      where: {
+        userId: userId,
+        weeklyChallengeId: todayWeekly.id,
+        // date: {
+        //   gte: today,
+        //   lte: endOfToday,
+        // },
+      },
+    });
+
     // ✅ Challenge active
     return res.status(200).json({
       weeklyChallenge: {
         ...todayWeekly,
-        startTime: format(startTimeLocal, "h:mm a", { timeZone: userTimeZone }),
-        endTime: format(endTimeLocal, "h:mm a", { timeZone: userTimeZone }),
+        startTime: startTimeLocal,
+        endTime: endTimeLocal,
+        // startTime: format(startTimeLocal, "h:mm a", { timeZone: userTimeZone }),
+        // endTime: format(endTimeLocal, "h:mm a", { timeZone: userTimeZone }),
         startDate: activeChallenge.startDate,
         planName: activeChallenge.title,
+        weeklyCompletion,
       },
       msg: "Today's Challenge Fetched Successfully",
       success: true,
