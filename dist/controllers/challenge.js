@@ -549,8 +549,8 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
     try {
         const user = await db_1.db.user.findUnique({ where: { id: userId } });
         const userTimeZone = user?.timezone || "UTC";
-        // Get current time in user's timezone
-        const now = (0, date_fns_tz_1.toZonedTime)(new Date(), userTimeZone);
+        // ✅ Current time in user’s timezone
+        const nowLocal = (0, date_fns_tz_1.toZonedTime)(new Date(), userTimeZone);
         const challenges = await db_1.db.challenge.findMany({
             where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
             include: { weeklyChallenges: true },
@@ -564,7 +564,7 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
                 success: true,
             });
         }
-        const todayDayIndex = (0, dateTimeFormatter_1.getRelativeDayIndex)(activeChallenge.startDate.toString(), now.toString());
+        const todayDayIndex = (0, dateTimeFormatter_1.getRelativeDayIndex)(activeChallenge.startDate.toString(), nowLocal.toString());
         const todayWeekly = activeChallenge.weeklyChallenges.find((w) => w.dayOfWeek === todayDayIndex);
         if (!todayWeekly) {
             return res.status(200).json({
@@ -573,41 +573,55 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
                 success: true,
             });
         }
-        // Step 1️⃣: Get today's date in user's timezone
-        const todayInTZ = (0, date_fns_tz_1.toZonedTime)(new Date(), userTimeZone);
-        // Step 2️⃣: Build full datetime for start & end
-        const startTimeDB = new Date(todayWeekly.startTime); // UTC base
+        // ✅ Build today's start/end times in user's local timezone
+        const startTimeDB = new Date(todayWeekly.startTime);
         const endTimeDB = new Date(todayWeekly.endTime);
-        const startTimeLocal = (0, date_fns_1.setSeconds)((0, date_fns_1.setMinutes)((0, date_fns_1.setHours)(todayInTZ, startTimeDB.getUTCHours()), startTimeDB.getUTCMinutes()), 0);
-        const endTimeLocal = (0, date_fns_1.setSeconds)((0, date_fns_1.setMinutes)((0, date_fns_1.setHours)(todayInTZ, endTimeDB.getUTCHours()), endTimeDB.getUTCMinutes()), 0);
-        console.log({ now, startTimeLocal, endTimeLocal, startTimeDB, endTimeDB });
-        let message = "";
-        let weeklyChallenge = null;
-        if (now < startTimeLocal) {
-            message = `Challenge will start at ${(0, date_fns_tz_1.format)(startTimeLocal, "h:mm a")}`;
+        const startTimeLocal = (0, date_fns_1.set)(nowLocal, {
+            hours: startTimeDB.getUTCHours(),
+            minutes: startTimeDB.getUTCMinutes(),
+            seconds: 0,
+            milliseconds: 0,
+        });
+        const endTimeLocal = (0, date_fns_1.set)(nowLocal, {
+            hours: endTimeDB.getUTCHours(),
+            minutes: endTimeDB.getUTCMinutes(),
+            seconds: 0,
+            milliseconds: 0,
+        });
+        console.log({ nowLocal, startTimeLocal, endTimeLocal });
+        // ✅ Logic to decide if challenge is available yet
+        if ((0, date_fns_1.isBefore)(nowLocal, startTimeLocal)) {
+            return res.status(200).json({
+                weeklyChallenge: null,
+                msg: `Challenge will start at ${(0, date_fns_tz_1.format)(startTimeLocal, "h:mm a", {
+                    timeZone: userTimeZone,
+                })}`,
+                success: true,
+            });
         }
-        else if (now > endTimeLocal) {
-            message = "Challenge has ended for today";
+        if ((0, date_fns_1.isAfter)(nowLocal, endTimeLocal)) {
+            return res.status(200).json({
+                weeklyChallenge: null,
+                msg: "Challenge has ended for today",
+                success: true,
+            });
         }
-        else {
-            weeklyChallenge = {
+        // ✅ Challenge active
+        return res.status(200).json({
+            weeklyChallenge: {
                 ...todayWeekly,
-                startTime: (0, date_fns_tz_1.format)(startTimeLocal, "h:mm a"),
-                endTime: (0, date_fns_tz_1.format)(endTimeLocal, "h:mm a"),
+                startTime: (0, date_fns_tz_1.format)(startTimeLocal, "h:mm a", { timeZone: userTimeZone }),
+                endTime: (0, date_fns_tz_1.format)(endTimeLocal, "h:mm a", { timeZone: userTimeZone }),
                 startDate: activeChallenge.startDate,
                 planName: activeChallenge.title,
-            };
-            message = "Today's Challenge Fetched Successfully";
-        }
-        return res.status(200).json({
-            weeklyChallenge,
-            msg: message,
+            },
+            msg: "Today's Challenge Fetched Successfully",
             success: true,
         });
     }
     catch (e) {
         console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
-        next(new Error("Something went wrong"));
+        next(new error_1.default("Something went wrong", 500));
     }
 };
 exports.getTodayWeeklyChallenge = getTodayWeeklyChallenge;

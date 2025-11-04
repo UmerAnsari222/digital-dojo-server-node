@@ -16,6 +16,7 @@ import {
   setSeconds,
   setMinutes,
   setHours,
+  set,
 } from "date-fns";
 import { toZonedTime, format, formatInTimeZone } from "date-fns-tz";
 import {
@@ -710,8 +711,8 @@ export const getTodayWeeklyChallenge = async (
     const user = await db.user.findUnique({ where: { id: userId } });
     const userTimeZone = user?.timezone || "UTC";
 
-    // Get current time in user's timezone
-    const now = toZonedTime(new Date(), userTimeZone);
+    // ✅ Current time in user’s timezone
+    const nowLocal = toZonedTime(new Date(), userTimeZone);
 
     const challenges = await db.challenge.findMany({
       where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
@@ -734,7 +735,7 @@ export const getTodayWeeklyChallenge = async (
 
     const todayDayIndex = getRelativeDayIndex(
       activeChallenge.startDate.toString(),
-      now.toString()
+      nowLocal.toString()
     );
     const todayWeekly = activeChallenge.weeklyChallenges.find(
       (w) => w.dayOfWeek === todayDayIndex
@@ -748,56 +749,60 @@ export const getTodayWeeklyChallenge = async (
       });
     }
 
-    // Step 1️⃣: Get today's date in user's timezone
-    const todayInTZ = toZonedTime(new Date(), userTimeZone);
-
-    // Step 2️⃣: Build full datetime for start & end
-    const startTimeDB = new Date(todayWeekly.startTime); // UTC base
+    // ✅ Build today's start/end times in user's local timezone
+    const startTimeDB = new Date(todayWeekly.startTime);
     const endTimeDB = new Date(todayWeekly.endTime);
 
-    const startTimeLocal = setSeconds(
-      setMinutes(
-        setHours(todayInTZ, startTimeDB.getUTCHours()),
-        startTimeDB.getUTCMinutes()
-      ),
-      0
-    );
-    const endTimeLocal = setSeconds(
-      setMinutes(
-        setHours(todayInTZ, endTimeDB.getUTCHours()),
-        endTimeDB.getUTCMinutes()
-      ),
-      0
-    );
+    const startTimeLocal = set(nowLocal, {
+      hours: startTimeDB.getUTCHours(),
+      minutes: startTimeDB.getUTCMinutes(),
+      seconds: 0,
+      milliseconds: 0,
+    });
 
-    console.log({ now, startTimeLocal, endTimeLocal, startTimeDB, endTimeDB });
+    const endTimeLocal = set(nowLocal, {
+      hours: endTimeDB.getUTCHours(),
+      minutes: endTimeDB.getUTCMinutes(),
+      seconds: 0,
+      milliseconds: 0,
+    });
 
-    let message = "";
-    let weeklyChallenge = null;
+    console.log({ nowLocal, startTimeLocal, endTimeLocal });
 
-    if (now < startTimeLocal) {
-      message = `Challenge will start at ${format(startTimeLocal, "h:mm a")}`;
-    } else if (now > endTimeLocal) {
-      message = "Challenge has ended for today";
-    } else {
-      weeklyChallenge = {
-        ...todayWeekly,
-        startTime: format(startTimeLocal, "h:mm a"),
-        endTime: format(endTimeLocal, "h:mm a"),
-        startDate: activeChallenge.startDate,
-        planName: activeChallenge.title,
-      };
-      message = "Today's Challenge Fetched Successfully";
+    // ✅ Logic to decide if challenge is available yet
+    if (isBefore(nowLocal, startTimeLocal)) {
+      return res.status(200).json({
+        weeklyChallenge: null,
+        msg: `Challenge will start at ${format(startTimeLocal, "h:mm a", {
+          timeZone: userTimeZone,
+        })}`,
+        success: true,
+      });
     }
 
+    if (isAfter(nowLocal, endTimeLocal)) {
+      return res.status(200).json({
+        weeklyChallenge: null,
+        msg: "Challenge has ended for today",
+        success: true,
+      });
+    }
+
+    // ✅ Challenge active
     return res.status(200).json({
-      weeklyChallenge,
-      msg: message,
+      weeklyChallenge: {
+        ...todayWeekly,
+        startTime: format(startTimeLocal, "h:mm a", { timeZone: userTimeZone }),
+        endTime: format(endTimeLocal, "h:mm a", { timeZone: userTimeZone }),
+        startDate: activeChallenge.startDate,
+        planName: activeChallenge.title,
+      },
+      msg: "Today's Challenge Fetched Successfully",
       success: true,
     });
   } catch (e) {
     console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
-    next(new Error("Something went wrong"));
+    next(new ErrorHandler("Something went wrong", 500));
   }
 };
 
