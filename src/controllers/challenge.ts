@@ -767,7 +767,17 @@ export const getTodayWeeklyChallenge = async (
       milliseconds: 0,
     });
 
-    console.log({ nowLocal, startTimeLocal, endTimeLocal });
+    console.log({
+      nowLocal: format(nowLocal, "yyyy-MM-dd HH:mm:ssXXX", {
+        timeZone: userTimeZone,
+      }),
+      startTimeLocal: format(startTimeLocal, "yyyy-MM-dd HH:mm:ssXXX", {
+        timeZone: userTimeZone,
+      }),
+      endTimeLocal: format(endTimeLocal, "yyyy-MM-dd HH:mm:ssXXX", {
+        timeZone: userTimeZone,
+      }),
+    });
 
     // ✅ Logic to decide if challenge is available yet
     if (isBefore(nowLocal, startTimeLocal)) {
