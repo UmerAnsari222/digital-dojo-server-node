@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getActiveCircleChallenges = exports.markCircleChallenge = exports.createCircleChallenge = exports.leaveMemberFromCircle = exports.addMemberInCircle = exports.getUserAllCircle = exports.getAllCircle = exports.createCircle = void 0;
+exports.getActiveCircleChallenges = exports.markCircleChallenge = exports.createCircleChallenge = exports.leaveMemberFromCircle = exports.addMemberInCircle = exports.getCircleById = exports.getUserAllCircle = exports.getAllCircle = exports.createCircle = void 0;
 const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
 const aws_1 = require("../utils/aws");
@@ -165,6 +165,69 @@ const getUserAllCircle = async (req, res, next) => {
     }
 };
 exports.getUserAllCircle = getUserAllCircle;
+const getCircleById = async (req, res, next) => {
+    const { userId } = req;
+    const { circleId } = req.params;
+    try {
+        const circle = await db_1.db.circle.findFirst({
+            where: { ownerId: userId, id: circleId },
+            include: {
+                members: {
+                    select: {
+                        name: true,
+                        email: true,
+                        id: true,
+                        imageUrl: true,
+                    },
+                },
+                owner: {
+                    select: {
+                        email: true,
+                        id: true,
+                        name: true,
+                        imageUrl: true,
+                        circles: true,
+                    },
+                },
+                circleChallenges: true,
+            },
+        });
+        // for (const circle of circles) {
+        if (circle?.owner?.imageUrl) {
+            circle.owner.imageUrl = await (0, aws_1.getObjectUrl)({
+                bucket: dotEnv_1.AWS_BUCKET_NAME,
+                key: circle?.owner?.imageUrl,
+            });
+            // }
+            // circle.members.forEach(async (member) => {
+            //   if (member.imageUrl) {
+            //     member.imageUrl = await getObjectUrl({
+            //       bucket: AWS_BUCKET_NAME,
+            //       key: member.imageUrl,
+            //     });
+            //   }
+            // });
+            for (const member of circle.members) {
+                if (member.imageUrl) {
+                    member.imageUrl = await (0, aws_1.getObjectUrl)({
+                        bucket: dotEnv_1.AWS_BUCKET_NAME,
+                        key: member.imageUrl,
+                    });
+                }
+            }
+        }
+        return res.status(200).json({
+            circle,
+            msg: "Fetched Circle Successfully",
+            success: true,
+        });
+    }
+    catch (e) {
+        console.log("[GET_CIRCLE_ERROR]", e);
+        next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.getCircleById = getCircleById;
 const addMemberInCircle = async (req, res, next) => {
     const { userId } = req;
     const { circleId } = req.params;

@@ -5,6 +5,7 @@ import {
   createCircleChallenge,
   getActiveCircleChallenges,
   getAllCircle,
+  getCircleById,
   getUserAllCircle,
   leaveMemberFromCircle,
   markCircleChallenge,
@@ -34,6 +35,14 @@ circleRouter.get(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await getUserAllCircle(req, res, next);
+  }
+);
+
+circleRouter.get(
+  "/:circleId",
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await getCircleById(req, res, next);
   }
 );
 
