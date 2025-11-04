@@ -2,6 +2,10 @@ import {
   addDays,
   differenceInCalendarDays,
   isWithinInterval,
+  setHours,
+  setMilliseconds,
+  setMinutes,
+  setSeconds,
   startOfDay,
 } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
@@ -51,4 +55,28 @@ export function normalizeUTC(date: Date): Date {
   return new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
   );
+}
+
+export function getChallengeTimeForToday(
+  timeStr: string,
+  userTimeZone: string
+) {
+  const now = new Date();
+  const todayInTZ = toZonedTime(now, userTimeZone);
+
+  const timeDate = new Date(timeStr); // e.g., 1970-01-01T16:00:00Z
+
+  // Set today’s date but keep the hours/minutes/seconds from timeDate
+  const combined = setMilliseconds(
+    setSeconds(
+      setMinutes(
+        setHours(todayInTZ, timeDate.getUTCHours()),
+        timeDate.getUTCMinutes()
+      ),
+      timeDate.getUTCSeconds()
+    ),
+    timeDate.getUTCMilliseconds()
+  );
+
+  return combined;
 }

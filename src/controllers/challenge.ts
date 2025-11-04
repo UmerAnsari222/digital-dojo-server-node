@@ -15,6 +15,7 @@ import {
 } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import {
+  getChallengeTimeForToday,
   getRelativeDayIndex,
   isTodayInChallengeWeek,
 } from "../utils/dateTimeFormatter";
@@ -711,10 +712,6 @@ export const getTodayWeeklyChallenge = async (
     const startOfToday = startOfDay(now);
     const endOfToday = endOfDay(now);
 
-    // Convert start/end to ISO string for DB query (DB expects UTC)
-    const startUtcISO = startOfToday.toISOString();
-    const endUtcISO = endOfToday.toISOString();
-
     // 3️⃣ Fetch active challenges
     const challenges = await db.challenge.findMany({
       where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
@@ -767,13 +764,19 @@ export const getTodayWeeklyChallenge = async (
       where: {
         userId,
         weeklyChallengeId: todayWeekly.id,
-        date: { gte: startUtcISO, lte: endUtcISO },
+        date: { gte: startOfToday, lte: endOfToday },
       },
     });
 
-    // 8️⃣ Convert challenge start/end times to user's timezone for response
-    const startTimeLocal = toZonedTime(todayWeekly.startTime, userTimeZone);
-    const endTimeLocal = toZonedTime(todayWeekly.endTime, userTimeZone);
+    // 8️⃣ Convert start/end times to user's timezone for today
+    const startTimeLocal = getChallengeTimeForToday(
+      todayWeekly.startTime.toISOString(),
+      userTimeZone
+    );
+    const endTimeLocal = getChallengeTimeForToday(
+      todayWeekly.endTime.toISOString(),
+      userTimeZone
+    );
 
     return res.status(200).json({
       weeklyChallenge: {
