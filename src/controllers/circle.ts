@@ -48,8 +48,14 @@ export const getAllCircle = async (
   res: Response,
   next: NextFunction
 ) => {
+  const { userId } = req;
   try {
     const circles = await db.circle.findMany({
+      where: {
+        ownerId: {
+          not: userId,
+        },
+      },
       include: {
         members: {
           select: {

@@ -10,6 +10,7 @@ const db_1 = require("../config/db");
 // import { processCompletion } from "./streak";
 const date_fns_1 = require("date-fns");
 const dateTimeFormatter_1 = require("../utils/dateTimeFormatter");
+const date_fns_tz_1 = require("date-fns-tz");
 const makeCompletion = async (req, res, next) => {
     const { userId } = req;
     const { userHabitId, dailyChallengeId, skip } = req.body;
@@ -101,58 +102,50 @@ exports.makeCompletion = makeCompletion;
 const makeWeeklyChallengeCompletion = async (req, res, next) => {
     const { userId } = req;
     const { weeklyChallengeId, challengeId, skip } = req.body;
-    console.log({ weeklyChallengeId, challengeId, skip });
     if (!userId) {
         return next(new error_1.default("Unauthorized", 401));
     }
-    const today = new Date();
-    const startOfToday = new Date(today.setHours(0, 0, 0, 0));
-    const endOfToday = new Date(today.setHours(23, 59, 59, 999));
     try {
-        const self = await db_1.db.user.findUnique({ where: { id: userId } });
-        if (!self) {
+        const user = await db_1.db.user.findUnique({ where: { id: userId } });
+        if (!user)
             return next(new error_1.default("Unauthorized", 401));
-        }
+        const userTimeZone = user.timezone || "UTC";
+        const now = (0, date_fns_tz_1.toZonedTime)(new Date(), userTimeZone);
+        const startOfToday = (0, date_fns_1.startOfDay)(now);
+        const endOfToday = (0, date_fns_1.endOfDay)(now);
+        // Fetch running challenge
         const isChallengeExisting = await db_1.db.challenge.findFirst({
-            where: {
-                id: challengeId,
-                status: "RUNNING",
-            },
+            where: { id: challengeId, status: "RUNNING" },
         });
-        if (!isChallengeExisting) {
+        if (!isChallengeExisting)
             return next(new error_1.default("Challenge not found", 404));
-        }
+        // Fetch weekly challenge
         const challenge = await db_1.db.weeklyChallenge.findFirst({
-            where: {
-                id: weeklyChallengeId,
-                challenge: {
-                    status: "RUNNING",
-                },
-            },
+            where: { id: weeklyChallengeId, challenge: { status: "RUNNING" } },
         });
-        if (!challenge) {
+        if (!challenge)
             return next(new error_1.default("Weekly challenge not found", 404));
-        }
+        // Check if user already completed today
         const isExisting = await db_1.db.weeklyChallengeCompletion.findFirst({
             where: {
-                weeklyChallengeId: weeklyChallengeId,
+                weeklyChallengeId,
                 userId,
                 date: {
-                    gte: startOfToday,
-                    lte: endOfToday,
+                    gte: zonedTimeToUtc(startOfToday, userTimeZone),
+                    lte: zonedTimeToUtc(endOfToday, userTimeZone),
                 },
             },
         });
-        if (isExisting) {
+        if (isExisting)
             return next(new error_1.default("Challenge already completed today", 400));
-        }
+        // Create completion record in UTC
         const completion = await db_1.db.weeklyChallengeCompletion.create({
             data: {
                 challengeId: isChallengeExisting.id,
                 weeklyChallengeId: challenge.id,
                 userId,
-                date: new Date(),
-                skip: skip,
+                date: new Date(), // stored as UTC
+                skip,
             },
         });
         return res.status(201).json({
@@ -169,6 +162,79 @@ const makeWeeklyChallengeCompletion = async (req, res, next) => {
     }
 };
 exports.makeWeeklyChallengeCompletion = makeWeeklyChallengeCompletion;
+// export const makeWeeklyChallengeCompletion = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const { userId } = req;
+//   const { weeklyChallengeId, challengeId, skip } = req.body;
+//   console.log({ weeklyChallengeId, challengeId, skip });
+//   if (!userId) {
+//     return next(new ErrorHandler("Unauthorized", 401));
+//   }
+//   const today = new Date();
+//   const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+//   const endOfToday = new Date(today.setHours(23, 59, 59, 999));
+//   try {
+//     const self = await db.user.findUnique({ where: { id: userId } });
+//     if (!self) {
+//       return next(new ErrorHandler("Unauthorized", 401));
+//     }
+//     const isChallengeExisting = await db.challenge.findFirst({
+//       where: {
+//         id: challengeId,
+//         status: "RUNNING",
+//       },
+//     });
+//     if (!isChallengeExisting) {
+//       return next(new ErrorHandler("Challenge not found", 404));
+//     }
+//     const challenge = await db.weeklyChallenge.findFirst({
+//       where: {
+//         id: weeklyChallengeId,
+//         challenge: {
+//           status: "RUNNING",
+//         },
+//       },
+//     });
+//     if (!challenge) {
+//       return next(new ErrorHandler("Weekly challenge not found", 404));
+//     }
+//     const isExisting = await db.weeklyChallengeCompletion.findFirst({
+//       where: {
+//         weeklyChallengeId: weeklyChallengeId,
+//         userId,
+//         date: {
+//           gte: startOfToday,
+//           lte: endOfToday,
+//         },
+//       },
+//     });
+//     if (isExisting) {
+//       return next(new ErrorHandler("Challenge already completed today", 400));
+//     }
+//     const completion = await db.weeklyChallengeCompletion.create({
+//       data: {
+//         challengeId: isChallengeExisting.id,
+//         weeklyChallengeId: challenge.id,
+//         userId,
+//         date: new Date(),
+//         skip: skip,
+//       },
+//     });
+//     return res.status(201).json({
+//       completion,
+//       msg: skip
+//         ? "Weekly Challenge Skipped Successfully!"
+//         : "Weekly Challenge Completed Successfully!",
+//       success: true,
+//     });
+//   } catch (e) {
+//     console.log("[MAKE_WEEKLY_COMPLETION_ERROR]", e);
+//     next(new ErrorHandler("Something went wrong", 500));
+//   }
+// };
 async function processCompletion(userId, today = new Date()) {
     console.log({ userId, today });
     const user = await db_1.db.user.findUnique({
@@ -301,4 +367,7 @@ async function processCompletion(userId, today = new Date()) {
         currentBelt,
         beltAchieved,
     };
+}
+function zonedTimeToUtc(startOfToday, userTimeZone) {
+    throw new Error("Function not implemented.");
 }
