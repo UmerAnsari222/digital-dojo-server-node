@@ -65,3 +65,7 @@ function convertToUserTime(utcDateStr, timeZone) {
     // Format nicely
     return (0, date_fns_tz_1.format)(zonedDate, "yyyy-MM-dd HH:mm:ssXXX", { timeZone });
 }
+function convertToUtc(date, timeZone) {
+    const local = (0, date_fns_tz_1.toZonedTime)(date, timeZone);
+    return new Date(local.getTime() - local.getTimezoneOffset() * 60 * 1000);
+}

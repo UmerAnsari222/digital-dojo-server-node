@@ -5,6 +5,13 @@ import { endOfDay, startOfDay, subDays } from "date-fns";
 import { db } from "../../config/db";
 import { toZonedTime } from "date-fns-tz";
 
+// Helper to convert a Date in a timezone to UTC
+function toUTC(date: Date, timeZone: string): Date {
+  const local = toZonedTime(date, timeZone); // date in user's timezone
+  // Convert local time to UTC
+  return new Date(local.getTime() - local.getTimezoneOffset() * 60 * 1000);
+}
+
 export const challengeSkipWorker = new Worker(
   WEEKLY_SKIP_QUEUE,
   async () => {
@@ -29,36 +36,41 @@ export const challengeSkipWorker = new Worker(
 
             // 3️⃣ Compute "yesterday" in user's timezone
             const nowUser = toZonedTime(new Date(), userTimeZone);
-            const yesterdayUser = subDays(nowUser, 1);
-            const startOfYesterday = startOfDay(yesterdayUser);
-            const endOfYesterday = endOfDay(yesterdayUser);
+            const startOfYesterday = startOfDay(subDays(nowUser, 1));
+            const endOfYesterday = endOfDay(subDays(nowUser, 1));
 
-            // 4️⃣ Check if user did NOT complete this weekly challenge yesterday
+            // 4️⃣ Convert to UTC for DB query
+            const startOfYesterdayUTC = toUTC(startOfYesterday, userTimeZone);
+            const endOfYesterdayUTC = toUTC(endOfYesterday, userTimeZone);
+
+            // 5️⃣ Check if user did NOT complete this weekly challenge yesterday
             const didNotComplete = await db.weeklyChallengeCompletion.findFirst(
               {
                 where: {
                   userId: user.id,
                   weeklyChallengeId: weekly.id,
                   date: {
-                    gte: startOfYesterday,
-                    lte: endOfYesterday,
+                    gte: startOfYesterdayUTC,
+                    lte: endOfYesterdayUTC,
                   },
                 },
               }
             );
 
             if (!didNotComplete) {
-              // 5️⃣ Mark skipped
+              // 6️⃣ Mark skipped
               await db.weeklyChallengeCompletion.create({
                 data: {
                   challengeId: challenge.id,
                   weeklyChallengeId: weekly.id,
                   userId: user.id,
-                  date: new Date(), // current timestamp in UTC
+                  date: startOfYesterdayUTC, // fixed UTC timestamp
                   skip: true,
                 },
               });
-              console.log(`Skipped user ${user.id} for challenge ${weekly.id}`);
+              console.log(
+                `✅ Skipped user ${user.id} for weekly challenge ${weekly.id}`
+              );
             }
           }
         }
