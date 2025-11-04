@@ -14,6 +14,7 @@ export const challengeSkipWorker = new Worker(
     const endOfYesterday = endOfDay(yesterday);
 
     try {
+      // 1️⃣ Get all running challenges with weekly challenges
       const runningChallenges = await db.challenge.findMany({
         where: { status: "RUNNING" },
         include: { weeklyChallenges: true },
@@ -21,6 +22,7 @@ export const challengeSkipWorker = new Worker(
 
       for (const challenge of runningChallenges) {
         for (const weekly of challenge.weeklyChallenges) {
+          // 2️⃣ Find users who do NOT have any completion (skipped or done) yesterday
           const usersWhoDidNotComplete = await db.user.findMany({
             where: {
               weeklyChallengeCompletions: {
@@ -30,32 +32,33 @@ export const challengeSkipWorker = new Worker(
                     gte: startOfYesterday,
                     lte: endOfYesterday,
                   },
-                  skip: false,
                 },
               },
             },
             select: { id: true },
           });
 
-          if (usersWhoDidNotComplete.length > 0) {
-            await db.weeklyChallengeCompletion.createMany({
-              data: usersWhoDidNotComplete.map((user) => ({
-                challengeId: challenge.id,
-                weeklyChallengeId: weekly.id,
-                userId: user.id,
-                date: new Date(),
-                skip: true,
-              })),
-              skipDuplicates: true,
-            });
-          }
+          if (usersWhoDidNotComplete.length === 0) continue;
 
-          // for (const user of usersWhoDidNotComplete) {
-          // console.log(user.id);
+          // 3️⃣ Bulk create skip entries safely
+          await db.weeklyChallengeCompletion.createMany({
+            data: usersWhoDidNotComplete.map((user) => ({
+              challengeId: challenge.id,
+              weeklyChallengeId: weekly.id,
+              userId: user.id,
+              date: new Date(),
+              skip: true,
+            })),
+            skipDuplicates: true, // ensures no duplicate skips
+          });
 
-          // }
+          console.log(
+            `✅ Marked ${usersWhoDidNotComplete.length} users as skipped for weekly challenge ${weekly.id}`
+          );
         }
       }
+
+      console.log("✅ Daily skip job finished successfully.");
     } catch (error) {
       console.error("❌ Error in daily skip job:", error);
     }
@@ -63,6 +66,7 @@ export const challengeSkipWorker = new Worker(
   { connection: redisConnection }
 );
 
+// Optional: log failed jobs
 challengeSkipWorker.on("failed", (job, err) => {
   console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
 });
