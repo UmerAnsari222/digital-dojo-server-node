@@ -15,12 +15,14 @@ export type NewRegisterUserWithEmailRequest = {
   email: string;
   password: string;
   confirmPassword: string;
+  timeZone: string;
 };
 
 export type LoginUserWithEmailRequest = {
   email: string;
   password: string;
   fcmToken?: string;
+  timeZone: string;
 };
 
 export type VerifyOtpRequest = {

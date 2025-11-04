@@ -11,7 +11,7 @@ const hashPassword_1 = require("../utils/hashPassword");
 const jwt_1 = require("../utils/jwt");
 const register = async (req, res, next) => {
     try {
-        const { name, email, password, confirmPassword } = req.body;
+        const { name, email, password, confirmPassword, timeZone } = req.body;
         if (!email) {
             return next(new error_1.default("Email is required", 400));
         }
@@ -41,6 +41,7 @@ const register = async (req, res, next) => {
                 name: name,
                 role: client_1.Role.USER,
                 currentBeltId: firstBelt ? firstBelt.id : null,
+                timezone: timeZone,
             },
         });
         const token = (0, jwt_1.createToken)({ userId: user.id, role: user.role });
@@ -58,7 +59,7 @@ const register = async (req, res, next) => {
 exports.register = register;
 const login = async (req, res, next) => {
     try {
-        const { email, password, fcmToken } = req.body;
+        const { email, password, fcmToken, timeZone } = req.body;
         if (!email) {
             return next(new error_1.default("Email is required", 400));
         }
@@ -78,7 +79,7 @@ const login = async (req, res, next) => {
         }
         await db_1.db.user.update({
             where: { id: isExisting.id },
-            data: { fcmToken: fcmToken },
+            data: { fcmToken: fcmToken, timezone: timeZone },
         });
         const token = (0, jwt_1.createToken)({ userId: isExisting.id, role: isExisting.role });
         delete isExisting.password;

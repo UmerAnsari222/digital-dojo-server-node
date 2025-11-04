@@ -13,6 +13,7 @@ import {
   startOfDay,
   subDays,
 } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import {
   getRelativeDayIndex,
   isTodayInChallengeWeek,
@@ -593,6 +594,104 @@ export const getDailyChallenges = async (
   }
 };
 
+// export const getTodayWeeklyChallenge = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const { userId } = req;
+
+//   if (!userId) {
+//     return next(new ErrorHandler("Unauthorized", 401));
+//   }
+
+//   const today = startOfDay(new Date());
+//   // const today = new Date();
+//   // const startOfToday = new Date(today.setHours(0, 0, 0, 0));
+//   const endOfToday = new Date(today.setHours(23, 59, 59, 999));
+
+//   try {
+//     const user = await db.user.findUnique({ where: { id: userId } });
+//     const userTimeZone = user?.timezone || "UTC"; // default to UTC if not set
+//     // 2️⃣ Get current date in user's timezone
+//     const now = utcToZonedTime(new Date(), userTimeZone);
+//     const startOfToday = startOfDay(now);
+//     const endOfToday = endOfDay(now);
+
+//     const startTimeLocal = toZonedTime(todayWeekly.startTime, userTimeZone);
+//     const endTimeLocal = toZonedTime(todayWeekly.endTime, userTimeZone);
+
+//     const challenges = await db.challenge.findMany({
+//       where: {
+//         OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }],
+//       },
+//       include: {
+//         weeklyChallenges: {
+//           include: {
+//             category: true,
+//           },
+//         },
+//       },
+//     });
+
+//     // ✅ use helper function here
+//     const activeChallenge = challenges.find(
+//       (c) => c.startDate && isTodayInChallengeWeek(c.startDate.toString())
+//     );
+
+//     if (!activeChallenge) {
+//       return res.status(200).json({
+//         challenge: null,
+//         msg: "No challenge for today",
+//         success: true,
+//       });
+//     }
+
+//     if (activeChallenge.status === "SCHEDULE") {
+//       await db.challenge.update({
+//         where: { id: activeChallenge.id },
+//         data: { status: "RUNNING" },
+//       });
+//     }
+
+//     const todayWeekly = activeChallenge.weeklyChallenges.find(
+//       (w) =>
+//         w.dayOfWeek ===
+//         getRelativeDayIndex(
+//           activeChallenge.startDate.toString(),
+//           today.toString()
+//         )
+//     );
+
+//     const weeklyCompletion = await db.weeklyChallengeCompletion.findFirst({
+//       where: {
+//         userId: userId,
+//         weeklyChallengeId: todayWeekly.id,
+//         // date: {
+//         //   gte: today,
+//         //   lte: endOfToday,
+//         // },
+//       },
+//     });
+
+//     return res.status(200).json({
+//       weeklyChallenge: {
+//         ...todayWeekly,
+//         startDate: activeChallenge.startDate,
+//         planName: activeChallenge.title,
+//         weeklyCompletion,
+//       },
+//       msg: todayWeekly
+//         ? "Today's Challenge Fetched Successfully"
+//         : "No challenge scheduled for today",
+//       success: true,
+//     });
+//   } catch (e) {
+//     console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
+//     next(new ErrorHandler("Something went wrong", 500));
+//   }
+// };
+
 export const getTodayWeeklyChallenge = async (
   req: Request,
   res: Response,
@@ -604,26 +703,29 @@ export const getTodayWeeklyChallenge = async (
     return next(new ErrorHandler("Unauthorized", 401));
   }
 
-  const today = startOfDay(new Date());
-  // const today = new Date();
-  // const startOfToday = new Date(today.setHours(0, 0, 0, 0));
-  const endOfToday = new Date(today.setHours(23, 59, 59, 999));
-
   try {
+    // 1️⃣ Get user info including timezone
+    const user = await db.user.findUnique({ where: { id: userId } });
+    const userTimeZone = user?.timezone || "UTC"; // fallback to UTC
+
+    // 2️⃣ Get current date in user's timezone
+    const now = toZonedTime(new Date(), userTimeZone);
+    const startOfToday = startOfDay(now);
+    const endOfToday = endOfDay(now);
+
+    // 3️⃣ Fetch active challenges (status SCHEDULE or RUNNING)
     const challenges = await db.challenge.findMany({
       where: {
         OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }],
       },
       include: {
         weeklyChallenges: {
-          include: {
-            category: true,
-          },
+          include: { category: true },
         },
       },
     });
 
-    // ✅ use helper function here
+    // 4️⃣ Find the challenge active this week
     const activeChallenge = challenges.find(
       (c) => c.startDate && isTodayInChallengeWeek(c.startDate.toString())
     );
@@ -636,6 +738,7 @@ export const getTodayWeeklyChallenge = async (
       });
     }
 
+    // 5️⃣ If scheduled, mark as RUNNING
     if (activeChallenge.status === "SCHEDULE") {
       await db.challenge.update({
         where: { id: activeChallenge.id },
@@ -643,36 +746,50 @@ export const getTodayWeeklyChallenge = async (
       });
     }
 
-    const todayWeekly = activeChallenge.weeklyChallenges.find(
-      (w) =>
-        w.dayOfWeek ===
-        getRelativeDayIndex(
-          activeChallenge.startDate.toString(),
-          today.toString()
-        )
+    // 6️⃣ Get today’s weekly challenge (considering user's timezone)
+    const todayDayIndex = getRelativeDayIndex(
+      activeChallenge.startDate.toString(),
+      now.toString()
     );
 
+    const todayWeekly = activeChallenge.weeklyChallenges.find(
+      (w) => w.dayOfWeek === todayDayIndex
+    );
+
+    if (!todayWeekly) {
+      return res.status(200).json({
+        weeklyChallenge: null,
+        msg: "No challenge scheduled for today",
+        success: true,
+      });
+    }
+
+    // 7️⃣ Check if user has completed the weekly challenge today
     const weeklyCompletion = await db.weeklyChallengeCompletion.findFirst({
       where: {
-        userId: userId,
+        userId,
         weeklyChallengeId: todayWeekly.id,
-        // date: {
-        //   gte: today,
-        //   lte: endOfToday,
-        // },
+        date: {
+          gte: startOfToday,
+          lte: endOfToday,
+        },
       },
     });
+
+    // 8️⃣ Convert challenge start/end times from UTC → user local time
+    const startTimeLocal = toZonedTime(todayWeekly.startTime, userTimeZone);
+    const endTimeLocal = toZonedTime(todayWeekly.endTime, userTimeZone);
 
     return res.status(200).json({
       weeklyChallenge: {
         ...todayWeekly,
+        startTime: startTimeLocal.toISOString(),
+        endTime: endTimeLocal.toISOString(),
         startDate: activeChallenge.startDate,
         planName: activeChallenge.title,
         weeklyCompletion,
       },
-      msg: todayWeekly
-        ? "Today's Challenge Fetched Successfully"
-        : "No challenge scheduled for today",
+      msg: "Today's Challenge Fetched Successfully",
       success: true,
     });
   } catch (e) {
@@ -1079,8 +1196,8 @@ cron.schedule("*/10 * * * *", async () => {
   }
 });
 
-// cron.schedule("0 0 * * *", async () => {
-cron.schedule("0 0 * * *", async () => {
+cron.schedule("* * * * *", async () => {
+  // cron.schedule("0 0 * * *", async () => {
   console.log("⏰ Triggering daily skip worker...");
 
   await challengeSkipQueue.add(

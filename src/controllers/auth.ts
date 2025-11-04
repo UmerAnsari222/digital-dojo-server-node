@@ -15,7 +15,7 @@ export const register = async (
   next: NextFunction
 ) => {
   try {
-    const { name, email, password, confirmPassword } = req.body;
+    const { name, email, password, confirmPassword, timeZone } = req.body;
 
     if (!email) {
       return next(new ErrorHandler("Email is required", 400));
@@ -53,6 +53,7 @@ export const register = async (
         name: name,
         role: Role.USER,
         currentBeltId: firstBelt ? firstBelt.id : null,
+        timezone: timeZone,
       },
     });
 
@@ -75,7 +76,7 @@ export const login = async (
   next: NextFunction
 ) => {
   try {
-    const { email, password, fcmToken } = req.body;
+    const { email, password, fcmToken, timeZone } = req.body;
 
     if (!email) {
       return next(new ErrorHandler("Email is required", 400));
@@ -105,7 +106,7 @@ export const login = async (
 
     await db.user.update({
       where: { id: isExisting.id },
-      data: { fcmToken: fcmToken },
+      data: { fcmToken: fcmToken, timezone: timeZone },
     });
 
     const token = createToken({ userId: isExisting.id, role: isExisting.role });

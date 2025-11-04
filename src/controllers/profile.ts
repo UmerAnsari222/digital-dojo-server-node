@@ -25,6 +25,7 @@ export const getProfile = async (
         createdAt: true,
         updatedAt: true,
         role: true,
+        timezone: true,
         currentBelt: {
           select: {
             id: true,
