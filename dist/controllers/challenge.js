@@ -545,7 +545,7 @@ exports.getDailyChallenges = getDailyChallenges;
 const getTodayWeeklyChallenge = async (req, res, next) => {
     const { userId } = req;
     if (!userId)
-        return next(new Error("Unauthorized"));
+        return next(new error_1.default("Unauthorized", 401));
     try {
         const user = await db_1.db.user.findUnique({ where: { id: userId } });
         const userTimeZone = user?.timezone || "UTC";
@@ -575,6 +575,7 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         // Convert challenge start/end times to user's timezone
         const startTimeLocal = (0, date_fns_tz_1.toZonedTime)(todayWeekly.startTime, userTimeZone);
         const endTimeLocal = (0, date_fns_tz_1.toZonedTime)(todayWeekly.endTime, userTimeZone);
+        console.log({ startTimeLocal, endTimeLocal });
         let message = "";
         let weeklyChallenge = null;
         if ((0, date_fns_1.isBefore)(now, startTimeLocal)) {

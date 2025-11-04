@@ -700,7 +700,7 @@ export const getTodayWeeklyChallenge = async (
   next: NextFunction
 ) => {
   const { userId } = req;
-  if (!userId) return next(new Error("Unauthorized"));
+  if (!userId) return next(new ErrorHandler("Unauthorized", 401));
 
   try {
     const user = await db.user.findUnique({ where: { id: userId } });
@@ -746,6 +746,8 @@ export const getTodayWeeklyChallenge = async (
     // Convert challenge start/end times to user's timezone
     const startTimeLocal = toZonedTime(todayWeekly.startTime, userTimeZone);
     const endTimeLocal = toZonedTime(todayWeekly.endTime, userTimeZone);
+
+    console.log({ startTimeLocal, endTimeLocal });
 
     let message = "";
     let weeklyChallenge = null;
