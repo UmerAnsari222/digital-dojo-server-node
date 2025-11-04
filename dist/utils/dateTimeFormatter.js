@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.isTodayInChallengeWeek = isTodayInChallengeWeek;
 exports.getRelativeDayIndex = getRelativeDayIndex;
 exports.normalizeUTC = normalizeUTC;
-exports.getChallengeTimeForToday = getChallengeTimeForToday;
+exports.convertToUserTime = convertToUserTime;
 const date_fns_1 = require("date-fns");
 const date_fns_tz_1 = require("date-fns-tz");
 // export function isTodayInChallengeWeek(startDateStr: string): boolean {
@@ -33,18 +33,35 @@ function getRelativeDayIndex(startDateStr, todayStr) {
 function normalizeUTC(date) {
     return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }
-function getChallengeTimeForToday(challengeTime, timeZone) {
-    // 1️⃣ Get today's date in user's timezone
-    const now = new Date();
-    const todayInTZ = (0, date_fns_tz_1.toZonedTime)(now, timeZone);
-    // 2️⃣ Extract hours and minutes from challengeTime **in local time**
-    const hours = challengeTime.getUTCHours(); // challengeTime is in UTC
-    const minutes = challengeTime.getUTCMinutes();
-    // 3️⃣ Set today's date with challenge hours/minutes in user's timezone
-    let challengeDateTime = (0, date_fns_1.setHours)(todayInTZ, hours);
-    challengeDateTime = (0, date_fns_1.setMinutes)(challengeDateTime, minutes);
-    challengeDateTime = (0, date_fns_1.setSeconds)(challengeDateTime, 0);
-    challengeDateTime = (0, date_fns_1.setMilliseconds)(challengeDateTime, 0);
-    // 4️⃣ Return as ISO string in UTC
-    return new Date(challengeDateTime.getTime() - challengeDateTime.getTimezoneOffset() * 60000).toISOString();
+// export function getChallengeTimeForToday(
+//   challengeTime: Date,
+//   timeZone: string
+// ): string {
+//   // 1️⃣ Get today's date in user's timezone
+//   const now = new Date();
+//   const todayInTZ = toZonedTime(now, timeZone);
+//   // 2️⃣ Extract hours and minutes from challengeTime **in local time**
+//   const hours = challengeTime.getUTCHours(); // challengeTime is in UTC
+//   const minutes = challengeTime.getUTCMinutes();
+//   // 3️⃣ Set today's date with challenge hours/minutes in user's timezone
+//   let challengeDateTime = setHours(todayInTZ, hours);
+//   challengeDateTime = setMinutes(challengeDateTime, minutes);
+//   challengeDateTime = setSeconds(challengeDateTime, 0);
+//   challengeDateTime = setMilliseconds(challengeDateTime, 0);
+//   // 4️⃣ Return as ISO string in UTC
+//   return new Date(
+//     challengeDateTime.getTime() - challengeDateTime.getTimezoneOffset() * 60000
+//   ).toISOString();
+// }
+/**
+ * Convert any UTC date string to user's local timezone
+ * @param utcDateStr UTC date string (ISO)
+ * @param timeZone IANA timezone string, e.g., "Asia/Karachi", "America/New_York"
+ * @returns formatted local date-time string in that timezone
+ */
+function convertToUserTime(utcDateStr, timeZone) {
+    // Convert UTC to user's timezone
+    const zonedDate = (0, date_fns_tz_1.toZonedTime)(new Date(utcDateStr), timeZone);
+    // Format nicely
+    return (0, date_fns_tz_1.format)(zonedDate, "yyyy-MM-dd HH:mm:ssXXX", { timeZone });
 }

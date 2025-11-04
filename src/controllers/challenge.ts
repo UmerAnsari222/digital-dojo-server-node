@@ -15,6 +15,7 @@ import {
 } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import {
+  convertToUserTime,
   getChallengeTimeForToday,
   getRelativeDayIndex,
   isTodayInChallengeWeek,
@@ -769,12 +770,12 @@ export const getTodayWeeklyChallenge = async (
     });
 
     // 8️⃣ Convert start/end times to user's timezone for today
-    const startTimeLocal = getChallengeTimeForToday(
-      todayWeekly.startTime,
+    const startTimeLocal = convertToUserTime(
+      todayWeekly.startTime.toString(),
       userTimeZone
     );
-    const endTimeLocal = getChallengeTimeForToday(
-      todayWeekly.endTime,
+    const endTimeLocal = convertToUserTime(
+      todayWeekly.endTime.toString(),
       userTimeZone
     );
 

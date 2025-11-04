@@ -595,8 +595,8 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
             },
         });
         // 8️⃣ Convert start/end times to user's timezone for today
-        const startTimeLocal = (0, dateTimeFormatter_1.getChallengeTimeForToday)(todayWeekly.startTime, userTimeZone);
-        const endTimeLocal = (0, dateTimeFormatter_1.getChallengeTimeForToday)(todayWeekly.endTime, userTimeZone);
+        const startTimeLocal = (0, dateTimeFormatter_1.convertToUserTime)(todayWeekly.startTime.toString(), userTimeZone);
+        const endTimeLocal = (0, dateTimeFormatter_1.convertToUserTime)(todayWeekly.endTime.toString(), userTimeZone);
         return res.status(200).json({
             weeklyChallenge: {
                 ...todayWeekly,

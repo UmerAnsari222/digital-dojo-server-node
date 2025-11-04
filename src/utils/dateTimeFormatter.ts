@@ -8,7 +8,7 @@ import {
   setSeconds,
   startOfDay,
 } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
+import { toZonedTime, format } from "date-fns-tz";
 
 // export function isTodayInChallengeWeek(startDateStr: string): boolean {
 //   const startDate = startOfDay(new Date(startDateStr)); // strip time
@@ -57,26 +57,43 @@ export function normalizeUTC(date: Date): Date {
   );
 }
 
-export function getChallengeTimeForToday(
-  challengeTime: Date,
+// export function getChallengeTimeForToday(
+//   challengeTime: Date,
+//   timeZone: string
+// ): string {
+//   // 1️⃣ Get today's date in user's timezone
+//   const now = new Date();
+//   const todayInTZ = toZonedTime(now, timeZone);
+
+//   // 2️⃣ Extract hours and minutes from challengeTime **in local time**
+//   const hours = challengeTime.getUTCHours(); // challengeTime is in UTC
+//   const minutes = challengeTime.getUTCMinutes();
+
+//   // 3️⃣ Set today's date with challenge hours/minutes in user's timezone
+//   let challengeDateTime = setHours(todayInTZ, hours);
+//   challengeDateTime = setMinutes(challengeDateTime, minutes);
+//   challengeDateTime = setSeconds(challengeDateTime, 0);
+//   challengeDateTime = setMilliseconds(challengeDateTime, 0);
+
+//   // 4️⃣ Return as ISO string in UTC
+//   return new Date(
+//     challengeDateTime.getTime() - challengeDateTime.getTimezoneOffset() * 60000
+//   ).toISOString();
+// }
+
+/**
+ * Convert any UTC date string to user's local timezone
+ * @param utcDateStr UTC date string (ISO)
+ * @param timeZone IANA timezone string, e.g., "Asia/Karachi", "America/New_York"
+ * @returns formatted local date-time string in that timezone
+ */
+export function convertToUserTime(
+  utcDateStr: string,
   timeZone: string
 ): string {
-  // 1️⃣ Get today's date in user's timezone
-  const now = new Date();
-  const todayInTZ = toZonedTime(now, timeZone);
+  // Convert UTC to user's timezone
+  const zonedDate = toZonedTime(new Date(utcDateStr), timeZone);
 
-  // 2️⃣ Extract hours and minutes from challengeTime **in local time**
-  const hours = challengeTime.getUTCHours(); // challengeTime is in UTC
-  const minutes = challengeTime.getUTCMinutes();
-
-  // 3️⃣ Set today's date with challenge hours/minutes in user's timezone
-  let challengeDateTime = setHours(todayInTZ, hours);
-  challengeDateTime = setMinutes(challengeDateTime, minutes);
-  challengeDateTime = setSeconds(challengeDateTime, 0);
-  challengeDateTime = setMilliseconds(challengeDateTime, 0);
-
-  // 4️⃣ Return as ISO string in UTC
-  return new Date(
-    challengeDateTime.getTime() - challengeDateTime.getTimezoneOffset() * 60000
-  ).toISOString();
+  // Format nicely
+  return format(zonedDate, "yyyy-MM-dd HH:mm:ssXXX", { timeZone });
 }
