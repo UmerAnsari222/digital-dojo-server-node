@@ -35,14 +35,15 @@ exports.challengeSkipWorker = new bullmq_1.Worker(challengeSkip_1.WEEKLY_SKIP_QU
                 });
                 for (const user of usersWhoDidNotComplete) {
                     console.log(user.id);
-                    await db_1.db.weeklyChallengeCompletion.create({
-                        data: {
+                    await db_1.db.weeklyChallengeCompletion.createMany({
+                        data: usersWhoDidNotComplete.map((user) => ({
                             challengeId: challenge.id,
                             weeklyChallengeId: weekly.id,
                             userId: user.id,
                             date: new Date(),
                             skip: true,
-                        },
+                        })),
+                        skipDuplicates: true,
                     });
                 }
             }

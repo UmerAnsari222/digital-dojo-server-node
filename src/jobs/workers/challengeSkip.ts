@@ -39,14 +39,15 @@ export const challengeSkipWorker = new Worker(
 
           for (const user of usersWhoDidNotComplete) {
             console.log(user.id);
-            await db.weeklyChallengeCompletion.create({
-              data: {
+            await db.weeklyChallengeCompletion.createMany({
+              data: usersWhoDidNotComplete.map((user) => ({
                 challengeId: challenge.id,
                 weeklyChallengeId: weekly.id,
                 userId: user.id,
                 date: new Date(),
                 skip: true,
-              },
+              })),
+              skipDuplicates: true,
             });
           }
         }
