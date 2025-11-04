@@ -37,11 +37,14 @@ function getChallengeTimeForToday(challengeTime, timeZone) {
     // 1️⃣ Get today's date in user's timezone
     const now = new Date();
     const todayInTZ = (0, date_fns_tz_1.toZonedTime)(now, timeZone);
-    // 2️⃣ Extract hours and minutes from challengeTime
-    const hours = challengeTime.getUTCHours();
+    // 2️⃣ Extract hours and minutes from challengeTime **in local time**
+    const hours = challengeTime.getUTCHours(); // challengeTime is in UTC
     const minutes = challengeTime.getUTCMinutes();
-    // 3️⃣ Set today's date with challenge hours/minutes
-    const challengeDateTime = (0, date_fns_1.setMinutes)((0, date_fns_1.setHours)(todayInTZ, hours), minutes);
-    // 4️⃣ Convert back to UTC ISO string for API
-    return challengeDateTime.toISOString();
+    // 3️⃣ Set today's date with challenge hours/minutes in user's timezone
+    let challengeDateTime = (0, date_fns_1.setHours)(todayInTZ, hours);
+    challengeDateTime = (0, date_fns_1.setMinutes)(challengeDateTime, minutes);
+    challengeDateTime = (0, date_fns_1.setSeconds)(challengeDateTime, 0);
+    challengeDateTime = (0, date_fns_1.setMilliseconds)(challengeDateTime, 0);
+    // 4️⃣ Return as ISO string in UTC
+    return new Date(challengeDateTime.getTime() - challengeDateTime.getTimezoneOffset() * 60000).toISOString();
 }
