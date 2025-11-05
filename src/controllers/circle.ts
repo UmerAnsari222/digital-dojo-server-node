@@ -213,6 +213,15 @@ export const getCircleById = async (
         },
         circleChallenges: {
           include: {
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                imageUrl: true,
+                currentBelt: true,
+                userBelts: true,
+              },
+            },
             category: true,
             participants: {
               where: {
@@ -254,6 +263,15 @@ export const getCircleById = async (
             key: member.imageUrl,
           });
         }
+      }
+    }
+
+    for (const circleCh of circle.circleChallenges) {
+      if (circleCh?.owner?.imageUrl) {
+        circleCh.owner.imageUrl = await getObjectUrl({
+          bucket: AWS_BUCKET_NAME,
+          key: circleCh?.owner?.imageUrl,
+        });
       }
     }
 

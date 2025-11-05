@@ -191,6 +191,15 @@ const getCircleById = async (req, res, next) => {
                 },
                 circleChallenges: {
                     include: {
+                        owner: {
+                            select: {
+                                id: true,
+                                name: true,
+                                imageUrl: true,
+                                currentBelt: true,
+                                userBelts: true,
+                            },
+                        },
                         category: true,
                         participants: {
                             where: {
@@ -229,6 +238,14 @@ const getCircleById = async (req, res, next) => {
                         key: member.imageUrl,
                     });
                 }
+            }
+        }
+        for (const circleCh of circle.circleChallenges) {
+            if (circleCh?.owner?.imageUrl) {
+                circleCh.owner.imageUrl = await (0, aws_1.getObjectUrl)({
+                    bucket: dotEnv_1.AWS_BUCKET_NAME,
+                    key: circleCh?.owner?.imageUrl,
+                });
             }
         }
         // const circleChIds = circle.circleChallenges.map((ch) => ch.id);
