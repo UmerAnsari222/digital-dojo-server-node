@@ -40,22 +40,20 @@ const date_fns_tz_1 = require("date-fns-tz");
 //   return diff; // 0..6
 // }
 // Check if today is within the 7-day challenge starting from startDate
+// Helper: Check if today is in the 7-day challenge week
 function isTodayInChallengeWeek(startDateStr, userTimeZone) {
     const startDate = (0, date_fns_1.startOfDay)((0, date_fns_tz_1.toZonedTime)(new Date(startDateStr), userTimeZone));
     const today = (0, date_fns_1.startOfDay)((0, date_fns_tz_1.toZonedTime)(new Date(), userTimeZone));
-    const endDate = (0, date_fns_1.addDays)(startDate, 6); // 7-day window
+    const endDate = (0, date_fns_1.addDays)(startDate, 6);
     return (0, date_fns_1.isWithinInterval)(today, { start: startDate, end: endDate });
 }
-// Get relative day index (0..6) within the challenge week, timezone-aware
-function getRelativeDayIndex(startDateStr, userTimeZone, todayStr) {
-    const startDate = (0, date_fns_1.startOfDay)((0, date_fns_tz_1.toZonedTime)(new Date(startDateStr), userTimeZone));
-    const today = (0, date_fns_1.startOfDay)(todayStr
-        ? (0, date_fns_tz_1.toZonedTime)(new Date(todayStr), userTimeZone)
-        : (0, date_fns_tz_1.toZonedTime)(new Date(), userTimeZone));
+function getRelativeDayIndex(startDateStr, todayStr) {
+    const startDate = (0, date_fns_1.startOfDay)(new Date(startDateStr));
+    const today = (0, date_fns_1.startOfDay)(todayStr ? new Date(todayStr) : new Date());
     const diff = (0, date_fns_1.differenceInCalendarDays)(today, startDate);
     if (diff < 0 || diff > 6)
-        return null; // outside the 7-day window
-    return diff; // 0..6
+        return null;
+    return diff;
 }
 function normalizeUTC(date) {
     return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));

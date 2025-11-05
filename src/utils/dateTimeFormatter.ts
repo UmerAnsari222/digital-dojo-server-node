@@ -52,6 +52,7 @@ import { toZonedTime, format } from "date-fns-tz";
 // }
 
 // Check if today is within the 7-day challenge starting from startDate
+// Helper: Check if today is in the 7-day challenge week
 export function isTodayInChallengeWeek(
   startDateStr: string,
   userTimeZone: string
@@ -60,29 +61,19 @@ export function isTodayInChallengeWeek(
     toZonedTime(new Date(startDateStr), userTimeZone)
   );
   const today = startOfDay(toZonedTime(new Date(), userTimeZone));
-
-  const endDate = addDays(startDate, 6); // 7-day window
+  const endDate = addDays(startDate, 6);
   return isWithinInterval(today, { start: startDate, end: endDate });
 }
 
-// Get relative day index (0..6) within the challenge week, timezone-aware
 export function getRelativeDayIndex(
   startDateStr: string,
-  userTimeZone: string,
   todayStr?: string
 ): number | null {
-  const startDate = startOfDay(
-    toZonedTime(new Date(startDateStr), userTimeZone)
-  );
-  const today = startOfDay(
-    todayStr
-      ? toZonedTime(new Date(todayStr), userTimeZone)
-      : toZonedTime(new Date(), userTimeZone)
-  );
-
+  const startDate = startOfDay(new Date(startDateStr));
+  const today = startOfDay(todayStr ? new Date(todayStr) : new Date());
   const diff = differenceInCalendarDays(today, startDate);
-  if (diff < 0 || diff > 6) return null; // outside the 7-day window
-  return diff; // 0..6
+  if (diff < 0 || diff > 6) return null;
+  return diff;
 }
 
 export function normalizeUTC(date: Date): Date {
