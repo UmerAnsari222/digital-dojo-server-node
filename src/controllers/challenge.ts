@@ -718,6 +718,8 @@ export const getTodayWeeklyChallenge = async (
     const user = await db.user.findUnique({ where: { id: userId } });
     const userTimeZone = user?.timezone || "UTC";
 
+    console.log({ userTimeZone });
+
     // 2️⃣ Current time in user's timezone
     const nowLocal = toZonedTime(new Date(), userTimeZone);
 
@@ -799,6 +801,16 @@ export const getTodayWeeklyChallenge = async (
       startUTC,
       endUTC,
     });
+
+    console.log(
+      formatInTimeZone(nowLocal, userTimeZone, "yyyy-MM-dd HH:mm:ss")
+    );
+    console.log(
+      formatInTimeZone(startTimeLocal, userTimeZone, "yyyy-MM-dd HH:mm:ss")
+    );
+    console.log(
+      formatInTimeZone(endTimeLocal, userTimeZone, "yyyy-MM-dd HH:mm:ss")
+    );
 
     // 9️⃣ Check if challenge is active
     if (isBefore(nowLocal, startTimeLocal)) {
