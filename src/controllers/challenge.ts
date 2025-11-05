@@ -725,15 +725,16 @@ export const getTodayWeeklyChallenge = async (
       include: { weeklyChallenges: true },
     });
 
-    // Find active challenge for today
+    // Find active challenge based on user's local date
     const activeChallenge = challenges.find((c) => {
       if (!c.startDate) return false;
-
-      const startDateLocal = startOfDay(
-        toZonedTime(new Date(c.startDate), userTimeZone)
-      );
-      const dayDiff = differenceInCalendarDays(nowLocal, startDateLocal);
-      return dayDiff >= 0 && dayDiff <= 6; // 7-day window
+      const startDateLocal = startOfDay(toZonedTime(c.startDate, userTimeZone));
+      const todayLocal = startOfDay(nowLocal);
+      const endDateLocal = addDays(startDateLocal, 6);
+      return isWithinInterval(todayLocal, {
+        start: startDateLocal,
+        end: endDateLocal,
+      });
     });
 
     if (!activeChallenge) {
@@ -744,11 +745,13 @@ export const getTodayWeeklyChallenge = async (
       });
     }
 
-    // Relative day index
     const startDateLocal = startOfDay(
-      toZonedTime(new Date(activeChallenge.startDate), userTimeZone)
+      toZonedTime(activeChallenge.startDate, userTimeZone)
     );
-    const todayDayIndex = differenceInCalendarDays(nowLocal, startDateLocal);
+    const todayDayIndex = differenceInCalendarDays(
+      startOfDay(nowLocal),
+      startDateLocal
+    );
 
     const todayWeekly = activeChallenge.weeklyChallenges.find(
       (w) => w.dayOfWeek === todayDayIndex
@@ -762,28 +765,36 @@ export const getTodayWeeklyChallenge = async (
       });
     }
 
-    // Build start/end datetime relative to startDateLocal
+    // Parse startTime and endTime (HH:mm:ss)
+    const [startHour, startMinute] = String(todayWeekly.startTime)
+      .split(":")
+      .map(Number);
+    const [endHour, endMinute] = String(todayWeekly.endTime)
+      .split(":")
+      .map(Number);
+
     const challengeDayLocal = addDays(startDateLocal, todayDayIndex);
 
-    const startTimeLocal = set(challengeDayLocal, {
-      hours: todayWeekly.startTime.getHours(),
-      minutes: todayWeekly.startTime.getMinutes(),
+    let startTimeLocal = set(challengeDayLocal, {
+      hours: startHour,
+      minutes: startMinute,
       seconds: 0,
       milliseconds: 0,
     });
 
-    const endTimeLocal = set(challengeDayLocal, {
-      hours: todayWeekly.endTime.getHours(),
-      minutes: todayWeekly.endTime.getMinutes(),
+    let endTimeLocal = set(challengeDayLocal, {
+      hours: endHour,
+      minutes: endMinute,
       seconds: 0,
       milliseconds: 0,
     });
 
-    // Handle overnight challenge (endTime < startTime)
+    // Handle overnight challenge
     if (isBefore(endTimeLocal, startTimeLocal)) {
-      endTimeLocal.setDate(endTimeLocal.getDate() + 1);
+      endTimeLocal = addDays(endTimeLocal, 1);
     }
 
+    // Convert local start/end to UTC for DB queries
     const startUTC = fromZonedTime(startTimeLocal, userTimeZone);
     const endUTC = fromZonedTime(endTimeLocal, userTimeZone);
 
@@ -795,13 +806,14 @@ export const getTodayWeeklyChallenge = async (
       endUTC,
     });
 
-    // Check if challenge is active
     if (isBefore(nowLocal, startTimeLocal)) {
       return res.status(200).json({
         weeklyChallenge: null,
         msg: `Challenge will start at ${startTimeLocal.toLocaleTimeString(
           "en-US",
           {
+            hour: "2-digit",
+            minute: "2-digit",
             timeZone: userTimeZone,
           }
         )}`,
@@ -819,7 +831,7 @@ export const getTodayWeeklyChallenge = async (
 
     const weeklyCompletion = await db.weeklyChallengeCompletion.findFirst({
       where: {
-        userId,
+        userId: userId,
         weeklyChallengeId: todayWeekly.id,
         date: { gte: startUTC, lte: endUTC },
       },
