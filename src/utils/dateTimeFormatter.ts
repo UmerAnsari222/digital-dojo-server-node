@@ -19,35 +19,69 @@ import { toZonedTime, format } from "date-fns-tz";
 //   return isWithinInterval(today, { start: startDate, end: endDate });
 // }
 
+// export function isTodayInChallengeWeek(
+//   startDateStr: string,
+//   userTimeZone: string
+// ): boolean {
+//   // Convert start date to user's timezone and strip time
+//   const startDate = startOfDay(
+//     toZonedTime(new Date(startDateStr), userTimeZone)
+//   );
+
+//   // Get today in user's timezone
+//   const today = startOfDay(toZonedTime(new Date(), userTimeZone));
+
+//   // 7-day week starting from startDate
+//   const endDate = addDays(startDate, 6);
+
+//   return isWithinInterval(today, { start: startDate, end: endDate });
+// }
+
+// export function getRelativeDayIndex(
+//   startDateStr: string,
+//   todayStr?: string
+// ): number | null {
+//   const startDate = startOfDay(new Date(startDateStr));
+//   const today = startOfDay(todayStr ? new Date(todayStr) : new Date());
+
+//   const diff = differenceInCalendarDays(today, startDate);
+//   if (diff < 0 || diff > 6) {
+//     return null; // today is not inside the 7-day window
+//   }
+//   return diff; // 0..6
+// }
+
+// Check if today is within the 7-day challenge starting from startDate
 export function isTodayInChallengeWeek(
   startDateStr: string,
   userTimeZone: string
 ): boolean {
-  // Convert start date to user's timezone and strip time
   const startDate = startOfDay(
     toZonedTime(new Date(startDateStr), userTimeZone)
   );
-
-  // Get today in user's timezone
   const today = startOfDay(toZonedTime(new Date(), userTimeZone));
 
-  // 7-day week starting from startDate
-  const endDate = addDays(startDate, 6);
-
+  const endDate = addDays(startDate, 6); // 7-day window
   return isWithinInterval(today, { start: startDate, end: endDate });
 }
 
+// Get relative day index (0..6) within the challenge week, timezone-aware
 export function getRelativeDayIndex(
   startDateStr: string,
+  userTimeZone: string,
   todayStr?: string
 ): number | null {
-  const startDate = startOfDay(new Date(startDateStr));
-  const today = startOfDay(todayStr ? new Date(todayStr) : new Date());
+  const startDate = startOfDay(
+    toZonedTime(new Date(startDateStr), userTimeZone)
+  );
+  const today = startOfDay(
+    todayStr
+      ? toZonedTime(new Date(todayStr), userTimeZone)
+      : toZonedTime(new Date(), userTimeZone)
+  );
 
   const diff = differenceInCalendarDays(today, startDate);
-  if (diff < 0 || diff > 6) {
-    return null; // today is not inside the 7-day window
-  }
+  if (diff < 0 || diff > 6) return null; // outside the 7-day window
   return diff; // 0..6
 }
 
