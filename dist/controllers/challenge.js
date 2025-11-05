@@ -593,6 +593,20 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
             seconds: 0,
             milliseconds: 0,
         });
+        console.log({
+            // nowLocal: format(nowLocal, "yyyy-MM-dd HH:mm:ssXXX", {
+            //   timeZone: userTimeZone,
+            // }),
+            // startTimeLocal: format(startTimeLocal, "yyyy-MM-dd HH:mm:ssXXX", {
+            //   timeZone: userTimeZone,
+            // }),
+            // endTimeLocal: format(endTimeLocal, "yyyy-MM-dd HH:mm:ssXXX", {
+            //   timeZone: userTimeZone,
+            // }),
+            startTimeLocal,
+            endTimeLocal,
+            nowLocal,
+        });
         // 7️⃣ Handle challenges that span midnight
         if ((0, date_fns_1.isBefore)(endTimeLocal, startTimeLocal)) {
             endTimeLocal = (0, date_fns_1.addDays)(endTimeLocal, 1);

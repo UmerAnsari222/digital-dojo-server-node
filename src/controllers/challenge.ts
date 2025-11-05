@@ -781,6 +781,20 @@ export const getTodayWeeklyChallenge = async (
       milliseconds: 0,
     });
 
+    console.log({
+      // nowLocal: format(nowLocal, "yyyy-MM-dd HH:mm:ssXXX", {
+      //   timeZone: userTimeZone,
+      // }),
+      // startTimeLocal: format(startTimeLocal, "yyyy-MM-dd HH:mm:ssXXX", {
+      //   timeZone: userTimeZone,
+      // }),
+      // endTimeLocal: format(endTimeLocal, "yyyy-MM-dd HH:mm:ssXXX", {
+      //   timeZone: userTimeZone,
+      // }),
+      startTimeLocal,
+      endTimeLocal,
+      nowLocal,
+    });
     // 7️⃣ Handle challenges that span midnight
     if (isBefore(endTimeLocal, startTimeLocal)) {
       endTimeLocal = addDays(endTimeLocal, 1);
