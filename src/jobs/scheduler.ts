@@ -1,4 +1,5 @@
 import { streakQueue } from "./queues/streak";
+import { challengeSkipQueue } from "./queues/challengeSkip"; // adjust import path
 import "../jobs/workers/streak";
 import "../jobs/workers/challengeSkip";
 
@@ -23,8 +24,35 @@ export async function scheduleStreakJob() {
   console.log("Schedulers:", schedulers);
 }
 
+export async function scheduleWeeklySkipJob() {
+  console.log("[BullMQ] Scheduling daily skip job (00:00)...");
+
+  // Remove previous scheduler if exists
+  await challengeSkipQueue.removeJobScheduler("weekly-challenge-skip-midnight");
+
+  // Upsert the scheduler
+  await challengeSkipQueue.upsertJobScheduler(
+    "weekly-challenge-skip-midnight", // scheduler ID
+    {
+      pattern: "0 0 * * *", // run every day at midnight
+    },
+    {
+      name: "weeklyChallengeSkipJob",
+      data: {}, // any static job data
+      opts: {
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+    }
+  );
+
+  const schedulers = await challengeSkipQueue.getJobSchedulers();
+  console.log("Schedulers:", schedulers);
+}
+
 export async function startScheduler() {
   await scheduleStreakJob();
+  await scheduleWeeklySkipJob();
 }
 
 // Worker to process the jobs

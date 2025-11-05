@@ -18,7 +18,13 @@ import {
   setHours,
   set,
 } from "date-fns";
-import { toZonedTime, format, formatInTimeZone } from "date-fns-tz";
+import {
+  toZonedTime,
+  format,
+  formatInTimeZone,
+  toDate,
+  fromZonedTime,
+} from "date-fns-tz";
 import {
   convertToUserTime,
   formatTimeForUser,
@@ -711,24 +717,20 @@ export const getTodayWeeklyChallenge = async (
     const user = await db.user.findUnique({ where: { id: userId } });
     const userTimeZone = user?.timezone || "UTC";
 
-    // ✅ Current time in user’s timezone
+    // ✅ Current time in user's timezone
     const nowLocal = toZonedTime(new Date(), userTimeZone);
 
+    // 1️⃣ Fetch running/scheduled challenges
     const challenges = await db.challenge.findMany({
       where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
-      include: {
-        weeklyChallenges: {
-          include: {
-            category: true,
-          },
-        },
-      },
+      include: { weeklyChallenges: true },
     });
 
+    // 2️⃣ Find the active challenge for today in user's timezone
     const activeChallenge = challenges.find(
       (c) =>
         c.startDate &&
-        isTodayInChallengeWeek(c.startDate.toString(), userTimeZone)
+        isTodayInChallengeWeek(c.startDate.toISOString(), userTimeZone)
     );
 
     if (!activeChallenge) {
@@ -739,10 +741,12 @@ export const getTodayWeeklyChallenge = async (
       });
     }
 
+    // 3️⃣ Determine today's weekly challenge based on startDate
     const todayDayIndex = getRelativeDayIndex(
-      activeChallenge.startDate.toString(),
-      nowLocal.toString()
+      activeChallenge.startDate.toISOString(),
+      nowLocal.toISOString()
     );
+
     const todayWeekly = activeChallenge.weeklyChallenges.find(
       (w) => w.dayOfWeek === todayDayIndex
     );
@@ -755,37 +759,32 @@ export const getTodayWeeklyChallenge = async (
       });
     }
 
-    // ✅ Build today's start/end times in user's local timezone
-    const startTimeDB = new Date(todayWeekly.startTime);
-    const endTimeDB = new Date(todayWeekly.endTime);
+    // 4️⃣ Build start/end datetime in user's local timezone
+    const startTimeStr = format(todayWeekly.startTime, "HH:mm");
+    const endTimeStr = format(todayWeekly.endTime, "HH:mm");
+
+    const [startHour, startMinute] = startTimeStr.split(":").map(Number);
+    const [endHour, endMinute] = endTimeStr.split(":").map(Number);
 
     const startTimeLocal = set(nowLocal, {
-      hours: startTimeDB.getUTCHours(),
-      minutes: startTimeDB.getUTCMinutes(),
+      hours: startHour,
+      minutes: startMinute,
       seconds: 0,
       milliseconds: 0,
     });
 
     const endTimeLocal = set(nowLocal, {
-      hours: endTimeDB.getUTCHours(),
-      minutes: endTimeDB.getUTCMinutes(),
+      hours: endHour,
+      minutes: endMinute,
       seconds: 0,
       milliseconds: 0,
     });
 
-    console.log({
-      nowLocal: format(nowLocal, "yyyy-MM-dd HH:mm:ssXXX", {
-        timeZone: userTimeZone,
-      }),
-      startTimeLocal: format(startTimeLocal, "yyyy-MM-dd HH:mm:ssXXX", {
-        timeZone: userTimeZone,
-      }),
-      endTimeLocal: format(endTimeLocal, "yyyy-MM-dd HH:mm:ssXXX", {
-        timeZone: userTimeZone,
-      }),
-    });
+    // 5️⃣ Convert local start/end to UTC for DB query
+    const startUTC = toDate(fromZonedTime(startTimeLocal, userTimeZone));
+    const endUTC = toDate(fromZonedTime(endTimeLocal, userTimeZone));
 
-    // ✅ Logic to decide if challenge is available yet
+    // 6️⃣ Check if challenge is active
     if (isBefore(nowLocal, startTimeLocal)) {
       return res.status(200).json({
         weeklyChallenge: null,
@@ -804,25 +803,21 @@ export const getTodayWeeklyChallenge = async (
       });
     }
 
+    // 7️⃣ Fetch weekly completion if any
     const weeklyCompletion = await db.weeklyChallengeCompletion.findFirst({
       where: {
         userId: userId,
         weeklyChallengeId: todayWeekly.id,
-        // date: {
-        //   gte: today,
-        //   lte: endOfToday,
-        // },
+        date: { gte: startUTC, lte: endUTC },
       },
     });
 
-    // ✅ Challenge active
+    // 8️⃣ Return today's weekly challenge
     return res.status(200).json({
       weeklyChallenge: {
         ...todayWeekly,
         startTime: startTimeLocal,
         endTime: endTimeLocal,
-        // startTime: format(startTimeLocal, "h:mm a", { timeZone: userTimeZone }),
-        // endTime: format(endTimeLocal, "h:mm a", { timeZone: userTimeZone }),
         startDate: activeChallenge.startDate,
         planName: activeChallenge.title,
         weeklyCompletion,
@@ -831,7 +826,7 @@ export const getTodayWeeklyChallenge = async (
       success: true,
     });
   } catch (e) {
-    console.log("[GET_TODAY_CHALLENGE_ERROR]", e);
+    console.error("[GET_TODAY_CHALLENGE_ERROR]", e);
     next(new ErrorHandler("Something went wrong", 500));
   }
 };
@@ -1230,15 +1225,15 @@ cron.schedule("*/10 * * * *", async () => {
 });
 
 // cron.schedule("* * * * *", async () => {
-cron.schedule("0 0 * * *", async () => {
-  console.log("⏰ Triggering daily skip worker...");
+// cron.schedule("0 0 * * *", async () => {
+//   console.log("⏰ Triggering daily skip worker...");
 
-  await challengeSkipQueue.add(
-    "weeklyChallengeSkipJob",
-    {},
-    {
-      removeOnComplete: true,
-      removeOnFail: true,
-    }
-  );
-});
+//   await challengeSkipQueue.add(
+//     "weeklyChallengeSkipJob",
+//     {},
+//     {
+//       removeOnComplete: true,
+//       removeOnFail: true,
+//     }
+//   );
+// });
