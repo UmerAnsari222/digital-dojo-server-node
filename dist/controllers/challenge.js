@@ -575,15 +575,16 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
                 success: true,
             });
         }
-        // 6️⃣ Parse startTime/endTime (HH:mm:ss)
-        const [startHour, startMinute] = todayWeekly.startTime
-            .toString()
-            .split(":")
-            .map(Number);
-        const [endHour, endMinute] = todayWeekly.endTime
-            .toString()
-            .split(":")
-            .map(Number);
+        // Convert startTime/endTime to string if needed
+        const startTimeStr = typeof todayWeekly.startTime === "string"
+            ? todayWeekly.startTime
+            : (0, date_fns_tz_1.format)(todayWeekly.startTime, "HH:mm:ss");
+        const endTimeStr = typeof todayWeekly.endTime === "string"
+            ? todayWeekly.endTime
+            : (0, date_fns_tz_1.format)(todayWeekly.endTime, "HH:mm:ss");
+        // Then parse hours/minutes
+        const [startHour, startMinute] = startTimeStr.split(":").map(Number);
+        const [endHour, endMinute] = endTimeStr.split(":").map(Number);
         // 7️⃣ Build local start/end times
         const startTimeLocal = (0, date_fns_1.set)(nowLocal, {
             hours: startHour,
