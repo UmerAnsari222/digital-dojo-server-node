@@ -214,6 +214,17 @@ export const getCircleById = async (
         circleChallenges: {
           include: {
             category: true,
+            participants: {
+              where: {
+                userId,
+              },
+              select: {
+                id: true,
+                joinedAt: true,
+                challengeId: true,
+                skip: true,
+              },
+            },
           },
         },
       },
@@ -245,6 +256,17 @@ export const getCircleById = async (
         }
       }
     }
+
+    // const circleChIds = circle.circleChallenges.map((ch) => ch.id);
+
+    // const completions = await db.circleChallengeParticipant.findMany({
+    //   where: {
+    //     userId,
+    //     challengeId: {
+    //       in: circleChIds,
+    //     },
+    //   },
+    // });
 
     return res.status(200).json({
       circle,
