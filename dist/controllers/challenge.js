@@ -546,19 +546,23 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
     if (!userId)
         return next(new error_1.default("Unauthorized", 401));
     try {
-        // 1️⃣ Fetch user and timezone
         const user = await db_1.db.user.findUnique({ where: { id: userId } });
         const userTimeZone = user?.timezone || "UTC";
-        // 2️⃣ Current local time in user's timezone
+        // Current time in user's timezone
         const nowLocal = (0, date_fns_tz_1.toZonedTime)(new Date(), userTimeZone);
-        // 3️⃣ Fetch running/scheduled challenges
+        // Fetch running/scheduled challenges
         const challenges = await db_1.db.challenge.findMany({
             where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
             include: { weeklyChallenges: true },
         });
-        // 4️⃣ Find active challenge for today in user's timezone
-        const activeChallenge = challenges.find((c) => c.startDate &&
-            (0, dateTimeFormatter_1.isTodayInChallengeWeek)(c.startDate.toISOString(), userTimeZone));
+        // Find the active challenge for today
+        const activeChallenge = challenges.find((c) => {
+            if (!c.startDate)
+                return false;
+            const startDateLocal = (0, date_fns_1.startOfDay)((0, date_fns_tz_1.toZonedTime)(new Date(c.startDate), userTimeZone));
+            const dayDiff = (0, date_fns_1.differenceInCalendarDays)(nowLocal, startDateLocal);
+            return dayDiff >= 0 && dayDiff <= 6; // 7-day window
+        });
         if (!activeChallenge) {
             return res.status(200).json({
                 weeklyChallenge: null,
@@ -566,8 +570,10 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
                 success: true,
             });
         }
-        // 5️⃣ Determine today's weekly challenge index
-        const todayDayIndex = (0, dateTimeFormatter_1.getRelativeDayIndex)(activeChallenge.startDate.toISOString(), nowLocal.toISOString());
+        // Calculate relative day index (0..6)
+        const startDateLocal = (0, date_fns_1.startOfDay)((0, date_fns_tz_1.toZonedTime)(new Date(activeChallenge.startDate), userTimeZone));
+        const todayDayIndex = (0, date_fns_1.differenceInCalendarDays)(nowLocal, startDateLocal);
+        // Find today's weekly challenge
         const todayWeekly = activeChallenge.weeklyChallenges.find((w) => w.dayOfWeek === todayDayIndex);
         if (!todayWeekly) {
             return res.status(200).json({
@@ -576,49 +582,34 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
                 success: true,
             });
         }
-        // 6️⃣ Build local start/end times
-        const startHour = todayWeekly.startTime.getHours();
-        const startMinute = todayWeekly.startTime.getMinutes();
-        const endHour = todayWeekly.endTime.getHours();
-        const endMinute = todayWeekly.endTime.getMinutes();
-        let startTimeLocal = (0, date_fns_1.set)(nowLocal, {
-            hours: startHour,
-            minutes: startMinute,
+        // Build start/end datetime in user's local timezone
+        const startTimeLocal = (0, date_fns_1.set)(nowLocal, {
+            hours: todayWeekly.startTime.getHours(),
+            minutes: todayWeekly.startTime.getMinutes(),
             seconds: 0,
             milliseconds: 0,
         });
-        let endTimeLocal = (0, date_fns_1.set)(nowLocal, {
-            hours: endHour,
-            minutes: endMinute,
+        const endTimeLocal = (0, date_fns_1.set)(nowLocal, {
+            hours: todayWeekly.endTime.getHours(),
+            minutes: todayWeekly.endTime.getMinutes(),
             seconds: 0,
             milliseconds: 0,
         });
+        // Convert local start/end to UTC for DB query
+        const startUTC = (0, date_fns_tz_1.fromZonedTime)(startTimeLocal, userTimeZone);
+        const endUTC = (0, date_fns_tz_1.fromZonedTime)(endTimeLocal, userTimeZone);
         console.log({
-            // nowLocal: format(nowLocal, "yyyy-MM-dd HH:mm:ssXXX", {
-            //   timeZone: userTimeZone,
-            // }),
-            // startTimeLocal: format(startTimeLocal, "yyyy-MM-dd HH:mm:ssXXX", {
-            //   timeZone: userTimeZone,
-            // }),
-            // endTimeLocal: format(endTimeLocal, "yyyy-MM-dd HH:mm:ssXXX", {
-            //   timeZone: userTimeZone,
-            // }),
+            startDateLocal,
             startTimeLocal,
             endTimeLocal,
-            nowLocal,
+            startUTC,
+            endUTC,
         });
-        // 7️⃣ Handle challenges that span midnight
-        if ((0, date_fns_1.isBefore)(endTimeLocal, startTimeLocal)) {
-            endTimeLocal = (0, date_fns_1.addDays)(endTimeLocal, 1);
-        }
-        // 8️⃣ Convert local start/end to UTC for DB query
-        const startUTC = (0, date_fns_tz_1.toDate)((0, date_fns_tz_1.fromZonedTime)(startTimeLocal, userTimeZone));
-        const endUTC = (0, date_fns_tz_1.toDate)((0, date_fns_tz_1.fromZonedTime)(endTimeLocal, userTimeZone));
-        // 9️⃣ Check if challenge is active
+        // Check if challenge is active
         if ((0, date_fns_1.isBefore)(nowLocal, startTimeLocal)) {
             return res.status(200).json({
                 weeklyChallenge: null,
-                msg: `Challenge will start at ${(0, date_fns_tz_1.format)(startTimeLocal, "h:mm a", {
+                msg: `Challenge will start at ${startTimeLocal.toLocaleTimeString("en-US", {
                     timeZone: userTimeZone,
                 })}`,
                 success: true,
@@ -631,7 +622,7 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
                 success: true,
             });
         }
-        // 🔟 Fetch weekly completion if any
+        // Fetch weekly completion if any
         const weeklyCompletion = await db_1.db.weeklyChallengeCompletion.findFirst({
             where: {
                 userId,
@@ -639,7 +630,7 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
                 date: { gte: startUTC, lte: endUTC },
             },
         });
-        // 1️⃣1️⃣ Return today's weekly challenge
+        // Return today's weekly challenge
         return res.status(200).json({
             weeklyChallenge: {
                 ...todayWeekly,
