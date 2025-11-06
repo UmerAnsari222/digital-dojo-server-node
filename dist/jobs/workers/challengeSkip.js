@@ -62,13 +62,21 @@ async function runDailySkipJob() {
         const users = await db_1.db.user.findMany({
             select: { id: true, timezone: true },
         });
+        // 🕓 Compute "yesterday" in UTC once
+        const nowUTC = new Date();
+        const yesterdayUTC = (0, date_fns_1.subDays)(nowUTC, 1);
+        const startOfYesterdayUTC = (0, date_fns_1.startOfDay)(yesterdayUTC);
+        const endOfYesterdayUTC = (0, date_fns_1.endOfDay)(yesterdayUTC);
         for (const challenge of runningChallenges) {
             for (const weekly of challenge.weeklyChallenges) {
+                // 🛑 Skip future weekly challenges
+                if ((0, date_fns_1.isAfter)(weekly.startTime, startOfYesterdayUTC))
+                    continue;
                 const bulkCreates = [];
                 for (const user of users) {
                     const tz = user.timezone || "UTC";
                     // 🕐 Compute user's current local time
-                    const nowInTZ = toZonedTime(new Date(), tz);
+                    const nowInTZ = toZonedTime(nowUTC, tz);
                     // 🕒 Prevent early skip: skip if local day hasn't fully ended yet
                     if (nowInTZ.getHours() < 2)
                         continue;
@@ -76,7 +84,7 @@ async function runDailySkipJob() {
                     const yesterdayInTZ = (0, date_fns_1.subDays)(nowInTZ, 1);
                     const startOfYesterdayInTZ = (0, date_fns_1.startOfDay)(yesterdayInTZ);
                     const endOfYesterdayInTZ = (0, date_fns_1.endOfDay)(yesterdayInTZ);
-                    // 🌍 Convert local times to UTC using fromZonedTime
+                    // 🌍 Convert local times to UTC
                     const startUTC = fromZonedTime(startOfYesterdayInTZ, tz);
                     const endUTC = fromZonedTime(endOfYesterdayInTZ, tz);
                     // 🔎 Check if user already completed this challenge yesterday
@@ -87,22 +95,22 @@ async function runDailySkipJob() {
                             date: { gte: startUTC, lte: endUTC },
                         },
                     });
-                    // 🚫 If not completed, prepare to insert
+                    // 🚫 If not completed, prepare to insert skip
                     if (!existing) {
                         bulkCreates.push({
                             challengeId: challenge.id,
                             weeklyChallengeId: weekly.id,
                             userId: user.id,
-                            date: new Date(), // UTC timestamp
+                            date: startUTC, // represents yesterday
                             skip: true,
                         });
                     }
                 }
-                // 5️⃣ Bulk insert to reduce DB calls
+                // 5️⃣ Bulk insert skips
                 if (bulkCreates.length > 0) {
                     await db_1.db.weeklyChallengeCompletion.createMany({
                         data: bulkCreates,
-                        skipDuplicates: true, // avoids duplicates
+                        skipDuplicates: true,
                     });
                     console.log(`✅ Bulk skipped ${bulkCreates.length} users for weekly challenge ${weekly.id}`);
                 }

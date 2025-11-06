@@ -218,8 +218,17 @@ export const getCircleById = async (
                 id: true,
                 name: true,
                 imageUrl: true,
-                currentBelt: true,
-                userBelts: true,
+                userBelts: {
+                  select: {
+                    earnedAt: true,
+                    belt: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
               },
             },
             category: true,
