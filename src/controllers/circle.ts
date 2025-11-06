@@ -591,3 +591,79 @@ export const getActiveCircleChallenges = async (
     next(new ErrorHandler("Something went wrong", 500));
   }
 };
+
+export const deleteCircleById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req;
+  const { circleId } = req.params;
+
+  try {
+    const self = await db.user.findUnique({ where: { id: userId } });
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    const circle = await db.circle.findUnique({ where: { id: circleId } });
+    if (!circle) {
+      return next(new ErrorHandler("Circle not found", 404));
+    }
+
+    if (circle.ownerId !== userId) {
+      return next(
+        new ErrorHandler("You are not the owner of this circle", 403)
+      );
+    }
+
+    await db.circle.delete({ where: { id: circleId } });
+
+    return res.status(200).json({
+      msg: "Circle deleted successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[DELETE_CIRCLE_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const deleteCircleChallengeById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req;
+  const { challengeId } = req.params;
+
+  try {
+    const self = await db.user.findUnique({ where: { id: userId } });
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    const challenge = await db.circleChallenge.findUnique({
+      where: { id: challengeId },
+    });
+    if (!challenge) {
+      return next(new ErrorHandler("Challenge not found", 404));
+    }
+
+    if (challenge.ownerId !== userId) {
+      return next(
+        new ErrorHandler("You are not the owner of this challenge", 403)
+      );
+    }
+
+    await db.circleChallenge.delete({ where: { id: challengeId } });
+
+    return res.status(200).json({
+      msg: "Circle challenge deleted successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[DELETE_CIRCLE_CHALLENGE_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};

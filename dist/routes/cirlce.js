@@ -32,3 +32,9 @@ exports.circleRouter.get("/challenge/:challengeId", async (req, res, next) => {
 exports.circleRouter.patch("/challenge/mark", auth_1.authMiddleware, async (req, res, next) => {
     await (0, circle_1.markCircleChallenge)(req, res, next);
 });
+exports.circleRouter.delete("/:challengeId", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, circle_1.deleteCircleById)(req, res, next);
+});
+exports.circleRouter.delete("/challenge/:challengeId", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, circle_1.deleteCircleChallengeById)(req, res, next);
+});

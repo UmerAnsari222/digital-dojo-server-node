@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getActiveCircleChallenges = exports.markCircleChallenge = exports.createCircleChallenge = exports.leaveMemberFromCircle = exports.addMemberInCircle = exports.getCircleById = exports.getUserAllCircle = exports.getAllCircle = exports.createCircle = void 0;
+exports.deleteCircleChallengeById = exports.deleteCircleById = exports.getActiveCircleChallenges = exports.markCircleChallenge = exports.createCircleChallenge = exports.leaveMemberFromCircle = exports.addMemberInCircle = exports.getCircleById = exports.getUserAllCircle = exports.getAllCircle = exports.createCircle = void 0;
 const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
 const aws_1 = require("../utils/aws");
@@ -517,3 +517,59 @@ const getActiveCircleChallenges = async (req, res, next) => {
     }
 };
 exports.getActiveCircleChallenges = getActiveCircleChallenges;
+const deleteCircleById = async (req, res, next) => {
+    const { userId } = req;
+    const { circleId } = req.params;
+    try {
+        const self = await db_1.db.user.findUnique({ where: { id: userId } });
+        if (!self) {
+            return next(new error_1.default("Unauthorized", 401));
+        }
+        const circle = await db_1.db.circle.findUnique({ where: { id: circleId } });
+        if (!circle) {
+            return next(new error_1.default("Circle not found", 404));
+        }
+        if (circle.ownerId !== userId) {
+            return next(new error_1.default("You are not the owner of this circle", 403));
+        }
+        await db_1.db.circle.delete({ where: { id: circleId } });
+        return res.status(200).json({
+            msg: "Circle deleted successfully",
+            success: true,
+        });
+    }
+    catch (e) {
+        console.log("[DELETE_CIRCLE_ERROR]", e);
+        next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.deleteCircleById = deleteCircleById;
+const deleteCircleChallengeById = async (req, res, next) => {
+    const { userId } = req;
+    const { challengeId } = req.params;
+    try {
+        const self = await db_1.db.user.findUnique({ where: { id: userId } });
+        if (!self) {
+            return next(new error_1.default("Unauthorized", 401));
+        }
+        const challenge = await db_1.db.circleChallenge.findUnique({
+            where: { id: challengeId },
+        });
+        if (!challenge) {
+            return next(new error_1.default("Challenge not found", 404));
+        }
+        if (challenge.ownerId !== userId) {
+            return next(new error_1.default("You are not the owner of this challenge", 403));
+        }
+        await db_1.db.circleChallenge.delete({ where: { id: challengeId } });
+        return res.status(200).json({
+            msg: "Circle challenge deleted successfully",
+            success: true,
+        });
+    }
+    catch (e) {
+        console.log("[DELETE_CIRCLE_CHALLENGE_ERROR]", e);
+        next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.deleteCircleChallengeById = deleteCircleChallengeById;

@@ -3,6 +3,8 @@ import {
   addMemberInCircle,
   createCircle,
   createCircleChallenge,
+  deleteCircleById,
+  deleteCircleChallengeById,
   getActiveCircleChallenges,
   getAllCircle,
   getCircleById,
@@ -82,5 +84,21 @@ circleRouter.patch(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await markCircleChallenge(req, res, next);
+  }
+);
+
+circleRouter.delete(
+  "/:challengeId",
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await deleteCircleById(req, res, next);
+  }
+);
+
+circleRouter.delete(
+  "/challenge/:challengeId",
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await deleteCircleChallengeById(req, res, next);
   }
 );
