@@ -63,6 +63,8 @@ async function runDailySkipJob() {
         const users = await db_1.db.user.findMany({
             select: { id: true, timezone: true },
         });
+        console.log("Fetched challenges:", runningChallenges.length);
+        console.log("Fetched users:", users.length);
         // 3️⃣ Compute UTC boundaries for yesterday and today
         const nowUTC = new Date();
         const yesterdayUTC = (0, date_fns_1.subDays)(nowUTC, 1);
@@ -71,7 +73,9 @@ async function runDailySkipJob() {
         const startOfTodayUTC = (0, date_fns_1.startOfDay)(nowUTC);
         // 4️⃣ Iterate through challenges and weekly challenges
         for (const challenge of runningChallenges) {
+            console.log("Processing challenge:", challenge.id);
             for (const weekly of challenge.weeklyChallenges) {
+                console.log("➡️ Checking weekly challenge:", weekly.id, weekly.startTime);
                 // 🛑 Skip if weekly challenge starts today or later (global fallback)
                 if (weekly.startTime >= startOfTodayUTC)
                     continue;
@@ -89,8 +93,10 @@ async function runDailySkipJob() {
                     // 🧭 Only process if this challenge was active yesterday in user's local time
                     const wasActiveYesterday = (0, date_fns_1.isBefore)(startInTZ, startOfTodayInTZ) &&
                         (0, date_fns_1.isAfter)(endInTZ, startOfYesterdayInTZ);
-                    if (!wasActiveYesterday)
+                    if (!wasActiveYesterday) {
+                        console.log(`Skipping weekly ${weekly.id} — not active yesterday for user ${user.id}`);
                         continue;
+                    }
                     // ⏰ Prevent early skip: ensure local day has ended
                     if (nowInTZ.getHours() < 2)
                         continue;
@@ -118,11 +124,15 @@ async function runDailySkipJob() {
                 }
                 // 6️⃣ Bulk insert skip records if any
                 if (bulkCreates.length > 0) {
+                    console.log(`Creating ${bulkCreates.length} skips for weekly ${weekly.id}...`);
                     await db_1.db.weeklyChallengeCompletion.createMany({
                         data: bulkCreates,
                         skipDuplicates: true,
                     });
                     console.log(`✅ Bulk skipped ${bulkCreates.length} users for weekly challenge ${weekly.id}`);
+                }
+                else {
+                    console.log(`No skips to create for weekly ${weekly.id}`);
                 }
             }
         }
