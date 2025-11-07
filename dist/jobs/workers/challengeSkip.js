@@ -51,94 +51,73 @@ exports.challengeSkipWorker.on("failed", (job, err) => {
     console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
 });
 console.log("✅ Daily skip worker running...");
+/**
+ * Helper: Build a Date for this week's challenge day/time
+ * If your week starts on SUNDAY, dayOfWeek = 0 → Sunday
+ */
+function buildWeeklyDateTime(baseDate, dayOfWeek, time) {
+    const weekStart = (0, date_fns_1.startOfWeek)(baseDate, { weekStartsOn: 0 }); // Sunday
+    const result = new Date(weekStart);
+    result.setDate(result.getDate() + dayOfWeek);
+    result.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), 0);
+    return result;
+}
 async function runDailySkipJob() {
     console.log("⏰ Running daily skip job via worker...");
-    try {
-        // 1️⃣ Get all running challenges with their weekly challenges
-        const runningChallenges = await db_1.db.challenge.findMany({
-            where: { status: "RUNNING" },
-            include: { weeklyChallenges: true },
-        });
-        // 2️⃣ Get all users and their timezones
-        const users = await db_1.db.user.findMany({
-            select: { id: true, timezone: true },
-        });
-        console.log("Fetched challenges:", runningChallenges.length);
-        console.log("Fetched users:", users.length);
-        // 3️⃣ Compute UTC boundaries for yesterday and today
-        const nowUTC = new Date();
-        const yesterdayUTC = (0, date_fns_1.subDays)(nowUTC, 1);
-        const startOfYesterdayUTC = (0, date_fns_1.startOfDay)(yesterdayUTC);
-        const endOfYesterdayUTC = (0, date_fns_1.endOfDay)(yesterdayUTC);
-        const startOfTodayUTC = (0, date_fns_1.startOfDay)(nowUTC);
-        // 4️⃣ Iterate through challenges and weekly challenges
-        for (const challenge of runningChallenges) {
-            console.log("Processing challenge:", challenge.id);
-            for (const weekly of challenge.weeklyChallenges) {
-                console.log("➡️ Checking weekly challenge:", weekly.id, weekly.startTime);
-                // 🛑 Skip if weekly challenge starts today or later (global fallback)
-                if (weekly.startTime >= startOfTodayUTC)
-                    continue;
-                const bulkCreates = [];
-                // 5️⃣ Process for each user
-                for (const user of users) {
-                    const tz = user.timezone || "UTC";
-                    // Convert current UTC time to user's local timezone
-                    const nowInTZ = toZonedTime(nowUTC, tz);
-                    const startOfTodayInTZ = (0, date_fns_1.startOfDay)(nowInTZ);
-                    const startOfYesterdayInTZ = (0, date_fns_1.startOfDay)((0, date_fns_1.subDays)(nowInTZ, 1));
-                    // Convert weekly challenge times to user's local timezone
-                    const startInTZ = toZonedTime(weekly.startTime, tz);
-                    const endInTZ = toZonedTime(weekly.endTime, tz);
-                    // 🧭 Only process if this challenge was active yesterday in user's local time
-                    const wasActiveYesterday = (0, date_fns_1.isBefore)(startInTZ, startOfTodayInTZ) &&
-                        (0, date_fns_1.isAfter)(endInTZ, startOfYesterdayInTZ);
-                    if (!wasActiveYesterday) {
-                        console.log(`Skipping weekly ${weekly.id} — not active yesterday for user ${user.id}`);
-                        continue;
-                    }
-                    // ⏰ Prevent early skip: ensure local day has ended
-                    if (nowInTZ.getHours() < 2)
-                        continue;
-                    // 📅 Convert yesterday's start and end in user TZ back to UTC
-                    const startUTC = fromZonedTime(startOfYesterdayInTZ, tz);
-                    const endUTC = fromZonedTime((0, date_fns_1.endOfDay)(startOfYesterdayInTZ), tz);
-                    // 🔍 Check if user already completed this challenge yesterday
-                    const existing = await db_1.db.weeklyChallengeCompletion.findFirst({
-                        where: {
-                            userId: user.id,
-                            weeklyChallengeId: weekly.id,
-                            date: { gte: startUTC, lte: endUTC },
-                        },
-                    });
-                    // 🚫 If not completed, prepare skip entry
-                    if (!existing) {
-                        bulkCreates.push({
-                            challengeId: challenge.id,
-                            weeklyChallengeId: weekly.id,
-                            userId: user.id,
-                            date: startUTC, // represents yesterday
-                            skip: true,
-                        });
-                    }
-                }
-                // 6️⃣ Bulk insert skip records if any
-                if (bulkCreates.length > 0) {
-                    console.log(`Creating ${bulkCreates.length} skips for weekly ${weekly.id}...`);
-                    await db_1.db.weeklyChallengeCompletion.createMany({
-                        data: bulkCreates,
-                        skipDuplicates: true,
-                    });
-                    console.log(`✅ Bulk skipped ${bulkCreates.length} users for weekly challenge ${weekly.id}`);
-                }
-                else {
-                    console.log(`No skips to create for weekly ${weekly.id}`);
-                }
+    const nowUTC = new Date();
+    const yesterdayUTC = (0, date_fns_1.subDays)(nowUTC, 1);
+    const startOfTodayUTC = (0, date_fns_1.startOfDay)(nowUTC);
+    const startOfYesterdayUTC = (0, date_fns_1.startOfDay)(yesterdayUTC);
+    const runningChallenges = await db_1.db.challenge.findMany({
+        where: { status: "RUNNING" },
+        include: { weeklyChallenges: true },
+    });
+    const users = await db_1.db.user.findMany();
+    console.log("Fetched challenges:", runningChallenges.length);
+    console.log("Fetched users:", users.length);
+    for (const challenge of runningChallenges) {
+        console.log("Processing challenge:", challenge.id);
+        for (const weekly of challenge.weeklyChallenges) {
+            console.log("➡️ Checking weekly challenge:", weekly.id, weekly.startTime);
+            if (!weekly.startTime || !weekly.endTime) {
+                console.warn(`⚠️ Weekly challenge ${weekly.id} missing start/end time.`);
+                continue;
+            }
+            // ✅ Build real DateTimes for this week based on Sunday-start week
+            const startInTZ = buildWeeklyDateTime(nowUTC, weekly.dayOfWeek, weekly.startTime);
+            const endInTZ = buildWeeklyDateTime(nowUTC, weekly.dayOfWeek, weekly.endTime);
+            // Handle overnight sessions (end < start)
+            if (endInTZ < startInTZ) {
+                endInTZ.setDate(endInTZ.getDate() + 1);
+            }
+            // ✅ Check if the challenge was active during “yesterday” (UTC)
+            const wasActiveYesterday = (0, date_fns_1.isBefore)(startInTZ, startOfTodayUTC) &&
+                (0, date_fns_1.isAfter)(endInTZ, startOfYesterdayUTC);
+            if (!wasActiveYesterday) {
+                console.log(`Skipping weekly ${weekly.id} — not active yesterday`);
+                continue;
+            }
+            const bulkCreates = [];
+            for (const user of users) {
+                bulkCreates.push({
+                    challengeId: challenge.id,
+                    weeklyChallengeId: weekly.id,
+                    userId: user.id,
+                    date: startOfYesterdayUTC,
+                    skip: true,
+                });
+            }
+            if (bulkCreates.length > 0) {
+                await db_1.db.weeklyChallengeCompletion.createMany({
+                    data: bulkCreates,
+                    skipDuplicates: true,
+                });
+                console.log(`✅ Bulk skipped ${bulkCreates.length} users for weekly challenge ${weekly.id}`);
+            }
+            else {
+                console.log(`No skips to create for weekly ${weekly.id}`);
             }
         }
-        console.log("✅ Daily skip job finished successfully.");
     }
-    catch (error) {
-        console.error("❌ Error in daily skip job:", error);
-    }
+    console.log("🎯 Daily skip job complete.");
 }
