@@ -88,7 +88,7 @@ circleRouter.patch(
 );
 
 circleRouter.delete(
-  "/:challengeId",
+  "/:circleId",
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await deleteCircleById(req, res, next);
