@@ -553,7 +553,13 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
         // 2️⃣ Fetch running/scheduled parent challenges
         const challenges = await db_1.db.challenge.findMany({
             where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
-            include: { weeklyChallenges: true },
+            include: {
+                weeklyChallenges: {
+                    include: {
+                        category: true,
+                    },
+                },
+            },
         });
         // 3️⃣ Find active challenge for today
         const activeChallenge = challenges.find((c) => (0, dateTimeFormatter_1.isTodayInChallengeWeek)(c.startDate.toISOString(), userTimeZone));
@@ -595,7 +601,7 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
             where: {
                 userId,
                 weeklyChallengeId: todayWeekly.id,
-                date: { gte: startUTC, lte: endUTC },
+                // date: { gte: startUTC, lte: endUTC },
             },
         });
         // 8️⃣ Return the full-day weekly challenge

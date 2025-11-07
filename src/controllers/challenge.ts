@@ -722,7 +722,13 @@ export const getTodayWeeklyChallenge = async (
     // 2️⃣ Fetch running/scheduled parent challenges
     const challenges = await db.challenge.findMany({
       where: { OR: [{ status: "SCHEDULE" }, { status: "RUNNING" }] },
-      include: { weeklyChallenges: true },
+      include: {
+        weeklyChallenges: {
+          include: {
+            category: true,
+          },
+        },
+      },
     });
 
     // 3️⃣ Find active challenge for today
@@ -779,7 +785,7 @@ export const getTodayWeeklyChallenge = async (
       where: {
         userId,
         weeklyChallengeId: todayWeekly.id,
-        date: { gte: startUTC, lte: endUTC },
+        // date: { gte: startUTC, lte: endUTC },
       },
     });
 
