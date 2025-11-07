@@ -21,7 +21,6 @@ const streak_1 = require("./routes/streak");
 const cirlce_1 = require("./routes/cirlce");
 const logger_1 = __importDefault(require("./config/logger"));
 const scheduler_1 = require("./jobs/scheduler");
-const challengeSkip_1 = require("./jobs/workers/challengeSkip");
 const app = (0, express_1.default)();
 // Use Morgan middleware
 app.use((0, morgan_1.default)("combined", {
@@ -37,7 +36,7 @@ app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
 console.log(new Date(1761819827362));
 app.get("/", async (req, res) => {
-    await (0, challengeSkip_1.runDailySkipJob)();
+    // await runDailySkipJob();
     return res
         .status(200)
         .json({ msg: "Welcome to DigitalDojo API", success: true });

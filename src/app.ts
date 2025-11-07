@@ -41,7 +41,7 @@ app.set("views", __dirname + "/views");
 console.log(new Date(1761819827362));
 
 app.get("/", async (req, res) => {
-  await runDailySkipJob();
+  // await runDailySkipJob();
   return res
     .status(200)
     .json({ msg: "Welcome to DigitalDojo API", success: true });
