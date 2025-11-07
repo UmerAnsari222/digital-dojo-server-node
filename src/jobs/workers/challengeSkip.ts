@@ -1,7 +1,14 @@
 import { Worker } from "bullmq";
 import { redisConnection } from "../../utils/redis";
 import { WEEKLY_SKIP_QUEUE } from "../queues/challengeSkip";
-import { endOfDay, isAfter, startOfDay, subDays } from "date-fns";
+import {
+  endOfDay,
+  isAfter,
+  isBefore,
+  isSameDay,
+  startOfDay,
+  subDays,
+} from "date-fns";
 import { db } from "../../config/db";
 // import { toZonedTime ,zonedTimeToUtc} from "date-fns-tz";
 
@@ -31,53 +38,64 @@ challengeSkipWorker.on("failed", (job, err) => {
 
 console.log("✅ Daily skip worker running...");
 
-async function runDailySkipJob() {
+export async function runDailySkipJob() {
   console.log("⏰ Running daily skip job via worker...");
 
   try {
-    // 1️⃣ Get all running challenges with weekly challenges
+    // 1️⃣ Get all running challenges with their weekly challenges
     const runningChallenges = await db.challenge.findMany({
       where: { status: "RUNNING" },
       include: { weeklyChallenges: true },
     });
 
-    // 2️⃣ Get all users once
+    // 2️⃣ Get all users and their timezones
     const users = await db.user.findMany({
       select: { id: true, timezone: true },
     });
 
-    // 🕓 Compute "yesterday" in UTC once
+    // 3️⃣ Compute UTC boundaries for yesterday and today
     const nowUTC = new Date();
     const yesterdayUTC = subDays(nowUTC, 1);
     const startOfYesterdayUTC = startOfDay(yesterdayUTC);
     const endOfYesterdayUTC = endOfDay(yesterdayUTC);
+    const startOfTodayUTC = startOfDay(nowUTC);
 
+    // 4️⃣ Iterate through challenges and weekly challenges
     for (const challenge of runningChallenges) {
       for (const weekly of challenge.weeklyChallenges) {
-        // 🛑 Skip future weekly challenges
-        if (isAfter(weekly.startTime, startOfYesterdayUTC)) continue;
+        // 🛑 Skip if weekly challenge starts today or later (global fallback)
+        if (weekly.startTime >= startOfTodayUTC) continue;
 
         const bulkCreates: any[] = [];
 
+        // 5️⃣ Process for each user
         for (const user of users) {
           const tz = user.timezone || "UTC";
 
-          // 🕐 Compute user's current local time
+          // Convert current UTC time to user's local timezone
           const nowInTZ = toZonedTime(nowUTC, tz);
+          const startOfTodayInTZ = startOfDay(nowInTZ);
+          const startOfYesterdayInTZ = startOfDay(subDays(nowInTZ, 1));
 
-          // 🕒 Prevent early skip: skip if local day hasn't fully ended yet
+          // Convert weekly challenge times to user's local timezone
+          const startInTZ = toZonedTime(weekly.startTime, tz);
+          const endInTZ = toZonedTime(weekly.endTime, tz);
+
+          // 🧭 Only process if this challenge was active yesterday in user's local time
+          const wasActiveYesterday =
+            isBefore(startInTZ, startOfTodayInTZ) &&
+            isAfter(endInTZ, startOfYesterdayInTZ);
+
+          if (!wasActiveYesterday) continue;
+
+          // ⏰ Prevent early skip: ensure local day has ended
           if (nowInTZ.getHours() < 2) continue;
 
-          // 📅 Compute yesterday's start & end in user's local timezone
-          const yesterdayInTZ = subDays(nowInTZ, 1);
-          const startOfYesterdayInTZ = startOfDay(yesterdayInTZ);
-          const endOfYesterdayInTZ = endOfDay(yesterdayInTZ);
-
-          // 🌍 Convert local times to UTC
+          // 📅 Convert yesterday's start and end in user TZ back to UTC
           const startUTC = fromZonedTime(startOfYesterdayInTZ, tz);
-          const endUTC = fromZonedTime(endOfYesterdayInTZ, tz);
+          const endUTC = fromZonedTime(endOfDay(startOfYesterdayInTZ), tz);
 
-          // 🔎 Check if user already completed this challenge yesterday
+          // 🔍 Check if user already completed this challenge yesterday
           const existing = await db.weeklyChallengeCompletion.findFirst({
             where: {
               userId: user.id,
@@ -86,7 +104,7 @@ async function runDailySkipJob() {
             },
           });
 
-          // 🚫 If not completed, prepare to insert skip
+          // 🚫 If not completed, prepare skip entry
           if (!existing) {
             bulkCreates.push({
               challengeId: challenge.id,
@@ -98,7 +116,7 @@ async function runDailySkipJob() {
           }
         }
 
-        // 5️⃣ Bulk insert skips
+        // 6️⃣ Bulk insert skip records if any
         if (bulkCreates.length > 0) {
           await db.weeklyChallengeCompletion.createMany({
             data: bulkCreates,
