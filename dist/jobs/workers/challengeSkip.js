@@ -66,7 +66,6 @@ async function runDailySkipJob() {
     console.log("⏰ Running daily skip job via worker...");
     const nowUTC = new Date();
     const yesterdayUTC = (0, date_fns_1.subDays)(nowUTC, 1);
-    const startOfTodayUTC = (0, date_fns_1.startOfDay)(nowUTC);
     const startOfYesterdayUTC = (0, date_fns_1.startOfDay)(yesterdayUTC);
     const runningChallenges = await db_1.db.challenge.findMany({
         where: { status: "RUNNING" },
@@ -76,46 +75,31 @@ async function runDailySkipJob() {
     console.log("Fetched challenges:", runningChallenges.length);
     console.log("Fetched users:", users.length);
     for (const challenge of runningChallenges) {
+        // Skip future challenges
+        if ((0, date_fns_1.isBefore)(nowUTC, challenge.startDate)) {
+            console.log(`Skipping future challenge ${challenge.id}`);
+            continue;
+        }
         console.log("Processing challenge:", challenge.id);
+        // Calculate the day index for yesterday relative to challenge start
+        const dayIndex = (((0, date_fns_1.differenceInCalendarDays)(yesterdayUTC, challenge.startDate) % 7) + 7) %
+            7;
         for (const weekly of challenge.weeklyChallenges) {
-            console.log("➡️ Checking weekly challenge:", weekly.id, weekly.startTime);
-            if (!weekly.startTime || !weekly.endTime) {
-                console.warn(`⚠️ Weekly challenge ${weekly.id} missing start/end time.`);
+            if (weekly.dayOfWeek !== dayIndex)
                 continue;
-            }
-            // ✅ Build real DateTimes for this week based on Sunday-start week
-            const startInTZ = buildWeeklyDateTime(nowUTC, weekly.dayOfWeek, weekly.startTime);
-            const endInTZ = buildWeeklyDateTime(nowUTC, weekly.dayOfWeek, weekly.endTime);
-            // Handle overnight sessions (end < start)
-            if (endInTZ < startInTZ) {
-                endInTZ.setDate(endInTZ.getDate() + 1);
-            }
-            // ✅ Check if the challenge was active during “yesterday” (UTC)
-            const wasActiveYesterday = (0, date_fns_1.isBefore)(startInTZ, startOfTodayUTC) &&
-                (0, date_fns_1.isAfter)(endInTZ, startOfYesterdayUTC);
-            if (!wasActiveYesterday) {
-                console.log(`Skipping weekly ${weekly.id} — not active yesterday`);
-                continue;
-            }
-            const bulkCreates = [];
-            for (const user of users) {
-                bulkCreates.push({
-                    challengeId: challenge.id,
-                    weeklyChallengeId: weekly.id,
-                    userId: user.id,
-                    date: startOfYesterdayUTC,
-                    skip: true,
-                });
-            }
+            const bulkCreates = users.map((user) => ({
+                challengeId: challenge.id,
+                weeklyChallengeId: weekly.id,
+                userId: user.id,
+                date: startOfYesterdayUTC,
+                skip: true,
+            }));
             if (bulkCreates.length > 0) {
                 await db_1.db.weeklyChallengeCompletion.createMany({
                     data: bulkCreates,
                     skipDuplicates: true,
                 });
                 console.log(`✅ Bulk skipped ${bulkCreates.length} users for weekly challenge ${weekly.id}`);
-            }
-            else {
-                console.log(`No skips to create for weekly ${weekly.id}`);
             }
         }
     }
