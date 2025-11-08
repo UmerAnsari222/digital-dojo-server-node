@@ -931,6 +931,7 @@ export const getPastChallenges = async (
         select: {
           skip: true,
           createdAt: true,
+          date: true,
           weeklyChallenge: {
             select: {
               id: true,

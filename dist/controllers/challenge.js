@@ -722,6 +722,7 @@ const getPastChallenges = async (req, res, next) => {
                 select: {
                     skip: true,
                     createdAt: true,
+                    date: true,
                     weeklyChallenge: {
                         select: {
                             id: true,
