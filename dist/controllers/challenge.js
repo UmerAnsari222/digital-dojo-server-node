@@ -702,6 +702,7 @@ const getPastChallenges = async (req, res, next) => {
                 },
                 select: {
                     skip: true,
+                    date: true,
                     createdAt: true,
                     userChallenge: {
                         select: {

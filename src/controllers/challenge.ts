@@ -912,6 +912,7 @@ export const getPastChallenges = async (
         },
         select: {
           skip: true,
+          date: true,
           createdAt: true,
           userChallenge: {
             select: {
