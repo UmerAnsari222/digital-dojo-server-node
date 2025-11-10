@@ -109,7 +109,9 @@ const getUserAllCircle = async (req, res, next) => {
     const { userId } = req;
     try {
         const circles = await db_1.db.circle.findMany({
-            where: { ownerId: userId },
+            where: {
+                OR: [{ ownerId: userId }, { members: { some: { id: userId } } }],
+            },
             include: {
                 members: {
                     select: {
@@ -319,7 +321,9 @@ const addMemberInCircle = async (req, res, next) => {
             });
         }
         return res.status(200).json({
-            msg: "You Joined Circle Successfully",
+            msg: isAlreadyMember
+                ? "You Already Joined Circle Successfully"
+                : "You Joined Circle Successfully",
             success: true,
         });
     }
