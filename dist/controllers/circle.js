@@ -48,6 +48,11 @@ const getAllCircle = async (req, res, next) => {
                 ownerId: {
                     not: userId,
                 },
+                members: {
+                    none: {
+                        id: userId,
+                    },
+                },
             },
             include: {
                 members: {

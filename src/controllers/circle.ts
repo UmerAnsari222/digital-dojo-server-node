@@ -56,6 +56,11 @@ export const getAllCircle = async (
         ownerId: {
           not: userId,
         },
+        members: {
+          none: {
+            id: userId,
+          },
+        },
       },
       include: {
         members: {
