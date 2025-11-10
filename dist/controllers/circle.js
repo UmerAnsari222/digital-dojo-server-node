@@ -8,6 +8,7 @@ const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
 const aws_1 = require("../utils/aws");
 const dotEnv_1 = require("../config/dotEnv");
+const date_fns_tz_1 = require("date-fns-tz");
 const createCircle = async (req, res, next) => {
     const { userId } = req;
     const { name, goal, colors } = req.body;
@@ -437,12 +438,23 @@ const markCircleChallenge = async (req, res, next) => {
     const { userId } = req;
     const { challengeId, skip } = req.body;
     try {
+        const self = await db_1.db.user.findUnique({ where: { id: userId } });
+        if (!self)
+            return next(new error_1.default("Challenge not found", 404));
+        const userTimezone = self.timezone || "UTC";
         const challenge = await db_1.db.circleChallenge.findUnique({
             where: { id: challengeId },
         });
         if (!challenge)
             return next(new error_1.default("Challenge not found", 404));
-        if (new Date() > challenge.expireAt) {
+        // 3️⃣ Convert challenge expiry to user’s local time
+        const nowUTC = new Date();
+        const nowLocal = (0, date_fns_tz_1.toZonedTime)(nowUTC, userTimezone);
+        const expireLocal = (0, date_fns_tz_1.toZonedTime)(challenge.expireAt, userTimezone);
+        // if (new Date() > challenge.expireAt) {
+        //   return next(new ErrorHandler("Challenge already expired", 400));
+        // }
+        if (nowLocal > expireLocal) {
             return next(new error_1.default("Challenge already expired", 400));
         }
         const alreadyMark = await db_1.db.circleChallengeParticipant.findFirst({

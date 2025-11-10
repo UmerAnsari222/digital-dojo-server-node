@@ -3,6 +3,7 @@ import ErrorHandler from "../utils/error";
 import { db } from "../config/db";
 import { getObjectUrl } from "../utils/aws";
 import { AWS_BUCKET_NAME } from "../config/dotEnv";
+import { toZonedTime } from "date-fns-tz";
 
 export const createCircle = async (
   req: Request,
@@ -503,12 +504,25 @@ export const markCircleChallenge = async (
   const { challengeId, skip } = req.body;
 
   try {
+    const self = await db.user.findUnique({ where: { id: userId } });
+    if (!self) return next(new ErrorHandler("Challenge not found", 404));
+    const userTimezone = self.timezone || "UTC";
+
     const challenge = await db.circleChallenge.findUnique({
       where: { id: challengeId },
     });
     if (!challenge) return next(new ErrorHandler("Challenge not found", 404));
 
-    if (new Date() > challenge.expireAt) {
+    // 3️⃣ Convert challenge expiry to user’s local time
+    const nowUTC = new Date();
+    const nowLocal = toZonedTime(nowUTC, userTimezone);
+    const expireLocal = toZonedTime(challenge.expireAt, userTimezone);
+
+    // if (new Date() > challenge.expireAt) {
+    //   return next(new ErrorHandler("Challenge already expired", 400));
+    // }
+
+    if (nowLocal > expireLocal) {
       return next(new ErrorHandler("Challenge already expired", 400));
     }
 
