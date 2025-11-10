@@ -218,6 +218,7 @@ export const getCircleById = async (
                 id: true,
                 name: true,
                 imageUrl: true,
+                streak: true,
                 userBelts: {
                   select: {
                     earnedAt: true,

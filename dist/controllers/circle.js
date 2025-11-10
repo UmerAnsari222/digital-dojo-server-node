@@ -196,6 +196,7 @@ const getCircleById = async (req, res, next) => {
                                 id: true,
                                 name: true,
                                 imageUrl: true,
+                                streak: true,
                                 userBelts: {
                                     select: {
                                         earnedAt: true,
