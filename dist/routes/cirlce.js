@@ -17,7 +17,7 @@ exports.circleRouter.get("/me/all", auth_1.authMiddleware, async (req, res, next
 exports.circleRouter.get("/:circleId", auth_1.authMiddleware, async (req, res, next) => {
     await (0, circle_1.getCircleById)(req, res, next);
 });
-exports.circleRouter.patch("/:circleId", auth_1.authMiddleware, async (req, res, next) => {
+exports.circleRouter.patch("/:circleId/join", auth_1.authMiddleware, async (req, res, next) => {
     await (0, circle_1.addMemberInCircle)(req, res, next);
 });
 exports.circleRouter.patch("/:circleId/leave", auth_1.authMiddleware, async (req, res, next) => {

@@ -49,7 +49,7 @@ circleRouter.get(
 );
 
 circleRouter.patch(
-  "/:circleId",
+  "/:circleId/join",
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await addMemberInCircle(req, res, next);
