@@ -27,8 +27,8 @@ model User {
   currentBelt        Belt?     @relation(fields: [currentBeltId], references: [id], onDelete: SetNull)
   lastCompletionDate DateTime?
 
-  circle   Circle? @relation(fields: [circleId], references: [id])
-  circleId String?
+  // circle   Circle? @relation(fields: [circleId], references: [id])
+  // circleId String?
 
   habits                      Habit[]
   userHabits                  UserHabit[]
@@ -39,6 +39,7 @@ model User {
   weeklyChallengeCompletions  WeeklyChallengeCompletion[]
   circleChallenges            CircleChallenge[]
   circleChallengeParticipants CircleChallengeParticipant[]
+  joinedCircles               Circle[]                     @relation("UserCircles")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -245,7 +246,7 @@ model Circle {
   ownerId String
   owner   User   @relation("CircleOwner", fields: [ownerId], references: [id])
 
-  members          User[]
+  members          User[]            @relation("UserCircles")
   circleChallenges CircleChallenge[]
 
   createdAt DateTime @default(now())
