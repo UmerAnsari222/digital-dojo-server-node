@@ -938,7 +938,7 @@ export const getPastChallenges = async (
               title: true,
               category: true,
               dayOfWeek: true,
-              challenge: { select: { id: true, title: true } },
+              challenge: { select: { id: true, title: true, startDate: true } },
             },
           },
         },

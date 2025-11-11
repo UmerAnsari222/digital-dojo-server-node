@@ -729,7 +729,7 @@ const getPastChallenges = async (req, res, next) => {
                             title: true,
                             category: true,
                             dayOfWeek: true,
-                            challenge: { select: { id: true, title: true } },
+                            challenge: { select: { id: true, title: true, startDate: true } },
                         },
                     },
                 },
