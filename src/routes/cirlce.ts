@@ -79,7 +79,7 @@ circleRouter.get(
   }
 );
 
-circleRouter.patch(
+circleRouter.post(
   "/challenge/mark",
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {

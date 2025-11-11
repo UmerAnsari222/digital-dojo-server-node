@@ -29,7 +29,7 @@ exports.circleRouter.post("/challenge/create", auth_1.authMiddleware, async (req
 exports.circleRouter.get("/challenge/:challengeId", async (req, res, next) => {
     await (0, circle_1.getActiveCircleChallenges)(req, res, next);
 });
-exports.circleRouter.patch("/challenge/mark", auth_1.authMiddleware, async (req, res, next) => {
+exports.circleRouter.post("/challenge/mark", auth_1.authMiddleware, async (req, res, next) => {
     await (0, circle_1.markCircleChallenge)(req, res, next);
 });
 exports.circleRouter.delete("/:circleId", auth_1.authMiddleware, async (req, res, next) => {
