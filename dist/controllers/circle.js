@@ -470,7 +470,7 @@ const markCircleChallenge = async (req, res, next) => {
             where: {
                 userId: userId,
                 challengeId,
-                OR: [{ skip: true }],
+                // OR: [{ skip: true }],
             },
         });
         if (alreadyMark) {

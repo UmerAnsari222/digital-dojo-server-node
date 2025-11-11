@@ -539,7 +539,7 @@ export const markCircleChallenge = async (
       where: {
         userId: userId,
         challengeId,
-        OR: [{ skip: true }],
+        // OR: [{ skip: true }],
       },
     });
 
