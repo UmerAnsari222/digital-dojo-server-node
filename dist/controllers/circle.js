@@ -234,6 +234,20 @@ const getCircleById = async (req, res, next) => {
                 },
             },
         });
+        // --- get user timezone ---
+        const self = await db_1.db.user.findUnique({ where: { id: userId } });
+        const userTimezone = self?.timezone || "UTC";
+        // --- compute isExpired for each challenge ---
+        const nowUTC = new Date();
+        const nowLocal = (0, date_fns_tz_1.toZonedTime)(nowUTC, userTimezone);
+        const updatedChallenges = circle.circleChallenges.map((challenge) => {
+            const expireLocal = (0, date_fns_tz_1.toZonedTime)(challenge.expireAt, userTimezone);
+            const isExpired = nowLocal > expireLocal;
+            return {
+                challengeId: challenge.id,
+                isExpired,
+            };
+        });
         // for (const circle of circles) {
         if (circle?.owner?.imageUrl) {
             circle.owner.imageUrl = await (0, aws_1.getObjectUrl)({
@@ -276,7 +290,7 @@ const getCircleById = async (req, res, next) => {
         //   },
         // });
         return res.status(200).json({
-            circle,
+            circle: { ...circle, expiresChallenges: updatedChallenges },
             msg: "Fetched Circle Successfully",
             success: true,
         });
