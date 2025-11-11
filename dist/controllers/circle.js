@@ -469,6 +469,7 @@ const markCircleChallenge = async (req, res, next) => {
         const alreadyMark = await db_1.db.circleChallengeParticipant.findFirst({
             where: {
                 userId: userId,
+                challengeId,
                 OR: [{ skip: true }],
             },
         });

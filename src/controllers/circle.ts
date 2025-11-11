@@ -538,6 +538,7 @@ export const markCircleChallenge = async (
     const alreadyMark = await db.circleChallengeParticipant.findFirst({
       where: {
         userId: userId,
+        challengeId,
         OR: [{ skip: true }],
       },
     });
