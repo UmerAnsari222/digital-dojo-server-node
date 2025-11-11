@@ -323,7 +323,7 @@ export const getCircleById = async (
     // });
 
     return res.status(200).json({
-      circle: { ...circle, expiresChallenges: updatedChallenges },
+      circle: { ...circle, expiredChallenges: updatedChallenges },
       msg: "Fetched Circle Successfully",
       success: true,
     });
