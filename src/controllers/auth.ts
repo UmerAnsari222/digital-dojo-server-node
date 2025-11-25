@@ -1,13 +1,15 @@
 import { NextFunction, Request, Response } from "express";
 import { db } from "../config/db";
-import { Role } from "@prisma/client";
+import { Provider, Role } from "@prisma/client";
 import ErrorHandler from "../utils/error";
 import { comparePassword, hashedPassword } from "../utils/hashPassword";
 import { createToken } from "../utils/jwt";
 import {
   LoginUserWithEmailRequest,
+  LoginWithApple,
   NewRegisterUserWithEmailRequest,
 } from "../types";
+import { verifyAppleToken, verifyGoogleToken } from "../services/auth";
 
 export const register = async (
   req: Request<{}, {}, NewRegisterUserWithEmailRequest>,
@@ -121,6 +123,142 @@ export const login = async (
     });
   } catch (e) {
     console.log("[LOGIN_USER_WITH_EMAIL_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const loginWithApple = async (
+  req: Request<{}, {}, LoginWithApple>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { identityToken, timezone, fcmToken } = req.body;
+
+    if (!identityToken) {
+      return next(new ErrorHandler("Apple id is required", 400));
+    }
+
+    const payload = await verifyAppleToken(identityToken);
+
+    const appleId = payload.sub;
+    const email = (payload.email as string) || null;
+
+    if (!appleId) {
+      return next(new ErrorHandler("Apple id is required", 400));
+    }
+
+    let user = await db.user.findUnique({
+      where: { providerId: appleId },
+    });
+
+    if (!user) {
+      const firstBelt = await db.belt.findFirst({
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+
+      user = await db.user.create({
+        data: {
+          providerId: appleId,
+          email: email,
+          fcmToken,
+          timezone,
+          provider: Provider.APPLE,
+          currentBeltId: firstBelt ? firstBelt.id : null,
+        },
+      });
+    } else {
+      user = await db.user.update({
+        where: { providerId: appleId },
+        data: {
+          timezone,
+          fcmToken,
+        },
+      });
+    }
+
+    const token = createToken({
+      role: user.role,
+      userId: user.id,
+    });
+
+    return res.status(200).json({
+      token,
+      msg: "Login Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[LOGIN_USER_WITH_APPLE_ERROR]", e);
+    next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const loginWithGoogle = async (
+  req: Request<{}, {}, LoginWithApple>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { identityToken, timezone, fcmToken } = req.body;
+
+    if (!identityToken) {
+      return next(new ErrorHandler("Google id is required", 400));
+    }
+
+    const payload = await verifyGoogleToken(identityToken);
+
+    const googleId = payload.sub;
+    const email = (payload.email as string) || null;
+
+    if (!googleId) {
+      return next(new ErrorHandler("Google id is required", 400));
+    }
+
+    let user = await db.user.findUnique({
+      where: { providerId: googleId },
+    });
+
+    if (!user) {
+      const firstBelt = await db.belt.findFirst({
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+
+      user = await db.user.create({
+        data: {
+          providerId: googleId,
+          email: email,
+          fcmToken,
+          timezone,
+          provider: Provider.GOOGLE,
+          currentBeltId: firstBelt ? firstBelt.id : null,
+        },
+      });
+    } else {
+      user = await db.user.update({
+        where: { providerId: googleId },
+        data: {
+          timezone,
+          fcmToken,
+        },
+      });
+    }
+
+    const token = createToken({
+      role: user.role,
+      userId: user.id,
+    });
+
+    return res.status(200).json({
+      token,
+      msg: "Login Successfully",
+      success: true,
+    });
+  } catch (e) {
+    console.log("[LOGIN_USER_WITH_GOOGLE_ERROR]", e);
     next(new ErrorHandler("Something went wrong", 500));
   }
 };

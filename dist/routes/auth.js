@@ -10,3 +10,9 @@ exports.authRouter.post("/register", async (req, res, next) => {
 exports.authRouter.post("/login", async (req, res, next) => {
     await (0, auth_1.login)(req, res, next);
 });
+exports.authRouter.post("/login/apple", async (req, res, next) => {
+    await (0, auth_1.loginWithApple)(req, res, next);
+});
+exports.authRouter.post("/login/google", async (req, res, next) => {
+    await (0, auth_1.loginWithGoogle)(req, res, next);
+});

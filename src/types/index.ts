@@ -52,6 +52,12 @@ export type PreSignedUploadParams = {
   key: string;
 };
 
+export type LoginWithApple = {
+  identityToken: string;
+  timezone: string;
+  fcmToken: string;
+};
+
 // export enum Role {
 //   USER = "USER",
 //   ADMIN = "ADMIN",
