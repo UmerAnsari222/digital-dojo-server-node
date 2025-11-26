@@ -6,7 +6,7 @@ import { comparePassword, hashedPassword } from "../utils/hashPassword";
 import { createToken } from "../utils/jwt";
 import {
   LoginUserWithEmailRequest,
-  LoginWithApple,
+  LoginWithProvider,
   NewRegisterUserWithEmailRequest,
 } from "../types";
 import { verifyAppleToken, verifyGoogleToken } from "../services/auth";
@@ -128,7 +128,7 @@ export const login = async (
 };
 
 export const loginWithApple = async (
-  req: Request<{}, {}, LoginWithApple>,
+  req: Request<{}, {}, LoginWithProvider>,
   res: Response,
   next: NextFunction
 ) => {
@@ -196,7 +196,7 @@ export const loginWithApple = async (
 };
 
 export const loginWithGoogle = async (
-  req: Request<{}, {}, LoginWithApple>,
+  req: Request<{}, {}, LoginWithProvider>,
   res: Response,
   next: NextFunction
 ) => {

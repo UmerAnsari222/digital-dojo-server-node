@@ -52,7 +52,7 @@ export type PreSignedUploadParams = {
   key: string;
 };
 
-export type LoginWithApple = {
+export type LoginWithProvider = {
   identityToken: string;
   timezone: string;
   fcmToken: string;
