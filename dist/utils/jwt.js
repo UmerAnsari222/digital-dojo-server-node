@@ -10,6 +10,9 @@ const dotEnv_1 = require("../config/dotEnv");
 const jwks_rsa_1 = __importDefault(require("jwks-rsa"));
 const client = (0, jwks_rsa_1.default)({
     jwksUri: "https://appleid.apple.com/auth/keys",
+    cache: true,
+    rateLimit: true,
+    jwksRequestsPerMinute: 5,
 });
 // function for generate jwt token
 const createToken = (user) => {

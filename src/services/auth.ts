@@ -18,6 +18,7 @@ export async function verifyAppleToken(identityToken: string) {
 
   const payload = jwt.verify(identityToken, key, {
     algorithms: ["RS256"],
+    issuer: "https://appleid.apple.com",
   }) as JwtPayload;
 
   if (payload.iss !== "https://appleid.apple.com") {

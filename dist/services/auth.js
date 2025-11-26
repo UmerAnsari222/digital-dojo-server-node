@@ -19,6 +19,7 @@ async function verifyAppleToken(identityToken) {
     const key = await (0, jwt_1.getApplePublicKey)(decode.header.kid);
     const payload = jsonwebtoken_1.default.verify(identityToken, key, {
         algorithms: ["RS256"],
+        issuer: "https://appleid.apple.com",
     });
     if (payload.iss !== "https://appleid.apple.com") {
         throw new error_1.default("Invalid issuer", 401);

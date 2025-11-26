@@ -5,6 +5,9 @@ import jwksClient, { SigningKey } from "jwks-rsa";
 
 const client = jwksClient({
   jwksUri: "https://appleid.apple.com/auth/keys",
+  cache: true,
+  rateLimit: true,
+  jwksRequestsPerMinute: 5,
 });
 
 // function for generate jwt token
