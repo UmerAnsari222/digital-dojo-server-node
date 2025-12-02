@@ -128,12 +128,12 @@ export const login = async (
 };
 
 export const loginWithApple = async (
-  req: Request<{}, {}, LoginWithProvider>,
+  req: Request<{}, {}, LoginWithProvider & { name: string }>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { identityToken, timezone, fcmToken } = req.body;
+    const { identityToken, timezone, fcmToken, name } = req.body;
 
     if (!identityToken) {
       return next(new ErrorHandler("Apple id is required", 400));
@@ -163,6 +163,7 @@ export const loginWithApple = async (
         data: {
           providerId: appleId,
           email: email,
+          name,
           fcmToken,
           timezone,
           provider: Provider.APPLE,
@@ -211,6 +212,7 @@ export const loginWithGoogle = async (
 
     const googleId = payload.sub;
     const email = (payload.email as string) || null;
+    const name = (payload.name as string) || null;
 
     if (!googleId) {
       return next(new ErrorHandler("Google id is required", 400));
@@ -231,6 +233,7 @@ export const loginWithGoogle = async (
         data: {
           providerId: googleId,
           email: email,
+          name,
           fcmToken,
           timezone,
           provider: Provider.GOOGLE,
