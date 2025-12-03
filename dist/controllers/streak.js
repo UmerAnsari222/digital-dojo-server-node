@@ -194,3 +194,7 @@ async function calculateUserGrowthScore(user) {
 node_cron_1.default.schedule("* * * * *", () => {
     recalculateGrowthScores().catch(console.error);
 }, { timezone: "America/New_York" });
+// cron.schedule("0 2 * * *", async () => {
+//   const result = await nightlyConsistencyUpdate();
+//   console.log("Nightly sweep complete:", result);
+// });

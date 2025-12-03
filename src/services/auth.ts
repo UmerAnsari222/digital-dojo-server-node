@@ -33,10 +33,15 @@ export async function verifyAppleToken(identityToken: string) {
 }
 
 export async function verifyGoogleToken(identityToken: string) {
-  const ticket = await googleClient.verifyIdToken({
-    idToken: identityToken,
-    audience: GOOGLE_CLIENT_ID,
-  });
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: identityToken,
+      audience: GOOGLE_CLIENT_ID,
+    });
 
-  return ticket.getPayload();
+    return ticket.getPayload();
+  } catch (error) {
+    console.log("Error verifying Google token:", error);
+    throw new ErrorHandler("Invalid Google id", 500);
+  }
 }

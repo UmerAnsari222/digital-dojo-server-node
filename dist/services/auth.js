@@ -30,9 +30,15 @@ async function verifyAppleToken(identityToken) {
     return payload;
 }
 async function verifyGoogleToken(identityToken) {
-    const ticket = await googleClient.verifyIdToken({
-        idToken: identityToken,
-        audience: dotEnv_1.GOOGLE_CLIENT_ID,
-    });
-    return ticket.getPayload();
+    try {
+        const ticket = await googleClient.verifyIdToken({
+            idToken: identityToken,
+            audience: dotEnv_1.GOOGLE_CLIENT_ID,
+        });
+        return ticket.getPayload();
+    }
+    catch (error) {
+        console.log("Error verifying Google token:", error);
+        throw new error_1.default("Invalid Google id", 500);
+    }
 }

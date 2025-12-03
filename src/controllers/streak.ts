@@ -5,6 +5,7 @@ import { differenceInCalendarDays, differenceInDays } from "date-fns";
 import { normalizeUTC } from "../utils/dateTimeFormatter";
 import { DateTime } from "luxon";
 import cron from "node-cron";
+import { nightlyConsistencyUpdate } from "../utils/consistency";
 
 const BATCH_SIZE = 200;
 
@@ -240,3 +241,8 @@ cron.schedule(
   },
   { timezone: "America/New_York" }
 );
+
+// cron.schedule("0 2 * * *", async () => {
+//   const result = await nightlyConsistencyUpdate();
+//   console.log("Nightly sweep complete:", result);
+// });
