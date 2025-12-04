@@ -176,8 +176,9 @@ export const loginWithApple = async (
       user = await db.user.update({
         where: { providerId: appleId },
         data: {
-          timezone,
-          fcmToken,
+          timezone: timezone,
+          fcmToken: fcmToken,
+          name: name || user.name,
         },
       });
     }
