@@ -1,55 +1,63 @@
-import { differenceInCalendarDays } from "date-fns";
 import { db } from "../config/db";
-import { normalizeUTC } from "./dateTimeFormatter";
 
-/**
- * Computes consistency score based on streak.
- */
+const BATCH_SIZE = 500;
+
 export function computeConsistency(streak: number): number {
   return Math.round((100 * Math.min(streak, 14)) / 14);
 }
 
-/**
- * Nightly job:
- * - If user has missed 2+ days since last completion → reset streak to 0
- * - Consistency is recalculated automatically via streak
- */
 export async function nightlyConsistencyUpdate() {
-  // Fetch all users with a streak field (essentially all users)
-  const users = await db.user.findMany({
-    select: {
-      id: true,
-      streak: true,
-    },
-  });
+  console.log("[Consistency Cron] Starting...");
 
-  const updates: Promise<any>[] = [];
-  const results: { userId: string; streak: number; consistency: number }[] = [];
+  let cursor: { id: string } | undefined = undefined;
+  let totalUpdated = 0;
 
-  for (const user of users) {
-    const consistency = computeConsistency(user.streak);
-
-    // Add update to queue
-    updates.push(
-      db.user.update({
-        where: { id: user.id },
-        data: { consistency },
-      })
-    );
-
-    results.push({
-      userId: user.id,
-      streak: user.streak,
-      consistency,
+  while (true) {
+    const users = await db.user.findMany({
+      take: BATCH_SIZE,
+      skip: cursor ? 1 : 0,
+      ...(cursor ? { cursor } : {}),
+      orderBy: { id: "asc" },
+      select: {
+        id: true,
+        streak: true,
+        consistency: true,
+      },
     });
+
+    if (users.length === 0) break;
+
+    // move cursor to last user
+    cursor = { id: users[users.length - 1].id };
+
+    const updates = [];
+
+    for (const user of users) {
+      const newConsistency = computeConsistency(user.streak);
+
+      if (newConsistency !== user.consistency) {
+        updates.push({ id: user.id, consistency: newConsistency });
+      }
+    }
+
+    // apply in small safe batches
+    const CHUNK = 100;
+    for (let i = 0; i < updates.length; i += CHUNK) {
+      const chunk = updates.slice(i, i + CHUNK);
+
+      await db.$transaction(
+        chunk.map((u) =>
+          db.user.update({
+            where: { id: u.id },
+            data: { consistency: u.consistency },
+          })
+        )
+      );
+    }
+
+    totalUpdated += updates.length;
+    console.log(`[Consistency Cron] Updated ${updates.length} users`);
   }
 
-  // run all DB writes in parallel
-  await Promise.all(updates);
-
-  return {
-    totalUsers: users.length,
-    updatedUsers: results.length,
-    results,
-  };
+  console.log(`[Consistency Cron] Completed. Total updated: ${totalUpdated}`);
 }

@@ -11,6 +11,7 @@ const error_1 = __importDefault(require("../utils/error"));
 const date_fns_1 = require("date-fns");
 const dateTimeFormatter_1 = require("../utils/dateTimeFormatter");
 const node_cron_1 = __importDefault(require("node-cron"));
+const consistency_1 = require("../utils/consistency");
 const statistics_1 = require("../utils/statistics");
 const BATCH_SIZE = 200;
 const getUserStreak = async (req, res, next) => {
@@ -123,6 +124,8 @@ async function calculateStreakPreview(userId, today = new Date()) {
 }
 // Runs nightly at 2AM EST
 node_cron_1.default.schedule("0 2 * * *", () => (0, statistics_1.recalculateGrowthScores)().catch(console.error), { timezone: "America/New_York" });
+// Runs nightly at 2AM EST
+node_cron_1.default.schedule("0 2 * * *", () => (0, consistency_1.nightlyConsistencyUpdate)().catch(console.error), { timezone: "America/New_York" });
 // async function recalculateGrowthScores() {
 //   let page = 0;
 //   let totalUpdated = 0;

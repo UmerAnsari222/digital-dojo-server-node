@@ -147,6 +147,13 @@ cron.schedule(
   { timezone: "America/New_York" }
 );
 
+// Runs nightly at 2AM EST
+cron.schedule(
+  "0 2 * * *",
+  () => nightlyConsistencyUpdate().catch(console.error),
+  { timezone: "America/New_York" }
+);
+
 // async function recalculateGrowthScores() {
 //   let page = 0;
 //   let totalUpdated = 0;
