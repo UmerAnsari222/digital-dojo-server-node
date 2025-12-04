@@ -1,8 +1,63 @@
-@BASE_URL = https://api.digitaldojoteam.com
+# @BASE_URL = https://api.digitaldojoteam.com
+@BASE_URL = http://localhost:5500
+@YOUR_JWT_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5ODE3M2UwYy0yZmUxLTQyNWMtODllOS0yZWQzNzA0MDY0MTgiLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc2NDgzOTM5NCwiZXhwIjoxNzY1NDQ0MTk0fQ.4chIYpKgTL8JS0Thsg6Z0P8LuRCD6PlivqQWKhGO_ds
 
 
 ### Health Check
 GET {{BASE_URL}}/
 Accept: application/json
 
-### Register User
+### Register with email
+POST {{BASE_URL}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+    "name": "Digital Dojo",
+    "email": "mydigitaldojodev@gmail.com",
+    "password": "12345678",
+    "confirmPassword": "12345678"
+}
+
+### Login with email
+POST {{BASE_URL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+    "email": "umerfaqrooq78@gmail.com",
+    "password": "new_password123",
+    "fcmToken": "3225252532",
+    "timeZone": "UTC"
+}
+
+### Login with google
+POST {{BASE_URL}}/api/v1/auth/login/google
+Content-Type: application/json
+
+{
+    "identityToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImQ1NDNlMjFhMDI3M2VmYzY2YTQ3NTAwMDI0NDFjYjIxNTFjYjIzNWYiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIxMTgyMzkxOTMyMTEtNmUybGozdXByams5MnVpZWMwbmN1cG0xaWE2aXFtZTkuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIxMTgyMzkxOTMyMTEtMWM3NzU5ZnFnb2hmN3Z0ZGQwNHRqdHI5bDViN2EzOWsuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTMyODUxMzM5ODk3ODQ4NzI3ODEiLCJlbWFpbCI6Im9wZW5jaXJjbGVkZXZlbG9wZXJzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoib3BlbmNpcmNsZWRldmVsb3BlcnMiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSnZsTGNNWTVZQTVVa1dYLUtCU0E1REx3cncyTXZZWVFCZ0pMejBjY0U3TERfZFJnPXM5Ni1jIiwiZ2l2ZW5fbmFtZSI6Im9wZW5jaXJjbGVkZXZlbG9wZXJzIiwiaWF0IjoxNzY0Nzc0MDUxLCJleHAiOjE3NjQ3Nzc2NTF9.FaLEaYTWNT6_UtGcKB1SJAFTFd1butuy9j717YytzSv0DDN8-35vmGWCkKwftHsO6SZ8_OmFYpN32NPqjHGqBgDvFqqAuc7eNDE3GikcJ0uQ73ooeFd_Lb3GOt2h_iFT3F9BsU_07a-vfV4ieQGEuXG0KHLHlWJSbVi5mBlujCTEjbi_VugZlT5g4cTLTmSaEBbgNnyBRtKr7pKVCwJsW1PgfqoeVs9PSvh7v-xfbOQvSaFnSH27ozb4hdE4DH0lh7RpsTVpluJ8HEmnFonHzWLBULdGB0TYm0HgjvoYNXC7ImEYKgjVjmwxQVcFOODYZo5_yUwO8F9VphF3q6PUmQ",
+    "timezone": "Asia/Karachi",
+    "fcmToken": "47293749237927935729475"
+}
+
+### Login with google
+POST {{BASE_URL}}/api/v1/auth/login/apple
+Content-Type: application/json
+
+{
+    "identityToken": "eyJraWQiOiJZUXJxZE1ENGJxIiwiYWxnIjoiUlMyNTYifQ.eyJpc3MiOiJodHRwczovL2FwcGxlaWQuYXBwbGUuY29tIiwiYXVkIjoiY29tLmRlZWRvam8uc2lnbmluIiwiZXhwIjoxNzY0OTEyOTkzLCJpYXQiOjE3NjQ4MjY1OTMsInN1YiI6IjAwMDUzMy4yYzBmYThmN2EzY2Q0ZDA1OTQ5Nzg0ZTI4NWNiNzIzMy4wNjU1Iiwibm9uY2UiOiI1MTM2MzIzOTgwYTkzNTE0YjY2Mjg0MjBkYjkyNjBlNDljZGY5ZDliZjhlMGIwNWMxMDgyNTQwM2FiYmY2MzBlIiwiY19oYXNoIjoiTnNVcVFPTTRuN3NDNUlSdHg1NGZKZyIsImVtYWlsIjoic2hhYmFuYWxpNjVAaWNsb3VkLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJhdXRoX3RpbWUiOjE3NjQ4MjY1OTMsIm5vbmNlX3N1cHBvcnRlZCI6dHJ1ZX0.wUwuA8nTzMuc-vld6XOi-S7oxvOQ_mxQObBJ7XsbYiv4j3e2R1-qE2wxMrBDXVSx4LSeCW9_zEnmCmxb5PaxtUbrYoUz66nYdBTP1Ssr6BFREFFbVfRfnnkWBwbJ9Ck5pY9qHZ94NtG9NLyzCvhJkLEtifyqVzY4E4hVWE4Ms69qLzcleY5KyIzwEKVsbCAMtGFlG1RZga0wxhRlY-_qyr3kKEKfuQDcwe0T4j3CcEtZcie4DHz6u9pY1-hrpQvtps7tiSQN3eFPzX-OA0a0WHr7CMP_B50exym6HkTnftryKNpPEvZFS0BeLITjtVAIu8hZiPATrOJ10-sYufxMBw",
+    "timezone": "Asia/Karachi",
+    "fcmToken": null,
+    "name": "Shaban"
+}
+
+### Change Password
+POST {{BASE_URL}}/api/v1/change/password
+Content-Type: application/json
+Authorization: Bearer {{YOUR_JWT_TOKEN}}
+
+{
+    "oldPassword": "123456",
+    "newPassword": "new_password123",
+    "confirmPassword": "new_password123"
+}
+

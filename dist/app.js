@@ -21,6 +21,7 @@ const streak_1 = require("./routes/streak");
 const cirlce_1 = require("./routes/cirlce");
 const logger_1 = __importDefault(require("./config/logger"));
 const scheduler_1 = require("./jobs/scheduler");
+const change_password_1 = require("./routes/change-password");
 const app = (0, express_1.default)();
 // Use Morgan middleware
 app.use((0, morgan_1.default)("combined", {
@@ -43,6 +44,7 @@ app.get("/", async (req, res) => {
 });
 app.use("/api/v1/auth", auth_1.authRouter);
 app.use("/api/v1/rest-password", forgot_password_1.forgotPasswordRouter);
+app.use("/api/v1/change", change_password_1.changePasswordRouter);
 app.use("/api/v1/habit", habit_1.habitRouter);
 app.use("/api/v1/challenge", challenge_1.challengeRouter);
 app.use("/api/v1/completion", completion_1.completionRouter);

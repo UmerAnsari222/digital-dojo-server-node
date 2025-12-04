@@ -18,6 +18,7 @@ import { circleRouter } from "./routes/cirlce";
 import logger from "./config/logger";
 import { startScheduler } from "./jobs/scheduler";
 import { runDailySkipJob } from "./jobs/workers/challengeSkip";
+import { changePasswordRouter } from "./routes/change-password";
 
 const app: Application = express();
 
@@ -49,6 +50,7 @@ app.get("/", async (req, res) => {
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/rest-password", forgotPasswordRouter);
+app.use("/api/v1/change", changePasswordRouter);
 app.use("/api/v1/habit", habitRouter);
 app.use("/api/v1/challenge", challengeRouter);
 app.use("/api/v1/completion", completionRouter);

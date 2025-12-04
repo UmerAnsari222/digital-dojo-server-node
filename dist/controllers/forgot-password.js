@@ -9,6 +9,7 @@ const error_1 = __importDefault(require("../utils/error"));
 const otp_1 = require("../utils/otp");
 const otpSender_1 = require("../utils/otpSender");
 const hashPassword_1 = require("../utils/hashPassword");
+const client_1 = require("@prisma/client");
 const sendOtp = async (req, res, next) => {
     try {
         const { email } = req.body;
@@ -19,6 +20,9 @@ const sendOtp = async (req, res, next) => {
         });
         if (!self) {
             return next(new error_1.default("User not found", 404));
+        }
+        if (self.provider !== client_1.Provider.EMAIL) {
+            return next(new error_1.default("Change password is not valid for you", 400));
         }
         //generate OTP
         const otp = (0, otp_1.generateOtp)();

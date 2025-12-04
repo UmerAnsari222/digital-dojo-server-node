@@ -5,6 +5,7 @@ import { generateOtp, hashOtp, verifyOtpService } from "../utils/otp";
 import { sendByEmail } from "../utils/otpSender";
 import { ChangePasswordRequest, VerifyOtpRequest } from "../types";
 import { hashedPassword } from "../utils/hashPassword";
+import { Provider } from "@prisma/client";
 
 export const sendOtp = async (
   req: Request,
@@ -22,6 +23,12 @@ export const sendOtp = async (
 
     if (!self) {
       return next(new ErrorHandler("User not found", 404));
+    }
+
+    if (self.provider !== Provider.EMAIL) {
+      return next(
+        new ErrorHandler("Change password is not valid for you", 400)
+      );
     }
 
     //generate OTP

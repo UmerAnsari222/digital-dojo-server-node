@@ -39,6 +39,12 @@ export type ChangePasswordRequest = {
   confirmPassword: string;
 };
 
+export type NewPasswordRequest = {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
 export type FileUploadParams = {
   Bucket: string;
   Key: string;
