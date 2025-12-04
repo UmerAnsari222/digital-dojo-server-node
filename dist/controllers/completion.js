@@ -11,6 +11,7 @@ const db_1 = require("../config/db");
 const date_fns_1 = require("date-fns");
 const dateTimeFormatter_1 = require("../utils/dateTimeFormatter");
 const date_fns_tz_1 = require("date-fns-tz");
+const consistency_1 = require("../utils/consistency");
 const makeCompletion = async (req, res, next) => {
     const { userId } = req;
     const { userHabitId, dailyChallengeId, skip } = req.body;
@@ -337,6 +338,7 @@ async function processCompletion(userId, today = new Date()) {
                 // beltProgress: 0,
                 lastCompletionDate: todayNormalized,
                 currentBeltId: nextBelt ? nextBelt.id : currentBelt.id,
+                consistency: (0, consistency_1.computeConsistency)(streak),
             },
         });
         beltAchieved = true;
@@ -350,6 +352,7 @@ async function processCompletion(userId, today = new Date()) {
                 streak,
                 beltProgress,
                 lastCompletionDate: todayNormalized,
+                consistency: (0, consistency_1.computeConsistency)(streak),
             },
         });
     }

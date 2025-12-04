@@ -5,6 +5,7 @@ import { db } from "../config/db";
 import { differenceInCalendarDays, endOfDay, startOfDay } from "date-fns";
 import { normalizeUTC } from "../utils/dateTimeFormatter";
 import { toZonedTime } from "date-fns-tz";
+import { computeConsistency } from "../utils/consistency";
 
 export const makeCompletion = async (
   req: Request,
@@ -392,6 +393,7 @@ export async function processCompletion(
         // beltProgress: 0,
         lastCompletionDate: todayNormalized,
         currentBeltId: nextBelt ? nextBelt.id : currentBelt.id,
+        consistency: computeConsistency(streak),
       },
     });
 
@@ -405,6 +407,7 @@ export async function processCompletion(
         streak,
         beltProgress,
         lastCompletionDate: todayNormalized,
+        consistency: computeConsistency(streak),
       },
     });
   }
