@@ -21,3 +21,4 @@ export const REDIS_HOST = process.env.REDIS_HOST!;
 export const REDIS_PORT = process.env.REDIS_PORT!;
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 export const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID!;
+export const APPLE_SERVICE_ID = process.env.APPLE_SERVICE_ID!;

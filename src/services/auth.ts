@@ -3,7 +3,11 @@ import ErrorHandler from "../utils/error";
 import { getApplePublicKey } from "../utils/jwt";
 
 import { OAuth2Client } from "google-auth-library";
-import { GOOGLE_CLIENT_ID } from "../config/dotEnv";
+import {
+  APPLE_CLIENT_ID,
+  APPLE_SERVICE_ID,
+  GOOGLE_CLIENT_ID,
+} from "../config/dotEnv";
 
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -22,11 +26,13 @@ export async function verifyAppleToken(identityToken: string) {
       issuer: "https://appleid.apple.com",
     }) as JwtPayload;
 
+    // console.log(payload);
+
     if (payload.iss !== "https://appleid.apple.com") {
       throw new ErrorHandler("Invalid issuer", 401);
     }
 
-    if (payload.aud !== process.env.APPLE_CLIENT_ID) {
+    if (payload.aud !== APPLE_CLIENT_ID && payload.aud !== APPLE_SERVICE_ID) {
       throw new ErrorHandler("Invalid audience", 401);
     }
 

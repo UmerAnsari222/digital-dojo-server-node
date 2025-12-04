@@ -22,10 +22,11 @@ async function verifyAppleToken(identityToken) {
             algorithms: ["RS256"],
             issuer: "https://appleid.apple.com",
         });
+        // console.log(payload);
         if (payload.iss !== "https://appleid.apple.com") {
             throw new error_1.default("Invalid issuer", 401);
         }
-        if (payload.aud !== process.env.APPLE_CLIENT_ID) {
+        if (payload.aud !== dotEnv_1.APPLE_CLIENT_ID && payload.aud !== dotEnv_1.APPLE_SERVICE_ID) {
             throw new error_1.default("Invalid audience", 401);
         }
         return payload;

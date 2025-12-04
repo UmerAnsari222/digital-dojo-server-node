@@ -190,6 +190,7 @@ export const loginWithApple = async (
 
     return res.status(200).json({
       token,
+      user,
       msg: "Login Successfully",
       success: true,
     });
@@ -260,6 +261,7 @@ export const loginWithGoogle = async (
 
     return res.status(200).json({
       token,
+      user,
       msg: "Login Successfully",
       success: true,
     });

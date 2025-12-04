@@ -147,6 +147,7 @@ const loginWithApple = async (req, res, next) => {
         });
         return res.status(200).json({
             token,
+            user,
             msg: "Login Successfully",
             success: true,
         });
@@ -206,6 +207,7 @@ const loginWithGoogle = async (req, res, next) => {
         });
         return res.status(200).json({
             token,
+            user,
             msg: "Login Successfully",
             success: true,
         });
