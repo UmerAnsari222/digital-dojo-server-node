@@ -8,6 +8,7 @@ const db_1 = require("../config/db");
 const error_1 = __importDefault(require("../utils/error"));
 const aws_1 = require("../utils/aws");
 const dotEnv_1 = require("../config/dotEnv");
+const date_fns_1 = require("date-fns");
 const getProfile = async (req, res, next) => {
     const { userId } = req;
     if (!userId) {
@@ -23,6 +24,8 @@ const getProfile = async (req, res, next) => {
                 imageUrl: true,
                 createdAt: true,
                 updatedAt: true,
+                growthScore: true,
+                consistency: true,
                 role: true,
                 timezone: true,
                 currentBelt: {
@@ -46,6 +49,11 @@ const getProfile = async (req, res, next) => {
                 },
             },
         });
+        const now = new Date();
+        const currentMonthStart = (0, date_fns_1.startOfMonth)(now);
+        const currentMonthEnd = (0, date_fns_1.endOfMonth)(now);
+        const lastMonthStart = (0, date_fns_1.startOfMonth)((0, date_fns_1.subMonths)(now, 1));
+        const lastMonthEnd = (0, date_fns_1.endOfMonth)((0, date_fns_1.subMonths)(now, 1));
         if (!user) {
             return next(new error_1.default("User not found", 404));
         }
@@ -71,9 +79,34 @@ const getProfile = async (req, res, next) => {
                 }
             }
         }
+        const lastMonthCount = await db_1.db.completion.count({
+            where: {
+                userId,
+                userChallengeId: { not: null },
+                date: {
+                    gte: lastMonthStart,
+                    lte: lastMonthEnd,
+                },
+            },
+        });
+        const currentMonthCount = await db_1.db.completion.count({
+            where: {
+                userId,
+                userChallengeId: { not: null },
+                date: {
+                    gte: currentMonthStart,
+                    lte: currentMonthEnd,
+                },
+            },
+        });
+        const delta = currentMonthCount - lastMonthCount;
         return res
             .status(200)
-            .json({ user, success: true, msg: "Profile fetched successfully" });
+            .json({
+            user: { ...user, lastMonthCount, currentMonthCount, delta },
+            success: true,
+            msg: "Profile fetched successfully",
+        });
     }
     catch (error) {
         console.error("[ERROR_GET_PROFILE]:", error);

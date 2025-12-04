@@ -3,6 +3,7 @@ import { db } from "../config/db";
 import ErrorHandler from "../utils/error";
 import { deleteFromAwsStorage, getObjectUrl } from "../utils/aws";
 import { AWS_BUCKET_NAME } from "../config/dotEnv";
+import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 
 export const getProfile = async (
   req: Request,
@@ -24,6 +25,8 @@ export const getProfile = async (
         imageUrl: true,
         createdAt: true,
         updatedAt: true,
+        growthScore: true,
+        consistency: true,
         role: true,
         timezone: true,
         currentBelt: {
@@ -47,6 +50,14 @@ export const getProfile = async (
         },
       },
     });
+
+    const now = new Date();
+
+    const currentMonthStart = startOfMonth(now);
+    const currentMonthEnd = endOfMonth(now);
+
+    const lastMonthStart = startOfMonth(subMonths(now, 1));
+    const lastMonthEnd = endOfMonth(subMonths(now, 1));
 
     if (!user) {
       return next(new ErrorHandler("User not found", 404));
@@ -77,9 +88,37 @@ export const getProfile = async (
       }
     }
 
+    const lastMonthCount = await db.completion.count({
+      where: {
+        userId,
+        userChallengeId: { not: null },
+        date: {
+          gte: lastMonthStart,
+          lte: lastMonthEnd,
+        },
+      },
+    });
+
+    const currentMonthCount = await db.completion.count({
+      where: {
+        userId,
+        userChallengeId: { not: null },
+        date: {
+          gte: currentMonthStart,
+          lte: currentMonthEnd,
+        },
+      },
+    });
+
+    const delta = currentMonthCount - lastMonthCount;
+
     return res
       .status(200)
-      .json({ user, success: true, msg: "Profile fetched successfully" });
+      .json({
+        user: { ...user, lastMonthCount, currentMonthCount, delta },
+        success: true,
+        msg: "Profile fetched successfully",
+      });
   } catch (error) {
     console.error("[ERROR_GET_PROFILE]:", error);
     return next(new ErrorHandler("Something went wrong", 500));
