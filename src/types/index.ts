@@ -58,6 +58,13 @@ export type LoginWithProvider = {
   fcmToken: string;
 };
 
+export type BestWeekResult = {
+  userId: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  count: number;
+};
+
 // export enum Role {
 //   USER = "USER",
 //   ADMIN = "ADMIN",

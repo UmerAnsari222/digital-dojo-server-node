@@ -8,11 +8,11 @@ const db_1 = require("../config/db");
 const error_1 = __importDefault(require("../utils/error"));
 const aws_1 = require("../utils/aws");
 const dotEnv_1 = require("../config/dotEnv");
-const date_fns_1 = require("date-fns");
+const statistics_1 = require("../utils/statistics");
 const getProfile = async (req, res, next) => {
     const { userId } = req;
     if (!userId) {
-        return next(new Error("Unauthorized"));
+        return next(new error_1.default("Unauthorized", 403));
     }
     try {
         const user = await db_1.db.user.findUnique({
@@ -49,11 +49,6 @@ const getProfile = async (req, res, next) => {
                 },
             },
         });
-        const now = new Date();
-        const currentMonthStart = (0, date_fns_1.startOfMonth)(now);
-        const currentMonthEnd = (0, date_fns_1.endOfMonth)(now);
-        const lastMonthStart = (0, date_fns_1.startOfMonth)((0, date_fns_1.subMonths)(now, 1));
-        const lastMonthEnd = (0, date_fns_1.endOfMonth)((0, date_fns_1.subMonths)(now, 1));
         if (!user) {
             return next(new error_1.default("User not found", 404));
         }
@@ -79,31 +74,16 @@ const getProfile = async (req, res, next) => {
                 }
             }
         }
-        const lastMonthCount = await db_1.db.completion.count({
-            where: {
-                userId,
-                userChallengeId: { not: null },
-                date: {
-                    gte: lastMonthStart,
-                    lte: lastMonthEnd,
-                },
+        const lastCurrentMonth = await (0, statistics_1.getChallengesCountLastAndCurrentMonth)(userId);
+        const bestWeek = await (0, statistics_1.computeBestWeek)(userId);
+        return res.status(200).json({
+            user: {
+                ...user,
+                lastMonthCount: lastCurrentMonth.lastMonthCount,
+                currentMonthCount: lastCurrentMonth.currentMonthCount,
+                delta: lastCurrentMonth.delta,
+                bestWeek: bestWeek.count,
             },
-        });
-        const currentMonthCount = await db_1.db.completion.count({
-            where: {
-                userId,
-                userChallengeId: { not: null },
-                date: {
-                    gte: currentMonthStart,
-                    lte: currentMonthEnd,
-                },
-            },
-        });
-        const delta = currentMonthCount - lastMonthCount;
-        return res
-            .status(200)
-            .json({
-            user: { ...user, lastMonthCount, currentMonthCount, delta },
             success: true,
             msg: "Profile fetched successfully",
         });
