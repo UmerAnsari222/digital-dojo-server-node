@@ -96,7 +96,7 @@ export const getProfile = async (
         lastMonthCount: lastCurrentMonth.lastMonthCount,
         currentMonthCount: lastCurrentMonth.currentMonthCount,
         delta: lastCurrentMonth.delta,
-        bestWeek: bestWeek.count,
+        bestWeek: bestWeek,
       },
       success: true,
       msg: "Profile fetched successfully",

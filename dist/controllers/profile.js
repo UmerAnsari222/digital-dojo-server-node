@@ -82,7 +82,7 @@ const getProfile = async (req, res, next) => {
                 lastMonthCount: lastCurrentMonth.lastMonthCount,
                 currentMonthCount: lastCurrentMonth.currentMonthCount,
                 delta: lastCurrentMonth.delta,
-                bestWeek: bestWeek.count,
+                bestWeek: bestWeek,
             },
             success: true,
             msg: "Profile fetched successfully",
