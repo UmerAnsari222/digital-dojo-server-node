@@ -54,7 +54,7 @@ const register = async (req, res, next) => {
     }
     catch (e) {
         console.log("[REGISTER_USER_WITH_EMAIL_ERROR]", e);
-        next(new error_1.default("Something went wrong", 500));
+        next(new error_1.default("Something went wrong", 500, e));
     }
 };
 exports.register = register;
@@ -100,6 +100,7 @@ exports.login = login;
 const loginWithApple = async (req, res, next) => {
     try {
         const { identityToken, timezone, fcmToken, name } = req.body;
+        console.log({ identityToken, timezone, fcmToken, name });
         if (!identityToken) {
             return next(new error_1.default("Apple id is required", 400));
         }
@@ -122,9 +123,9 @@ const loginWithApple = async (req, res, next) => {
                 data: {
                     providerId: appleId,
                     email: email,
-                    name,
-                    fcmToken,
-                    timezone,
+                    name: name,
+                    fcmToken: fcmToken,
+                    timezone: timezone,
                     provider: client_1.Provider.APPLE,
                     currentBeltId: firstBelt ? firstBelt.id : null,
                 },

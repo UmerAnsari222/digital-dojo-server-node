@@ -9,10 +9,12 @@ const errorMiddleware = (err, req, res, next) => {
     logger_1.default.error(err); // ✅ logs full stack trace if logger is set up correctly
     const status = err.statusCode || 500;
     const message = err.message || "Internal Server Error";
+    const stack = err.stack || null;
     res.status(status).json({
         success: false,
         status,
         message,
+        stack,
     });
 };
 exports.default = errorMiddleware;

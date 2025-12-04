@@ -14,22 +14,27 @@ export async function verifyAppleToken(identityToken: string) {
     throw new ErrorHandler("Invalid Apple id", 500);
   }
 
-  const key = await getApplePublicKey(decode.header.kid);
+  try {
+    const key = await getApplePublicKey(decode.header.kid);
 
-  const payload = jwt.verify(identityToken, key, {
-    algorithms: ["RS256"],
-    issuer: "https://appleid.apple.com",
-  }) as JwtPayload;
+    const payload = jwt.verify(identityToken, key, {
+      algorithms: ["RS256"],
+      issuer: "https://appleid.apple.com",
+    }) as JwtPayload;
 
-  if (payload.iss !== "https://appleid.apple.com") {
-    throw new ErrorHandler("Invalid issuer", 401);
+    if (payload.iss !== "https://appleid.apple.com") {
+      throw new ErrorHandler("Invalid issuer", 401);
+    }
+
+    if (payload.aud !== process.env.APPLE_CLIENT_ID) {
+      throw new ErrorHandler("Invalid audience", 401);
+    }
+
+    return payload;
+  } catch (error) {
+    console.log("Error verifying Apple token:", error);
+    throw new ErrorHandler("Invalid Apple id", 500);
   }
-
-  if (payload.aud !== process.env.APPLE_CLIENT_ID) {
-    throw new ErrorHandler("Invalid audience", 401);
-  }
-
-  return payload;
 }
 
 export async function verifyGoogleToken(identityToken: string) {

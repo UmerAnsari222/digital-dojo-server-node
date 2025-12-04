@@ -68,7 +68,7 @@ export const register = async (
     });
   } catch (e) {
     console.log("[REGISTER_USER_WITH_EMAIL_ERROR]", e);
-    next(new ErrorHandler("Something went wrong", 500));
+    next(new ErrorHandler("Something went wrong", 500, e));
   }
 };
 
@@ -135,6 +135,8 @@ export const loginWithApple = async (
   try {
     const { identityToken, timezone, fcmToken, name } = req.body;
 
+    console.log({ identityToken, timezone, fcmToken, name });
+
     if (!identityToken) {
       return next(new ErrorHandler("Apple id is required", 400));
     }
@@ -163,9 +165,9 @@ export const loginWithApple = async (
         data: {
           providerId: appleId,
           email: email,
-          name,
-          fcmToken,
-          timezone,
+          name: name,
+          fcmToken: fcmToken,
+          timezone: timezone,
           provider: Provider.APPLE,
           currentBeltId: firstBelt ? firstBelt.id : null,
         },
