@@ -48,15 +48,22 @@ export const register = async (
     // hash the password
     const hashed = await hashedPassword(password);
 
-    const user = await db.user.create({
-      data: {
-        email: email,
-        password: hashed, // In a real application, ensure to hash the password before saving
-        name: name,
-        role: Role.USER,
-        currentBeltId: firstBelt ? firstBelt.id : null,
-        timezone: timeZone,
-      },
+    // const user = await db.user.create({
+    //   data: {
+    //     email: email,
+    //     password: hashed, // In a real application, ensure to hash the password before saving
+    //     name: name,
+    //     role: Role.USER,
+    //     currentBeltId: firstBelt ? firstBelt.id : null,
+    //     timezone: timeZone,
+    //   },
+    // });
+    const user = await createUser({
+      email: email,
+      password: hashed, // In a real application, ensure to hash the password before saving
+      name: name,
+      firstBeltId: firstBelt ? firstBelt.id : null,
+      timeZone: timeZone,
     });
 
     const token = createToken({ userId: user.id, role: user.role });
@@ -161,16 +168,14 @@ export const loginWithApple = async (
         },
       });
 
-      user = await db.user.create({
-        data: {
-          providerId: appleId,
-          email: email,
-          name: name,
-          fcmToken: fcmToken,
-          timezone: timezone,
-          provider: Provider.APPLE,
-          currentBeltId: firstBelt ? firstBelt.id : null,
-        },
+      user = await createUser({
+        providerId: appleId,
+        email: email,
+        name: name,
+        fcmToken: fcmToken,
+        timeZone: timezone,
+        provider: Provider.APPLE,
+        firstBeltId: firstBelt ? firstBelt.id : null,
       });
     } else {
       user = await db.user.update({
@@ -233,16 +238,14 @@ export const loginWithGoogle = async (
         },
       });
 
-      user = await db.user.create({
-        data: {
-          providerId: googleId,
-          email: email,
-          name,
-          fcmToken,
-          timezone,
-          provider: Provider.GOOGLE,
-          currentBeltId: firstBelt ? firstBelt.id : null,
-        },
+      user = await createUser({
+        providerId: googleId,
+        email: email,
+        name,
+        fcmToken,
+        timeZone: timezone,
+        provider: Provider.GOOGLE,
+        firstBeltId: firstBelt ? firstBelt.id : null,
       });
     } else {
       user = await db.user.update({
@@ -270,3 +273,52 @@ export const loginWithGoogle = async (
     next(new ErrorHandler("Something went wrong", 500));
   }
 };
+
+async function createUser({
+  name,
+  email,
+  password,
+  timeZone,
+  providerId,
+  provider,
+  firstBeltId,
+  fcmToken,
+}: {
+  name: string;
+  email: string;
+  password?: string;
+  timeZone: string;
+  providerId?: string;
+  provider?: Provider;
+  firstBeltId?: string;
+  fcmToken?: string;
+}) {
+  return await db.$transaction(async (tx) => {
+    // 1️⃣ Create the user
+    const user = await tx.user.create({
+      data: {
+        email,
+        password: password,
+        name,
+        role: Role.USER,
+        currentBeltId: firstBeltId,
+        timezone: timeZone,
+        providerId,
+        provider,
+        fcmToken,
+      },
+    });
+
+    // 2️⃣ Create default user preferences
+    await tx.userPreferences.create({
+      data: {
+        userId: user.id,
+        dailyReminders: true,
+        challengeAlerts: true,
+      },
+    });
+
+    // 3️⃣ Return the user (preferences created automatically)
+    return user;
+  });
+}

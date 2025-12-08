@@ -7,15 +7,18 @@
 GET {{BASE_URL}}/
 Accept: application/json
 
+# -- Auth
+
 ### Register with email
 POST {{BASE_URL}}/api/v1/auth/register
 Content-Type: application/json
 
 {
     "name": "Digital Dojo",
-    "email": "mydigitaldojodev@gmail.com",
+    "email": "mydigitaldojodev2@gmail.com",
     "password": "12345678",
-    "confirmPassword": "12345678"
+    "confirmPassword": "12345678",
+    "timezone": "UTC"
 }
 
 ### Login with email
@@ -49,6 +52,15 @@ Content-Type: application/json
     "fcmToken": null,
     "name": "Shaban"
 }
+
+# -- Profile
+
+### Get Profile
+GET {{BASE_URL}}/api/v1/profile
+Content-Type: application/json
+Authorization: Bearer {{YOUR_JWT_TOKEN}}
+
+# -- Change password
 
 ### Change Password
 POST {{BASE_URL}}/api/v1/change/password

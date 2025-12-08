@@ -41,6 +41,7 @@ model User {
   circleChallenges            CircleChallenge[]
   circleChallengeParticipants CircleChallengeParticipant[]
   joinedCircles               Circle[]                     @relation("UserCircles")
+  userPreferences             UserPreferences?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -291,6 +292,17 @@ model CircleChallengeParticipant {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model UserPreferences {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dailyReminders  Boolean  @default(true)
+  challengeAlerts Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 enum Role {
