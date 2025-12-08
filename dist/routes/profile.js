@@ -11,3 +11,6 @@ exports.profileRouter.get("/", auth_1.authMiddleware, async (req, res, next) => 
 exports.profileRouter.patch("/update", auth_1.authMiddleware, async (req, res, next) => {
     await (0, profile_1.updateProfile)(req, res, next);
 });
+exports.profileRouter.patch("/update-preferences", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, profile_1.updatePreferences)(req, res, next);
+});

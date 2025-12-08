@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProfile = exports.getProfile = void 0;
+exports.updatePreferences = exports.updateProfile = exports.getProfile = void 0;
 const db_1 = require("../config/db");
 const error_1 = __importDefault(require("../utils/error"));
 const aws_1 = require("../utils/aws");
@@ -127,3 +127,32 @@ const updateProfile = async (req, res, next) => {
     }
 };
 exports.updateProfile = updateProfile;
+const updatePreferences = async (req, res, next) => {
+    const { userId } = req;
+    const { dailyReminders, challengeAlerts } = req.body;
+    if (!userId) {
+        return next(new error_1.default("Unauthorized", 403));
+    }
+    try {
+        const isExisting = await db_1.db.userPreferences.findUnique({
+            where: { userId: userId },
+        });
+        if (!isExisting) {
+            return next(new error_1.default("User preferences not found", 404));
+        }
+        const updatedPreferences = await db_1.db.userPreferences.update({
+            where: { userId: userId },
+            data: { dailyReminders, challengeAlerts },
+        });
+        return res.status(200).json({
+            preferences: updatedPreferences,
+            success: true,
+            msg: "Preferences updated successfully",
+        });
+    }
+    catch (error) {
+        console.error("[ERROR_UPDATE_PREFERENCES]:", error);
+        return next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.updatePreferences = updatePreferences;

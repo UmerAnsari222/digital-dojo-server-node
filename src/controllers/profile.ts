@@ -148,3 +148,40 @@ export const updateProfile = async (
     return next(new ErrorHandler("Something went wrong", 500));
   }
 };
+
+export const updatePreferences = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req;
+  const { dailyReminders, challengeAlerts } = req.body;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 403));
+  }
+
+  try {
+    const isExisting = await db.userPreferences.findUnique({
+      where: { userId: userId },
+    });
+
+    if (!isExisting) {
+      return next(new ErrorHandler("User preferences not found", 404));
+    }
+
+    const updatedPreferences = await db.userPreferences.update({
+      where: { userId: userId },
+      data: { dailyReminders, challengeAlerts },
+    });
+
+    return res.status(200).json({
+      preferences: updatedPreferences,
+      success: true,
+      msg: "Preferences updated successfully",
+    });
+  } catch (error) {
+    console.error("[ERROR_UPDATE_PREFERENCES]:", error);
+    return next(new ErrorHandler("Something went wrong", 500));
+  }
+};
