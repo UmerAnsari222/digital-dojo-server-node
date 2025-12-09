@@ -9,3 +9,4 @@ logs/
 test.ts
 test.js
 /src/firebase/serviceAccountKey.json
+/dist/firebase/serviceAccountKey.json
