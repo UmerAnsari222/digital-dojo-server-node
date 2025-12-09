@@ -64,6 +64,7 @@ app.use("/api/v1/presigned", urlRouter);
 startScheduler().then(() => {
   console.log("Job Scheduler started.");
 });
+
 // Error handling middleware
 app.use(errorMiddleware);
 

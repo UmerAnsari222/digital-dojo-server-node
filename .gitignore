@@ -8,3 +8,4 @@ digitalDojoKey.pem
 logs/
 test.ts
 test.js
+/src/firebase/serviceAccountKey.json
