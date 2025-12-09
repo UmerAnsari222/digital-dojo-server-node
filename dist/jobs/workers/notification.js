@@ -11,7 +11,7 @@ exports.reminderWorker = new bullmq_1.Worker(notification_1.REMINDER_QUEUE, asyn
     const batchSize = 60; // you choose
     let skip = 0;
     while (true) {
-        const preferences = await getUserPreferences();
+        const preferences = await getUserPreferences(batchSize, skip);
         if (preferences.length === 0)
             break;
         // Extract only valid fcmTokens
@@ -56,13 +56,14 @@ exports.reminderWorker = new bullmq_1.Worker(notification_1.REMINDER_QUEUE, asyn
     }
 }, {
     connection: redis_1.redisConnection,
+    concurrency: 1,
 });
 exports.challengeWorker = new bullmq_1.Worker(notification_1.CHALLENGE_QUEUE, async () => {
     console.log("[BullMQ] Running Challenge worker check...");
     const batchSize = 200;
     let skip = 0;
     while (true) {
-        const preferences = await getUserPreferences();
+        const preferences = await getUserPreferences(batchSize, skip);
         if (preferences.length === 0)
             break;
         // Extract only valid fcmTokens
@@ -90,16 +91,18 @@ exports.challengeWorker = new bullmq_1.Worker(notification_1.CHALLENGE_QUEUE, as
         skip += batchSize;
         console.log("[BullMQ] ✅ Challenge Alert! Done");
     }
-}, { connection: redis_1.redisConnection });
+}, { connection: redis_1.redisConnection, concurrency: 1 });
 exports.reminderWorker.on("failed", (job, err) => {
     console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
 });
 exports.challengeWorker.on("failed", (job, err) => {
     console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
 });
-async function getUserPreferences() {
+async function getUserPreferences(skip, take) {
     return db_1.db.userPreferences.findMany({
         where: { dailyReminders: true },
+        skip,
+        take,
         include: {
             user: {
                 select: {

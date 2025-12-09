@@ -13,7 +13,7 @@ export const reminderWorker = new Worker(
     let skip = 0;
 
     while (true) {
-      const preferences = await getUserPreferences();
+      const preferences = await getUserPreferences(batchSize, skip);
 
       if (preferences.length === 0) break;
 
@@ -69,6 +69,7 @@ export const reminderWorker = new Worker(
   },
   {
     connection: redisConnection,
+    concurrency: 1,
   }
 );
 
@@ -81,7 +82,7 @@ export const challengeWorker = new Worker(
     let skip = 0;
 
     while (true) {
-      const preferences = await getUserPreferences();
+      const preferences = await getUserPreferences(batchSize, skip);
 
       if (preferences.length === 0) break;
 
@@ -119,7 +120,7 @@ export const challengeWorker = new Worker(
       console.log("[BullMQ] ✅ Challenge Alert! Done");
     }
   },
-  { connection: redisConnection }
+  { connection: redisConnection, concurrency: 1 }
 );
 
 reminderWorker.on("failed", (job, err) => {
@@ -130,9 +131,11 @@ challengeWorker.on("failed", (job, err) => {
   console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
 });
 
-async function getUserPreferences() {
+async function getUserPreferences(skip: number, take: number) {
   return db.userPreferences.findMany({
     where: { dailyReminders: true },
+    skip,
+    take,
     include: {
       user: {
         select: {
