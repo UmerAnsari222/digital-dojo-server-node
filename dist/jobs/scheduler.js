@@ -10,9 +10,10 @@ const streak_1 = require("./queues/streak");
 const challengeSkip_1 = require("./queues/challengeSkip"); // adjust import path
 require("../jobs/workers/streak");
 require("../jobs/workers/challengeSkip");
+// import "../jobs/workers/notification";
 const notification_1 = require("./workers/notification");
 const node_cron_1 = __importDefault(require("node-cron"));
-const eventBus_1 = __importDefault(require("../events/eventBus"));
+const notification_2 = require("./queues/notification");
 async function scheduleStreakJob() {
     console.log("[BullMQ] Scheduling streak reset job (daily 00:00)...");
     await streak_1.streakQueue.removeJobScheduler("streak-reset-midnight");
@@ -51,14 +52,22 @@ async function startScheduler() {
     await scheduleWeeklySkipJob();
 }
 // Run every morning at 9 AM
-node_cron_1.default.schedule("0 9 * * *", () => {
+node_cron_1.default.schedule("0 9 * * *", async () => {
     // cron.schedule("* * * * *", () => {
     console.log("[CRON] Adding daily reminder job to queue");
-    eventBus_1.default.emit("dailyReminder");
+    // eventBus.emit("dailyReminder");
+    await notification_2.reminderQueue.add("SEND_DAILY_REMINDER", {
+        title: "Daily Reminder!",
+        description: "Don't forget to complete your challenge today!",
+    });
 });
 // Challenge alerts every hour
-node_cron_1.default.schedule("0 * * * *", () => {
-    eventBus_1.default.emit("challengeAlert");
+node_cron_1.default.schedule("0 * * * *", async () => {
+    await notification_2.challengeQueue.add("SEND_CHALLENGE_ALERT", {
+        title: "Challenge Alert!",
+        description: "You have a new challenge waiting. Complete it today!",
+    });
+    // eventBus.emit("challengeAlert");
 });
 process.on("SIGINT", async () => {
     console.log("Shutting down gracefully...");
