@@ -61,7 +61,7 @@ export async function startScheduler() {
 }
 
 // Run every morning at 9 AM
-cron.schedule("0 9 * * *", async () => {
+cron.schedule("0 4 * * *", async () => {
   // cron.schedule("* * * * *", () => {
   console.log("[CRON] Adding daily reminder job to queue");
   // eventBus.emit("dailyReminder");

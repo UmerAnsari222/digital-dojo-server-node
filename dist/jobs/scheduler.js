@@ -52,7 +52,7 @@ async function startScheduler() {
     await scheduleWeeklySkipJob();
 }
 // Run every morning at 9 AM
-node_cron_1.default.schedule("0 9 * * *", async () => {
+node_cron_1.default.schedule("0 4 * * *", async () => {
     // cron.schedule("* * * * *", () => {
     console.log("[CRON] Adding daily reminder job to queue");
     // eventBus.emit("dailyReminder");
