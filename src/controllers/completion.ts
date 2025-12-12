@@ -6,6 +6,8 @@ import { differenceInCalendarDays, endOfDay, startOfDay } from "date-fns";
 import { normalizeUTC } from "../utils/dateTimeFormatter";
 import { toZonedTime } from "date-fns-tz";
 import { computeConsistency } from "../utils/consistency";
+import { notificationQueue } from "../jobs/queues/notification";
+import { SEND_NOTIFICATION } from "../types/constant";
 
 export const makeCompletion = async (
   req: Request,
@@ -101,6 +103,17 @@ export const makeCompletion = async (
     //     lastCompletionDate: data.lastCompletionDate,
     //   },
     // });
+
+    if (!skip) {
+      // Add job to notification queue
+      await notificationQueue.add(SEND_NOTIFICATION, {
+        userIds: [userId], // single user
+        title: "Challenge Completion!",
+        description: "Congratulations on completing your challenge today!",
+        extraData: {}, // optional extra data for push
+        type: "dynamic", // optional: you can use 'dailyReminder', 'challengeAlert', or 'custom'
+      });
+    }
 
     return res.status(201).json({
       completion,

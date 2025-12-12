@@ -1,5 +1,9 @@
 import { Worker } from "bullmq";
-import { CHALLENGE_QUEUE, REMINDER_QUEUE } from "../queues/notification";
+import {
+  CHALLENGE_QUEUE,
+  NOTIFICATION_QUEUE,
+  REMINDER_QUEUE,
+} from "../queues/notification";
 import { redisConnection } from "../../utils/redis";
 import { db } from "../../config/db";
 import { messaging } from "../../firebase";
@@ -184,6 +188,41 @@ export const challengeWorker = new Worker(
     }
   },
   { connection: redisConnection, concurrency: 1 }
+);
+
+export const notificationWorker = new Worker(
+  NOTIFICATION_QUEUE,
+  async (job) => {
+    const { type, title, description, userIds, extraData } = job.data;
+    if (!userIds || userIds.length === 0) return;
+
+    const users = await db.user.findMany({
+      where: { id: { in: userIds } },
+      include: { userPreferences: true },
+    });
+
+    for (const user of users) {
+      // Only send if user has preferences object
+      if (!user.userPreferences) continue;
+
+      // Save notification in DB
+      await db.notification.create({
+        data: { userId: user.id, title, description },
+      });
+
+      // Send push if token exists
+      if (user.fcmToken) {
+        await messaging.sendEachForMulticast({
+          tokens: [user.fcmToken],
+          notification: { title, body: description },
+          data: extraData || {},
+        });
+      }
+    }
+
+    console.log(`[Worker] ✅ Notifications sent for users with preferences`);
+  },
+  { connection: redisConnection, concurrency: 5 }
 );
 
 reminderWorker.on("failed", (job, err) => {

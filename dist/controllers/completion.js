@@ -12,6 +12,8 @@ const date_fns_1 = require("date-fns");
 const dateTimeFormatter_1 = require("../utils/dateTimeFormatter");
 const date_fns_tz_1 = require("date-fns-tz");
 const consistency_1 = require("../utils/consistency");
+const notification_1 = require("../jobs/queues/notification");
+const constant_1 = require("../types/constant");
 const makeCompletion = async (req, res, next) => {
     const { userId } = req;
     const { userHabitId, dailyChallengeId, skip } = req.body;
@@ -86,6 +88,16 @@ const makeCompletion = async (req, res, next) => {
         //     lastCompletionDate: data.lastCompletionDate,
         //   },
         // });
+        if (!skip) {
+            // Add job to notification queue
+            await notification_1.notificationQueue.add(constant_1.SEND_NOTIFICATION, {
+                userIds: [userId], // single user
+                title: "Challenge Completion!",
+                description: "Congratulations on completing your challenge today!",
+                extraData: {}, // optional extra data for push
+                type: "dynamic", // optional: you can use 'dailyReminder', 'challengeAlert', or 'custom'
+            });
+        }
         return res.status(201).json({
             completion,
             msg: skip

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.challengeWorker = exports.reminderWorker = void 0;
+exports.notificationWorker = exports.challengeWorker = exports.reminderWorker = void 0;
 const bullmq_1 = require("bullmq");
 const notification_1 = require("../queues/notification");
 const redis_1 = require("../../utils/redis");
@@ -141,6 +141,33 @@ exports.challengeWorker = new bullmq_1.Worker(notification_1.CHALLENGE_QUEUE, as
         console.log("[BullMQ] ✅ Challenge Alert! Batch complete");
     }
 }, { connection: redis_1.redisConnection, concurrency: 1 });
+exports.notificationWorker = new bullmq_1.Worker(notification_1.NOTIFICATION_QUEUE, async (job) => {
+    const { type, title, description, userIds, extraData } = job.data;
+    if (!userIds || userIds.length === 0)
+        return;
+    const users = await db_1.db.user.findMany({
+        where: { id: { in: userIds } },
+        include: { userPreferences: true },
+    });
+    for (const user of users) {
+        // Only send if user has preferences object
+        if (!user.userPreferences)
+            continue;
+        // Save notification in DB
+        await db_1.db.notification.create({
+            data: { userId: user.id, title, description },
+        });
+        // Send push if token exists
+        if (user.fcmToken) {
+            await firebase_1.messaging.sendEachForMulticast({
+                tokens: [user.fcmToken],
+                notification: { title, body: description },
+                data: extraData || {},
+            });
+        }
+    }
+    console.log(`[Worker] ✅ Notifications sent for users with preferences`);
+}, { connection: redis_1.redisConnection, concurrency: 5 });
 exports.reminderWorker.on("failed", (job, err) => {
     console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
 });

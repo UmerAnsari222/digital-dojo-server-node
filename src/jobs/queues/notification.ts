@@ -3,6 +3,7 @@ import { redisConnection } from "../../utils/redis";
 
 export const REMINDER_QUEUE = "reminderQueue";
 export const CHALLENGE_QUEUE = "challengeQueue";
+export const NOTIFICATION_QUEUE = "notificationQueue";
 
 export const reminderQueue = new Queue(REMINDER_QUEUE, {
   connection: redisConnection,
@@ -18,6 +19,19 @@ export const reminderQueue = new Queue(REMINDER_QUEUE, {
 });
 
 export const challengeQueue = new Queue(CHALLENGE_QUEUE, {
+  connection: redisConnection,
+  defaultJobOptions: {
+    removeOnComplete: true,
+    removeOnFail: true,
+    attempts: 3,
+    backoff: {
+      type: "exponential",
+      delay: 1000,
+    },
+  },
+});
+
+export const notificationQueue = new Queue(NOTIFICATION_QUEUE, {
   connection: redisConnection,
   defaultJobOptions: {
     removeOnComplete: true,
