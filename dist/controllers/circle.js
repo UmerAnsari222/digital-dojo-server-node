@@ -280,23 +280,20 @@ const getCircleById = async (req, res, next) => {
             }
         }
         // let ownerStats: OwnerStats[] = [];
-        let ownerStats = await Promise.all(circle.circleChallenges.map((circleCh) => limit(async () => {
-            const owner = circleCh.owner;
+        const results = await Promise.allSettled(circle.circleChallenges.map(({ owner }) => limit(async () => {
             const [growthScore, challengeStats] = await Promise.all([
-                // 2️⃣ Calculate growth score
-                await (0, statistics_1.calculateUserGrowthScore)({
+                (0, statistics_1.calculateUserGrowthScore)({
                     id: owner.id,
                     createdAt: owner.createdAt,
-                    timezone: owner.timezone || "UTC",
+                    timezone: owner.timezone ?? "UTC",
                 }),
-                // 3️⃣ Calculate challenges count delta
-                await (0, statistics_1.getChallengesCountLastAndCurrentMonth)(owner.id),
+                (0, statistics_1.getChallengesCountLastAndCurrentMonth)(owner.id),
             ]);
-            return {
-                growthScore,
-                challengeStats,
-            };
+            return { growthScore, challengeStats };
         })));
+        const ownerStats = results
+            .filter((r) => r.status === "fulfilled")
+            .map((r) => r.value);
         // for (const circleCh of circle.circleChallenges) {
         //   const owner = circleCh.owner;
         //   // 2️⃣ Calculate growth score
