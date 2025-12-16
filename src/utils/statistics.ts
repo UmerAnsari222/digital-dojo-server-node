@@ -76,7 +76,7 @@ export async function recalculateGrowthScores() {
   );
 }
 
-async function calculateUserGrowthScore(user: {
+export async function calculateUserGrowthScore(user: {
   id: string;
   createdAt: Date;
   timezone: string;

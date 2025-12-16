@@ -4,6 +4,14 @@ import { db } from "../config/db";
 import { getObjectUrl } from "../utils/aws";
 import { AWS_BUCKET_NAME } from "../config/dotEnv";
 import { toZonedTime } from "date-fns-tz";
+import pLimit from "p-limit";
+import {
+  calculateUserGrowthScore,
+  getChallengesCountLastAndCurrentMonth,
+} from "../utils/statistics";
+import { OwnerStats } from "../types";
+
+const limit = pLimit(10);
 
 export const createCircle = async (
   req: Request,
@@ -217,6 +225,8 @@ export const getCircleById = async (
             name: true,
             imageUrl: true,
             circles: true,
+            createdAt: true,
+            timezone: true,
           },
         },
         circleChallenges: {
@@ -227,6 +237,8 @@ export const getCircleById = async (
                 name: true,
                 imageUrl: true,
                 streak: true,
+                createdAt: true,
+                timezone: true,
                 userBelts: {
                   select: {
                     earnedAt: true,
@@ -283,15 +295,6 @@ export const getCircleById = async (
       });
       // }
 
-      // circle.members.forEach(async (member) => {
-      //   if (member.imageUrl) {
-      //     member.imageUrl = await getObjectUrl({
-      //       bucket: AWS_BUCKET_NAME,
-      //       key: member.imageUrl,
-      //     });
-      //   }
-      // });
-
       for (const member of circle.members) {
         if (member.imageUrl) {
           member.imageUrl = await getObjectUrl({
@@ -311,6 +314,51 @@ export const getCircleById = async (
       }
     }
 
+    // let ownerStats: OwnerStats[] = [];
+    let ownerStats: OwnerStats[] = await Promise.all(
+      circle.circleChallenges.map((circleCh) =>
+        limit(async () => {
+          const owner = circleCh.owner;
+
+          const [growthScore, challengeStats] = await Promise.all([
+            // 2️⃣ Calculate growth score
+            await calculateUserGrowthScore({
+              id: owner.id,
+              createdAt: owner.createdAt,
+              timezone: owner.timezone || "UTC",
+            }),
+            // 3️⃣ Calculate challenges count delta
+            await getChallengesCountLastAndCurrentMonth(owner.id),
+          ]);
+
+          return {
+            growthScore,
+            challengeStats,
+          };
+        })
+      )
+    );
+
+    // for (const circleCh of circle.circleChallenges) {
+    //   const owner = circleCh.owner;
+
+    //   // 2️⃣ Calculate growth score
+    //   const growthScore = await calculateUserGrowthScore({
+    //     id: owner.id,
+    //     createdAt: owner.createdAt,
+    //     timezone: owner.timezone || "UTC",
+    //   });
+    //   // 3️⃣ Calculate challenges count delta
+    //   const challengeStats = await getChallengesCountLastAndCurrentMonth(
+    //     owner.id
+    //   );
+
+    //   ownerStats.push({
+    //     growthScore,
+    //     challengeStats,
+    //   });
+    // }
+
     // const circleChIds = circle.circleChallenges.map((ch) => ch.id);
 
     // const completions = await db.circleChallengeParticipant.findMany({
@@ -323,7 +371,7 @@ export const getCircleById = async (
     // });
 
     return res.status(200).json({
-      circle: { ...circle, expiredChallenges: updatedChallenges },
+      circle: { ...circle, expiredChallenges: updatedChallenges, ownerStats },
       msg: "Fetched Circle Successfully",
       success: true,
     });

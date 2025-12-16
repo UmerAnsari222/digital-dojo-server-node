@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import { Request } from "express";
 
 declare global {
@@ -75,3 +75,17 @@ export type BestWeekResult = {
 //   USER = "USER",
 //   ADMIN = "ADMIN",
 // }
+
+export type OwnerStats = {
+  growthScore: number;
+  challengeStats: {
+    lastMonthCount: number;
+    currentMonthCount: number;
+    delta: number;
+  };
+};
+export type CircleChallengeDTO = Prisma.CircleChallengeGetPayload<{
+  include: { owner: true; category: true; participants: true };
+}> & {
+  ownerStats?: OwnerStats;
+};

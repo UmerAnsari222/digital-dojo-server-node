@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.recalculateGrowthScores = recalculateGrowthScores;
+exports.calculateUserGrowthScore = calculateUserGrowthScore;
 exports.getChallengesCountLastAndCurrentMonth = getChallengesCountLastAndCurrentMonth;
 exports.computeBestWeek = computeBestWeek;
 const luxon_1 = require("luxon");
