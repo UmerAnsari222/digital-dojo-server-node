@@ -289,7 +289,7 @@ const getCircleById = async (req, res, next) => {
                 }),
                 (0, statistics_1.getChallengesCountLastAndCurrentMonth)(owner.id),
             ]);
-            return { growthScore, challengeStats };
+            return { growthScore, challengeStats, ownerId: owner.id };
         })));
         const ownerStats = results
             .filter((r) => r.status === "fulfilled")

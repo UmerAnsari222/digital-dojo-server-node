@@ -327,7 +327,7 @@ export const getCircleById = async (
             getChallengesCountLastAndCurrentMonth(owner.id),
           ]);
 
-          return { growthScore, challengeStats };
+          return { growthScore, challengeStats, ownerId: owner.id };
         })
       )
     );

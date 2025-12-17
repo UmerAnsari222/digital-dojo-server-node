@@ -78,6 +78,7 @@ export type BestWeekResult = {
 
 export type OwnerStats = {
   growthScore: number;
+  ownerId: string;
   challengeStats: {
     lastMonthCount: number;
     currentMonthCount: number;
