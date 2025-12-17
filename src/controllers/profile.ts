@@ -5,6 +5,7 @@ import { deleteFromAwsStorage, getObjectUrl } from "../utils/aws";
 import { AWS_BUCKET_NAME } from "../config/dotEnv";
 import { endOfMonth, startOfMonth, subMonths } from "date-fns";
 import {
+  calculateUserGrowthScore,
   computeBestWeek,
   getChallengesCountLastAndCurrentMonth,
 } from "../utils/statistics";
@@ -29,7 +30,7 @@ export const getProfile = async (
         imageUrl: true,
         createdAt: true,
         updatedAt: true,
-        growthScore: true,
+        // growthScore: true,
         consistency: true,
         role: true,
         timezone: true,
@@ -88,7 +89,21 @@ export const getProfile = async (
       userId
     );
 
-    const bestWeek = await computeBestWeek(userId);
+    // const bestWeek = await computeBestWeek(userId);
+    // const growthScore = await calculateUserGrowthScore({
+    //   id: user.id,
+    //   createdAt: user.createdAt,
+    //   timezone: user.timezone ?? "UTC",
+    // });
+
+    const [bestWeek, growthScore] = await Promise.all([
+      computeBestWeek(userId),
+      calculateUserGrowthScore({
+        id: user.id,
+        createdAt: user.createdAt,
+        timezone: user.timezone ?? "UTC",
+      }),
+    ]);
 
     return res.status(200).json({
       user: {
@@ -97,6 +112,7 @@ export const getProfile = async (
         currentMonthCount: lastCurrentMonth.currentMonthCount,
         delta: lastCurrentMonth.delta,
         bestWeek: bestWeek,
+        growthScore,
       },
       success: true,
       msg: "Profile fetched successfully",

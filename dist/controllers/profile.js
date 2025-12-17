@@ -24,7 +24,7 @@ const getProfile = async (req, res, next) => {
                 imageUrl: true,
                 createdAt: true,
                 updatedAt: true,
-                growthScore: true,
+                // growthScore: true,
                 consistency: true,
                 role: true,
                 timezone: true,
@@ -75,7 +75,20 @@ const getProfile = async (req, res, next) => {
             }
         }
         const lastCurrentMonth = await (0, statistics_1.getChallengesCountLastAndCurrentMonth)(userId);
-        const bestWeek = await (0, statistics_1.computeBestWeek)(userId);
+        // const bestWeek = await computeBestWeek(userId);
+        // const growthScore = await calculateUserGrowthScore({
+        //   id: user.id,
+        //   createdAt: user.createdAt,
+        //   timezone: user.timezone ?? "UTC",
+        // });
+        const [bestWeek, growthScore] = await Promise.all([
+            (0, statistics_1.computeBestWeek)(userId),
+            (0, statistics_1.calculateUserGrowthScore)({
+                id: user.id,
+                createdAt: user.createdAt,
+                timezone: user.timezone ?? "UTC",
+            }),
+        ]);
         return res.status(200).json({
             user: {
                 ...user,
@@ -83,6 +96,7 @@ const getProfile = async (req, res, next) => {
                 currentMonthCount: lastCurrentMonth.currentMonthCount,
                 delta: lastCurrentMonth.delta,
                 bestWeek: bestWeek,
+                growthScore,
             },
             success: true,
             msg: "Profile fetched successfully",
