@@ -238,6 +238,12 @@ export const loginWithGoogle = async (
         },
       });
 
+      const emailExist = await db.user.findUnique({ where: { email } });
+
+      if (emailExist) {
+        return next(new ErrorHandler("Email is already exist", 409));
+      }
+
       user = await createUser({
         providerId: googleId,
         email: email,

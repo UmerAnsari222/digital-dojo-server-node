@@ -185,6 +185,10 @@ const loginWithGoogle = async (req, res, next) => {
                     createdAt: "asc",
                 },
             });
+            const emailExist = await db_1.db.user.findUnique({ where: { email } });
+            if (emailExist) {
+                return next(new error_1.default("Email is already exist", 409));
+            }
             user = await createUser({
                 providerId: googleId,
                 email: email,
