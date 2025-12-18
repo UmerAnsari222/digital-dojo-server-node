@@ -56,7 +56,7 @@ export const deleteUserNotificationById = async (
       return next(new ErrorHandler("Notification not found", 404));
     }
 
-    await db.notification.delete({ where: { id: notification.id } });
+    await db.notification.delete({ where: { id: notification.id, userId } });
 
     return res.status(200).json({
       msg: "Notification Deleted Successfully",

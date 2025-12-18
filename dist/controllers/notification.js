@@ -46,7 +46,7 @@ const deleteUserNotificationById = async (req, res, next) => {
         if (!notification) {
             return next(new error_1.default("Notification not found", 404));
         }
-        await db_1.db.notification.delete({ where: { id: notification.id } });
+        await db_1.db.notification.delete({ where: { id: notification.id, userId } });
         return res.status(200).json({
             msg: "Notification Deleted Successfully",
             success: true,
