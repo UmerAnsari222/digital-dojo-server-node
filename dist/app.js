@@ -22,6 +22,7 @@ const cirlce_1 = require("./routes/cirlce");
 const logger_1 = __importDefault(require("./config/logger"));
 const scheduler_1 = require("./jobs/scheduler");
 const change_password_1 = require("./routes/change-password");
+const notification_1 = require("./routes/notification");
 const app = (0, express_1.default)();
 // Use Morgan middleware
 app.use((0, morgan_1.default)("combined", {
@@ -53,6 +54,7 @@ app.use("/api/v1/streak", streak_1.streakRouter);
 app.use("/api/v1/circle", cirlce_1.circleRouter);
 app.use("/api/v1/category", category_1.categoryRouter);
 app.use("/api/v1/profile", profile_1.profileRouter);
+app.use("/api/v1/notifications", notification_1.notificationRouter);
 app.use("/api/v1/presigned", presigned_1.urlRouter);
 (0, scheduler_1.startScheduler)().then(() => {
     console.log("Job Scheduler started.");

@@ -92,8 +92,8 @@ const makeCompletion = async (req, res, next) => {
             // Add job to notification queue
             await notification_1.notificationQueue.add(constant_1.SEND_NOTIFICATION, {
                 userIds: [userId], // single user
-                title: "Challenge Completion!",
-                description: "Congratulations on completing your challenge today!",
+                title: `${userHabitId ? "Habit" : "Challenge"} Completion!`,
+                description: `Congratulations on completing your ${userHabitId ? "habit" : "challenge"} today!`,
                 extraData: {}, // optional extra data for push
                 type: "dynamic", // optional: you can use 'dailyReminder', 'challengeAlert', or 'custom'
             });

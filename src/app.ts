@@ -19,6 +19,7 @@ import logger from "./config/logger";
 import { startScheduler } from "./jobs/scheduler";
 import { runDailySkipJob } from "./jobs/workers/challengeSkip";
 import { changePasswordRouter } from "./routes/change-password";
+import { notificationRouter } from "./routes/notification";
 
 const app: Application = express();
 
@@ -59,6 +60,7 @@ app.use("/api/v1/streak", streakRouter);
 app.use("/api/v1/circle", circleRouter);
 app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/profile", profileRouter);
+app.use("/api/v1/notifications", notificationRouter);
 app.use("/api/v1/presigned", urlRouter);
 
 startScheduler().then(() => {
