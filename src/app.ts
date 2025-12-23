@@ -1,6 +1,7 @@
 import express, { Application } from "express";
 import cors from "cors";
 import morgan from "morgan";
+import bodyParser from "body-parser";
 
 import { PORT } from "./config/dotEnv";
 import errorMiddleware from "./middlewares/error";
@@ -20,6 +21,8 @@ import { startScheduler } from "./jobs/scheduler";
 import { runDailySkipJob } from "./jobs/workers/challengeSkip";
 import { changePasswordRouter } from "./routes/change-password";
 import { notificationRouter } from "./routes/notification";
+import { paymentRouter } from "./routes/payment";
+import { webhookRouter } from "./routes/webhook";
 
 const app: Application = express();
 
@@ -33,6 +36,12 @@ app.use(
 ); // 'dev' is a pre-defined format string
 
 app.use(cors({ origin: "*" }));
+app.use(
+  "/api/v1/webhook",
+  // express.raw({ type: "application/json" }),
+  bodyParser.raw({ type: "application/json" }),
+  webhookRouter
+);
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
@@ -62,6 +71,7 @@ app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/notifications", notificationRouter);
 app.use("/api/v1/presigned", urlRouter);
+app.use("/api/v1/payment", paymentRouter);
 
 startScheduler().then(() => {
   console.log("Job Scheduler started.");

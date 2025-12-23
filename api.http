@@ -1,6 +1,6 @@
 # @BASE_URL = https://api.digitaldojoteam.com
 @BASE_URL = http://localhost:5500
-@YOUR_JWT_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5ODE3M2UwYy0yZmUxLTQyNWMtODllOS0yZWQzNzA0MDY0MTgiLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc2NDgzOTM5NCwiZXhwIjoxNzY1NDQ0MTk0fQ.4chIYpKgTL8JS0Thsg6Z0P8LuRCD6PlivqQWKhGO_ds
+@YOUR_JWT_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5ODE3M2UwYy0yZmUxLTQyNWMtODllOS0yZWQzNzA0MDY0MTgiLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc2NjQ4MDEyOSwiZXhwIjoxNzY3MDg0OTI5fQ.C38U7gkIErFyi69CygpEkdLWlug4xWstxNQFbd2pQFA
 
 
 ### Health Check
@@ -73,3 +73,12 @@ Authorization: Bearer {{YOUR_JWT_TOKEN}}
     "confirmPassword": "new_password123"
 }
 
+
+### Payment
+POST {{BASE_URL}}/api/v1/payment/checkout
+Content-Type: application/json
+Authorization: Bearer {{YOUR_JWT_TOKEN}}
+
+{
+    "email": "umerfaqrooq78@gmail.com"
+}

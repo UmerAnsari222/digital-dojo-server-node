@@ -28,9 +28,12 @@ model User {
   currentBelt        Belt?     @relation(fields: [currentBeltId], references: [id], onDelete: SetNull)
   lastCompletionDate DateTime?
 
+  stripeCustomerId String?
+
   // circle   Circle? @relation(fields: [circleId], references: [id])
   // circleId String?
 
+  subscription                Subscription?
   habits                      Habit[]
   userHabits                  UserHabit[]
   completions                 Completion[]
@@ -315,6 +318,22 @@ model Notification {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   isNew Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
+}
+
+model Subscription {
+  id                   String   @id @default(uuid())
+  stripeSubscriptionId String   @unique
+  stripePriceId        String
+  status               String
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updateAt  DateTime @updatedAt
