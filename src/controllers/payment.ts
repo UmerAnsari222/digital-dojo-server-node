@@ -40,6 +40,19 @@ export const makeCheckout = async (
       });
     }
 
+    // Check for active subscriptions
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "active",
+      limit: 1,
+    });
+
+    if (subscriptions.data.length > 0) {
+      return next(
+        new ErrorHandler("User already has an active subscription", 400)
+      );
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,

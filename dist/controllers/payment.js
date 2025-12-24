@@ -33,6 +33,15 @@ const makeCheckout = async (req, res, next) => {
                 data: { stripeCustomerId: customerId },
             });
         }
+        // Check for active subscriptions
+        const subscriptions = await stripe_1.stripe.subscriptions.list({
+            customer: customerId,
+            status: "active",
+            limit: 1,
+        });
+        if (subscriptions.data.length > 0) {
+            return next(new error_1.default("User already has an active subscription", 400));
+        }
         const session = await stripe_1.stripe.checkout.sessions.create({
             mode: "subscription",
             customer: customerId,
