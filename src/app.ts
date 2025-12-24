@@ -36,12 +36,6 @@ app.use(
 ); // 'dev' is a pre-defined format string
 
 app.use(cors({ origin: "*" }));
-app.use(
-  "/api/v1/webhook",
-  // express.raw({ type: "application/json" }),
-  bodyParser.raw({ type: "application/json" }),
-  webhookRouter
-);
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
@@ -72,6 +66,11 @@ app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/notifications", notificationRouter);
 app.use("/api/v1/presigned", urlRouter);
 app.use("/api/v1/payment", paymentRouter);
+app.use(
+  "/api/v1/webhook",
+  // express.raw({ type: "application/json" }),
+  webhookRouter
+);
 
 startScheduler().then(() => {
   console.log("Job Scheduler started.");

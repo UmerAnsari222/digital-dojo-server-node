@@ -16,7 +16,7 @@ const stripeWebhookHandler = async (req, res, next) => {
     }
     catch (e) {
         console.log("[STRIPE_WEBHOOK_ERROR]", e);
-        return next(new error_1.default("Something went wrong", 500));
+        return next(new error_1.default("Something went wrong", 500, e));
     }
     if (event.type === "checkout.session.completed") {
         const session = event.data.object;

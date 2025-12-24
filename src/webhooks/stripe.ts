@@ -22,7 +22,7 @@ export const stripeWebhookHandler = async (
     );
   } catch (e) {
     console.log("[STRIPE_WEBHOOK_ERROR]", e);
-    return next(new ErrorHandler("Something went wrong", 500));
+    return next(new ErrorHandler("Something went wrong", 500, e));
   }
 
   if (event.type === "checkout.session.completed") {
