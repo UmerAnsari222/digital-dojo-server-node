@@ -1,6 +1,6 @@
 // imports middleware and controllers
 import { NextFunction, Request, Response, Router } from "express";
-import { stripeWebhookHandler } from "../controllers/webhook";
+import { stripeWebhookHandler } from "../webhooks/stripe";
 
 // initialize the router
 export const webhookRouter = Router();

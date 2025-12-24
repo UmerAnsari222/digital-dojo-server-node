@@ -7,3 +7,6 @@ exports.urlRouter = (0, express_1.Router)();
 exports.urlRouter.post("/generate-url", async (req, res, next) => {
     await (0, presigned_1.generatePresignedUrl)(req, res, next);
 });
+exports.urlRouter.post("/upload-url", async (req, res, next) => {
+    await (0, presigned_1.generateCFPresignedUrl)(req, res, next);
+});

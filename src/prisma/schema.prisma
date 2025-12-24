@@ -46,6 +46,7 @@ model User {
   joinedCircles               Circle[]                     @relation("UserCircles")
   userPreferences             UserPreferences?
   notifications               Notification[]
+  videos                      Video[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -339,6 +340,30 @@ model Subscription {
   updateAt  DateTime @updatedAt
 }
 
+model Video {
+  id       String      @id @default(uuid())
+  streamId String      @unique
+  status   VideoStatus @default(UPLOADING)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String?
+  description String?
+
+  duration     Float?
+  thumbnailUrl String?
+
+  views Int @default(0)
+  likes Int @default(0)
+
+  createdAt   DateTime  @default(now())
+  publishedAt DateTime?
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
 enum Role {
   USER
   ADMIN
@@ -360,4 +385,11 @@ enum ChallengeStatus {
   SCHEDULE
   RUNNING
   COMPLETED
+}
+
+enum VideoStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
 }

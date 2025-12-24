@@ -82,3 +82,13 @@ Authorization: Bearer {{YOUR_JWT_TOKEN}}
 {
     "email": "umerfaqrooq78@gmail.com"
 }
+
+
+### PreSignedURL
+POST {{BASE_URL}}/api/v1/presigned/upload-url
+Content-Type: application/json
+Authorization: Bearer {{YOUR_JWT_TOKEN}}
+
+{
+    "title": "Random title"
+}

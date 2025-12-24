@@ -22,3 +22,5 @@ export const REDIS_PORT = process.env.REDIS_PORT!;
 export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 export const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID!;
 export const APPLE_SERVICE_ID = process.env.APPLE_SERVICE_ID!;
+export const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID!;
+export const CF_API_TOKEN = process.env.CF_API_TOKEN!;

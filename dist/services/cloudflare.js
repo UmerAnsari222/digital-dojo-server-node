@@ -1,0 +1,22 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getCFPresignedUrl = getCFPresignedUrl;
+const node_fetch_1 = __importDefault(require("node-fetch"));
+const dotEnv_1 = require("../config/dotEnv");
+let url = `https://api.cloudflare.com/client/v4/accounts/${dotEnv_1.CF_ACCOUNT_ID}/stream/direct_upload`;
+async function getCFPresignedUrl() {
+    const res = await (0, node_fetch_1.default)(url, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${dotEnv_1.CF_API_TOKEN}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            maxDurationSeconds: 90,
+        }),
+    });
+    return res.json();
+}

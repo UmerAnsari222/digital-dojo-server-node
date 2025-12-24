@@ -90,3 +90,17 @@ export type CircleChallengeDTO = Prisma.CircleChallengeGetPayload<{
 }> & {
   ownerStats?: OwnerStats;
 };
+
+export type CloudflareApiResponse<T> = {
+  result: T;
+  success: boolean;
+  errors: unknown[];
+  messages: unknown[];
+};
+
+export type StreamUploadResult = {
+  uploadURL: string;
+  uid: string;
+};
+
+export type StreamUploadResponse = CloudflareApiResponse<StreamUploadResult>;
