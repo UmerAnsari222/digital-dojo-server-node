@@ -8,8 +8,6 @@ export const webhookRouter = Router();
 
 webhookRouter.post(
   "/stripe",
-  bodyParser.raw({ type: "application/json" }),
-
   async (req: Request, res: Response, next: NextFunction) => {
     await stripeWebhookHandler(req, res, next);
   }

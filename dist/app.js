@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const morgan_1 = __importDefault(require("morgan"));
+const body_parser_1 = __importDefault(require("body-parser"));
 const dotEnv_1 = require("./config/dotEnv");
 const error_1 = __importDefault(require("./middlewares/error"));
 const auth_1 = require("./routes/auth");
@@ -34,6 +35,7 @@ app.use((0, morgan_1.default)("combined", {
 })); // 'dev' is a pre-defined format string
 app.use((0, cors_1.default)({ origin: "*" }));
 app.use(express_1.default.json({ limit: "50mb" }));
+app.use(body_parser_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true, limit: "50mb" }));
 // set view engine for html and ejs files
 app.set("view engine", "ejs");

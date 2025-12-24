@@ -12,6 +12,7 @@ const stripeWebhookHandler = async (req, res, next) => {
     const sig = req.headers["stripe-signature"];
     let event;
     try {
+        console.log("IS BUFFER: ", Buffer.isBuffer(req.body));
         event = stripe_1.stripe.webhooks.constructEvent(req.body, sig, dotEnv_1.STRIPE_WEBHOOK_SECRET);
     }
     catch (e) {

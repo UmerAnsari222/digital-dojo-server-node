@@ -15,6 +15,8 @@ export const stripeWebhookHandler = async (
   let event: Stripe.Event;
 
   try {
+    console.log("IS BUFFER: ", Buffer.isBuffer(req.body));
+
     event = stripe.webhooks.constructEvent(
       req.body,
       sig,
