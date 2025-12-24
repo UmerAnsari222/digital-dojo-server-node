@@ -25,6 +25,16 @@ const getProfile = async (req, res, next) => {
                 createdAt: true,
                 updatedAt: true,
                 // growthScore: true,
+                subscription: {
+                    select: {
+                        id: true,
+                        status: true,
+                        stripeSubscriptionId: true,
+                        cancelAtPeriodEnd: true,
+                        currentPeriodStart: true,
+                        currentPeriodEnd: true,
+                    },
+                },
                 consistency: true,
                 role: true,
                 timezone: true,

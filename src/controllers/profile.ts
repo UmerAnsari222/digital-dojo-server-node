@@ -31,6 +31,16 @@ export const getProfile = async (
         createdAt: true,
         updatedAt: true,
         // growthScore: true,
+        subscription: {
+          select: {
+            id: true,
+            status: true,
+            stripeSubscriptionId: true,
+            cancelAtPeriodEnd: true,
+            currentPeriodStart: true,
+            currentPeriodEnd: true,
+          },
+        },
         consistency: true,
         role: true,
         timezone: true,
