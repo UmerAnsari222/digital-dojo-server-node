@@ -99,10 +99,19 @@ const stripeWebhookHandler = async (req, res, next) => {
     }
     if (event.type === "customer.subscription.deleted") {
         const sub = event.data.object;
-        await db_1.db.subscription.update({
+        // Try to find the subscription first
+        const existingSub = await db_1.db.subscription.findUnique({
             where: { stripeSubscriptionId: sub.id },
-            data: { status: "canceled" },
         });
+        if (existingSub) {
+            await db_1.db.subscription.update({
+                where: { stripeSubscriptionId: sub.id },
+                data: { status: "canceled", cancelAtPeriodEnd: false },
+            });
+        }
+        else {
+            console.log("Subscription not found in DB, skipping delete update");
+        }
     }
     return res.status(200).json({ received: true });
 };
