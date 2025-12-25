@@ -48,9 +48,11 @@ export const makeCheckout = async (
     });
 
     if (subscriptions.data.length > 0) {
-      return next(
-        new ErrorHandler("User already has an active subscription", 400)
-      );
+      return res.status(201).json({
+        isSubscribed: true,
+        msg: "User is already subscribed",
+        success: true,
+      });
     }
 
     const session = await stripe.checkout.sessions.create({

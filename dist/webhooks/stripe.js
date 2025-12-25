@@ -31,24 +31,56 @@ const stripeWebhookHandler = async (req, res, next) => {
         const userId = session.metadata?.userId;
         if (!userId)
             return res.sendStatus(200);
-        await db_1.db.subscription.upsert({
-            where: { stripeSubscriptionId: subscription.id },
-            update: {
-                status: subscription.status,
-                currentPeriodStart: new Date(periodStart * 1000),
-                currentPeriodEnd: new Date(periodEnd * 1000),
-                cancelAtPeriodEnd: subscription.cancel_at_period_end,
-            },
-            create: {
-                userId,
-                stripeSubscriptionId: subscription.id,
-                stripePriceId: subscription.items.data[0].price.id,
-                status: subscription.status,
-                currentPeriodStart: new Date(periodStart * 1000),
-                currentPeriodEnd: new Date(periodEnd * 1000),
-                cancelAtPeriodEnd: subscription.cancel_at_period_end,
-            },
+        // Try to find any existing subscription for this user
+        const existingSub = await db_1.db.subscription.findUnique({
+            where: { userId },
         });
+        if (existingSub) {
+            // If existing subscription is canceled or different, update it
+            await db_1.db.subscription.update({
+                where: { userId },
+                data: {
+                    stripeSubscriptionId: subscription.id,
+                    stripePriceId: subItem.price.id,
+                    status: subscription.status,
+                    currentPeriodStart: new Date(periodStart * 1000),
+                    currentPeriodEnd: new Date(periodEnd * 1000),
+                    cancelAtPeriodEnd: subscription.cancel_at_period_end,
+                },
+            });
+        }
+        else {
+            // Otherwise create new record
+            await db_1.db.subscription.create({
+                data: {
+                    userId,
+                    stripeSubscriptionId: subscription.id,
+                    stripePriceId: subItem.price.id,
+                    status: subscription.status,
+                    currentPeriodStart: new Date(periodStart * 1000),
+                    currentPeriodEnd: new Date(periodEnd * 1000),
+                    cancelAtPeriodEnd: subscription.cancel_at_period_end,
+                },
+            });
+        }
+        // await db.subscription.upsert({
+        //   where: { stripeSubscriptionId: subscription.id },
+        //   update: {
+        //     status: subscription.status,
+        //     currentPeriodStart: new Date(periodStart * 1000),
+        //     currentPeriodEnd: new Date(periodEnd * 1000),
+        //     cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        //   },
+        //   create: {
+        //     userId,
+        //     stripeSubscriptionId: subscription.id,
+        //     stripePriceId: subscription.items.data[0].price.id,
+        //     status: subscription.status,
+        //     currentPeriodStart: new Date(periodStart * 1000),
+        //     currentPeriodEnd: new Date(periodEnd * 1000),
+        //     cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        //   },
+        // });
     }
     if (event.type === "customer.subscription.updated") {
         const sub = event.data.object;
