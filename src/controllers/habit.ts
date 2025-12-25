@@ -22,7 +22,12 @@ export const createHabit = async (
   }
 
   try {
-    const self = await db.user.findUnique({ where: { id: userId } });
+    const self = await db.user.findUnique({
+      where: { id: userId },
+      include: {
+        subscription: true,
+      },
+    });
 
     if (!self) {
       return next(new ErrorHandler("Unauthorized", 401));
@@ -43,6 +48,21 @@ export const createHabit = async (
         },
       });
     } else {
+      // If not subscribed or not active
+      if (!self.subscription || self.subscription.status !== "active") {
+        // Count how many habits the user already has
+        const habitCount = await db.habit.count({
+          where: { userId: self.id },
+        });
+
+        // If 5 or more, block creation
+        if (habitCount >= 5) {
+          return next(
+            new ErrorHandler("Free plan limit reached (5 habits only)", 403)
+          );
+        }
+      }
+
       habit = await db.habit.create({
         data: {
           title,
