@@ -115,9 +115,12 @@ export const getProfile = async (
       }),
     ]);
 
+    const habitCount = await db.habit.count({ where: { userId: user.id } });
+
     return res.status(200).json({
       user: {
         ...user,
+        habitCount,
         lastMonthCount: lastCurrentMonth.lastMonthCount,
         currentMonthCount: lastCurrentMonth.currentMonthCount,
         delta: lastCurrentMonth.delta,

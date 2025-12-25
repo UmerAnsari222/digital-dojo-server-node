@@ -99,9 +99,11 @@ const getProfile = async (req, res, next) => {
                 timezone: user.timezone ?? "UTC",
             }),
         ]);
+        const habitCount = await db_1.db.habit.count({ where: { userId: user.id } });
         return res.status(200).json({
             user: {
                 ...user,
+                habitCount,
                 lastMonthCount: lastCurrentMonth.lastMonthCount,
                 currentMonthCount: lastCurrentMonth.currentMonthCount,
                 delta: lastCurrentMonth.delta,
