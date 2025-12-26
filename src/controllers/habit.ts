@@ -398,6 +398,7 @@ export const getUserHabitsProgress = async (
           },
         },
       },
+      distinct: ["habitId"],
     });
 
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd });

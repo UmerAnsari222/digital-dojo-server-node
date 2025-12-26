@@ -329,6 +329,7 @@ const getUserHabitsProgress = async (req, res, next) => {
                     },
                 },
             },
+            distinct: ["habitId"],
         });
         const days = (0, date_fns_1.eachDayOfInterval)({ start: weekStart, end: weekEnd });
         // console.log(JSON.stringify(habits, null, 2));
