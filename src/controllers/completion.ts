@@ -171,8 +171,10 @@ export const makeWeeklyChallengeCompletion = async (
         weeklyChallengeId,
         userId,
         date: {
-          gte: zonedTimeToUtc(startOfToday, userTimeZone),
-          lte: zonedTimeToUtc(endOfToday, userTimeZone),
+          // gte: zonedTimeToUtc(startOfToday, userTimeZone),
+          // lte: zonedTimeToUtc(endOfToday, userTimeZone),
+          gte: toZonedTime(startOfToday, userTimeZone),
+          lte: toZonedTime(endOfToday, userTimeZone),
         },
       },
     });

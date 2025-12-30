@@ -144,8 +144,10 @@ const makeWeeklyChallengeCompletion = async (req, res, next) => {
                 weeklyChallengeId,
                 userId,
                 date: {
-                    gte: zonedTimeToUtc(startOfToday, userTimeZone),
-                    lte: zonedTimeToUtc(endOfToday, userTimeZone),
+                    // gte: zonedTimeToUtc(startOfToday, userTimeZone),
+                    // lte: zonedTimeToUtc(endOfToday, userTimeZone),
+                    gte: (0, date_fns_tz_1.toZonedTime)(startOfToday, userTimeZone),
+                    lte: (0, date_fns_tz_1.toZonedTime)(endOfToday, userTimeZone),
                 },
             },
         });

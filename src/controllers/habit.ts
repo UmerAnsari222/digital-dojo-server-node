@@ -94,7 +94,7 @@ export const createHabit = async (
 };
 
 export const saveUserHabit = async (
-  req: Request,
+  req: Request<{}, {}, { habitIds: string[] }>,
   res: Response,
   next: NextFunction
 ) => {
@@ -106,7 +106,10 @@ export const saveUserHabit = async (
   }
 
   try {
-    const self = await db.user.findUnique({ where: { id: userId } });
+    const self = await db.user.findUnique({
+      where: { id: userId },
+      include: { subscription: true },
+    });
 
     if (!self) {
       return next(new ErrorHandler("Unauthorized", 401));
@@ -125,6 +128,12 @@ export const saveUserHabit = async (
 
     if (habits.length === 0) {
       return next(new ErrorHandler("No valid habits found", 400));
+    }
+
+    if (habitIds.length > 3) {
+      if (!self.subscription && self.subscription.status !== "active") {
+        return next(new ErrorHandler("You need to buy subscription", 403));
+      }
     }
 
     const saveHabits = await db.userHabit.createMany({

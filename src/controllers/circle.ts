@@ -26,10 +26,19 @@ export const createCircle = async (
   }
 
   try {
-    const self = await db.user.findUnique({ where: { id: userId } });
+    const self = await db.user.findUnique({
+      where: { id: userId },
+      include: { subscription: true },
+    });
 
     if (!self) {
       return next(new ErrorHandler("Unauthorized", 401));
+    }
+
+    if (!self.subscription && self.subscription.status !== "active") {
+      return next(
+        new ErrorHandler("You need to buy subscription to create circle", 403)
+      );
     }
 
     const circle = await db.circle.create({
