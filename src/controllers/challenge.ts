@@ -855,28 +855,33 @@ export const getWeeklyChallengeProgress = async (
       where: {
         userId,
         challengeId: activeChallenge.id,
-        skip: {
-          not: true,
-        },
+        // skip: {
+        //   not: true,
+        // },
       },
     });
 
     // Normalize completion dates (strip time)
-    const completionDates = completions.map((c) =>
-      startOfDay(new Date(c.date))
-    );
+    const completionDates = completions.map((c) => ({
+      date: startOfDay(new Date(c.date)),
+      skip: c.skip,
+    }));
 
     const startDate = startOfDay(new Date(activeChallenge.startDate));
 
     // Build a 7-day week view
     const days = Array.from({ length: 7 }).map((_, i) => {
       const currentDay = addDays(startDate, i);
-      const done = completionDates.some((d) => isSameDay(d, currentDay));
+      const done = completionDates.some((d) => isSameDay(d.date, currentDay));
+      const skip = completionDates.some(
+        (d) => isSameDay(d.date, currentDay) && d.skip === true
+      );
 
       return {
         day: format(currentDay, "EEE"), // Mon, Tue, Wed...
         date: currentDay.toISOString().split("T")[0], // 2025-09-12
         done,
+        skip,
       };
     });
 

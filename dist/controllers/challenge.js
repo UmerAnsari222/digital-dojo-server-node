@@ -657,22 +657,27 @@ const getWeeklyChallengeProgress = async (req, res, next) => {
             where: {
                 userId,
                 challengeId: activeChallenge.id,
-                skip: {
-                    not: true,
-                },
+                // skip: {
+                //   not: true,
+                // },
             },
         });
         // Normalize completion dates (strip time)
-        const completionDates = completions.map((c) => (0, date_fns_1.startOfDay)(new Date(c.date)));
+        const completionDates = completions.map((c) => ({
+            date: (0, date_fns_1.startOfDay)(new Date(c.date)),
+            skip: c.skip,
+        }));
         const startDate = (0, date_fns_1.startOfDay)(new Date(activeChallenge.startDate));
         // Build a 7-day week view
         const days = Array.from({ length: 7 }).map((_, i) => {
             const currentDay = (0, date_fns_1.addDays)(startDate, i);
-            const done = completionDates.some((d) => (0, date_fns_1.isSameDay)(d, currentDay));
+            const done = completionDates.some((d) => (0, date_fns_1.isSameDay)(d.date, currentDay));
+            const skip = completionDates.some((d) => (0, date_fns_1.isSameDay)(d.date, currentDay) && d.skip === true);
             return {
                 day: (0, date_fns_tz_1.format)(currentDay, "EEE"), // Mon, Tue, Wed...
                 date: currentDay.toISOString().split("T")[0], // 2025-09-12
                 done,
+                skip,
             };
         });
         return res.status(200).json({
