@@ -106,11 +106,15 @@ const saveUserHabit = async (req, res, next) => {
         if (habits.length === 0) {
             return next(new error_1.default("No valid habits found", 400));
         }
-        if (habitIds.length > 3) {
-            if (!self.subscription && self.subscription.status !== "active") {
-                return next(new error_1.default("You need to buy subscription", 403));
-            }
+        const hasActiveSubscription = self.subscription?.status === "active";
+        if (habitIds.length > 3 && !hasActiveSubscription) {
+            return next(new error_1.default("You need an active subscription", 403));
         }
+        // if (habitIds.length > 3) {
+        //   if (!self.subscription && self.subscription.status !== "active") {
+        //     return next(new ErrorHandler("You need to buy subscription", 403));
+        //   }
+        // }
         const saveHabits = await db_1.db.userHabit.createMany({
             data: habits.map((habit) => {
                 return {
