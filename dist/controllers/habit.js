@@ -46,8 +46,8 @@ const createHabit = async (req, res, next) => {
                     where: { userId: self.id },
                 });
                 // If 5 or more, block creation
-                if (habitCount >= 5) {
-                    return next(new error_1.default("Free plan limit reached (5 habits only)", 403));
+                if (habitCount >= 3) {
+                    return next(new error_1.default("Free plan limit reached (3 habits only)", 403));
                 }
             }
             habit = await db_1.db.habit.create({

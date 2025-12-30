@@ -56,9 +56,9 @@ export const createHabit = async (
         });
 
         // If 5 or more, block creation
-        if (habitCount >= 5) {
+        if (habitCount >= 3) {
           return next(
-            new ErrorHandler("Free plan limit reached (5 habits only)", 403)
+            new ErrorHandler("Free plan limit reached (3 habits only)", 403)
           );
         }
       }
