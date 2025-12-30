@@ -35,9 +35,12 @@ export const createCircle = async (
       return next(new ErrorHandler("Unauthorized", 401));
     }
 
-    if (!self.subscription && self.subscription.status !== "active") {
+    if (!self.subscription || self.subscription.status !== "active") {
       return next(
-        new ErrorHandler("You need to buy subscription to create circle", 403)
+        new ErrorHandler(
+          "You need an active subscription to create a circle",
+          403
+        )
       );
     }
 

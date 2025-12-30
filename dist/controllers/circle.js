@@ -26,8 +26,8 @@ const createCircle = async (req, res, next) => {
         if (!self) {
             return next(new error_1.default("Unauthorized", 401));
         }
-        if (!self.subscription && self.subscription.status !== "active") {
-            return next(new error_1.default("You need to buy subscription to create circle", 403));
+        if (!self.subscription || self.subscription.status !== "active") {
+            return next(new error_1.default("You need an active subscription to create a circle", 403));
         }
         const circle = await db_1.db.circle.create({
             data: {
