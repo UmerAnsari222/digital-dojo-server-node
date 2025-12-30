@@ -872,7 +872,9 @@ export const getWeeklyChallengeProgress = async (
     // Build a 7-day week view
     const days = Array.from({ length: 7 }).map((_, i) => {
       const currentDay = addDays(startDate, i);
-      const done = completionDates.some((d) => isSameDay(d.date, currentDay));
+      const done = completionDates.some(
+        (d) => isSameDay(d.date, currentDay) && d.skip === false
+      );
       const skip = completionDates.some(
         (d) => isSameDay(d.date, currentDay) && d.skip === true
       );
