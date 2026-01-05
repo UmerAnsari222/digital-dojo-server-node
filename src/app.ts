@@ -23,6 +23,7 @@ import { changePasswordRouter } from "./routes/change-password";
 import { notificationRouter } from "./routes/notification";
 import { paymentRouter } from "./routes/payment";
 import { webhookRouter } from "./routes/webhook";
+import { reelRouter } from "./routes/reel";
 
 const app: Application = express();
 
@@ -71,6 +72,7 @@ app.use("/api/v1/circle", circleRouter);
 app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/notifications", notificationRouter);
+app.use("/api/v1/reels", reelRouter);
 app.use("/api/v1/presigned", urlRouter);
 app.use("/api/v1/payment", paymentRouter);
 

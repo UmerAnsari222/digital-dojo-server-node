@@ -341,9 +341,9 @@ model Subscription {
 }
 
 model Video {
-  id       String      @id @default(uuid())
-  streamId String      @unique
-  status   VideoStatus @default(UPLOADING)
+  id       String       @id @default(uuid())
+  streamId String?      @unique
+  status   VideoStatus? @default(UPLOADING)
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -353,12 +353,18 @@ model Video {
 
   duration     Float?
   thumbnailUrl String?
+  previewUrl   String?
+
+  playbackHls  String?
+  playbackDash String?
 
   views Int @default(0)
   likes Int @default(0)
 
   createdAt   DateTime  @default(now())
   publishedAt DateTime?
+
+  error Json?
 
   @@index([createdAt])
   @@index([userId])

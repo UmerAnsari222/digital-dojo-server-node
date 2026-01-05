@@ -4,6 +4,7 @@ import { getPresignedUrl } from "../utils/aws";
 import { AWS_BUCKET_NAME } from "../config/dotEnv";
 import { getCFPresignedUrl } from "../services/cloudflare";
 import { StreamUploadResponse } from "../types";
+import { db } from "../config/db";
 
 export const generatePresignedUrl = async (
   req: Request,
@@ -37,10 +38,16 @@ export const generateCFPresignedUrl = async (
   res: Response,
   next: NextFunction
 ) => {
+  const { userId } = req;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 403));
+  }
+
   try {
     const cfData = (await getCFPresignedUrl()) as StreamUploadResponse;
 
-    console.log(cfData.errors);
+    // console.log(cfData.errors);
 
     if (cfData.errors.length > 0) {
       return next(
@@ -52,11 +59,19 @@ export const generateCFPresignedUrl = async (
       );
     }
 
+    const video = await db.video.create({
+      data: {
+        userId,
+        streamId: cfData.result.uid,
+      },
+    });
+
     return res.status(200).json({
-      success: true,
       presignedUrl: cfData.result.uploadURL,
       streamId: cfData.result.uid,
+      videoId: video.id,
       msg: "URL generated successfully",
+      success: true,
     });
   } catch (error) {
     console.error("[GET_CLOUD_FLARE_PRESIGNED_URL_ERROR]", error);

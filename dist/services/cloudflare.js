@@ -8,6 +8,7 @@ const node_fetch_1 = __importDefault(require("node-fetch"));
 const dotEnv_1 = require("../config/dotEnv");
 let url = `https://api.cloudflare.com/client/v4/accounts/${dotEnv_1.CF_ACCOUNT_ID}/stream/direct_upload`;
 async function getCFPresignedUrl() {
+    // console.log("URL: ", { url, CF_API_TOKEN });
     const res = await (0, node_fetch_1.default)(url, {
         method: "POST",
         headers: {

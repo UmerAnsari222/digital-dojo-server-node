@@ -8,6 +8,7 @@ const error_1 = __importDefault(require("../utils/error"));
 const aws_1 = require("../utils/aws");
 const dotEnv_1 = require("../config/dotEnv");
 const cloudflare_1 = require("../services/cloudflare");
+const db_1 = require("../config/db");
 const generatePresignedUrl = async (req, res, next) => {
     try {
         const { fileType, filename, key } = req.body;
@@ -30,17 +31,28 @@ const generatePresignedUrl = async (req, res, next) => {
 };
 exports.generatePresignedUrl = generatePresignedUrl;
 const generateCFPresignedUrl = async (req, res, next) => {
+    const { userId } = req;
+    if (!userId) {
+        return next(new error_1.default("Unauthorized", 403));
+    }
     try {
         const cfData = (await (0, cloudflare_1.getCFPresignedUrl)());
-        console.log(cfData.errors);
+        // console.log(cfData.errors);
         if (cfData.errors.length > 0) {
             return next(new error_1.default("Failed to generate signed url", 500, JSON.stringify(cfData.errors, null, 2)));
         }
+        const video = await db_1.db.video.create({
+            data: {
+                userId,
+                streamId: cfData.result.uid,
+            },
+        });
         return res.status(200).json({
-            success: true,
             presignedUrl: cfData.result.uploadURL,
             streamId: cfData.result.uid,
+            videoId: video.id,
             msg: "URL generated successfully",
+            success: true,
         });
     }
     catch (error) {

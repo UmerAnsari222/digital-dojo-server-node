@@ -25,6 +25,7 @@ const change_password_1 = require("./routes/change-password");
 const notification_1 = require("./routes/notification");
 const payment_1 = require("./routes/payment");
 const webhook_1 = require("./routes/webhook");
+const reel_1 = require("./routes/reel");
 const app = (0, express_1.default)();
 // Use Morgan middleware
 app.use((0, morgan_1.default)("combined", {
@@ -59,6 +60,7 @@ app.use("/api/v1/circle", cirlce_1.circleRouter);
 app.use("/api/v1/category", category_1.categoryRouter);
 app.use("/api/v1/profile", profile_1.profileRouter);
 app.use("/api/v1/notifications", notification_1.notificationRouter);
+app.use("/api/v1/reels", reel_1.reelRouter);
 app.use("/api/v1/presigned", presigned_1.urlRouter);
 app.use("/api/v1/payment", payment_1.paymentRouter);
 (0, scheduler_1.startScheduler)().then(() => {

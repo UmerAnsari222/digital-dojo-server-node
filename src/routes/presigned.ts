@@ -3,6 +3,7 @@ import {
   generateCFPresignedUrl,
   generatePresignedUrl,
 } from "../controllers/presigned";
+import { authMiddleware } from "../middlewares/auth";
 
 export const urlRouter = Router();
 
@@ -15,6 +16,7 @@ urlRouter.post(
 
 urlRouter.post(
   "/upload-url",
+  authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await generateCFPresignedUrl(req, res, next);
   }
