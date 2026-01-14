@@ -48,8 +48,9 @@ model User {
   notifications               Notification[]
   videos                      Video[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  videoViews VideoView[]
 }
 
 model Habit {
@@ -256,6 +257,8 @@ model Circle {
   members          User[]            @relation("UserCircles")
   circleChallenges CircleChallenge[]
 
+  videos Video[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -358,7 +361,13 @@ model Video {
   playbackHls  String?
   playbackDash String?
 
-  views Int @default(0)
+  type VideoType @default(CHALLENGE)
+
+  circleId String?
+  circle   Circle? @relation(fields: [circleId], references: [id], onDelete: Cascade)
+
+  // views Int @default(0)
+  // views Int @default(0)
   likes Int @default(0)
 
   createdAt   DateTime  @default(now())
@@ -366,7 +375,24 @@ model Video {
 
   error Json?
 
+  videoViews VideoView[]
+
   @@index([createdAt])
+  @@index([userId])
+}
+
+model VideoView {
+  id      String @id @default(uuid())
+  video   Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  videoId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  createdAt DateTime @default(now())
+
+  @@unique([videoId, userId]) // prevents double counting
+  @@index([videoId])
   @@index([userId])
 }
 
@@ -398,4 +424,9 @@ enum VideoStatus {
   PROCESSING
   READY
   FAILED
+}
+
+enum VideoType {
+  CIRCLE
+  CHALLENGE
 }

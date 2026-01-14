@@ -1,6 +1,6 @@
 # @BASE_URL = https://api.digitaldojoteam.com
 @BASE_URL = http://localhost:5500
-@YOUR_JWT_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5ODE3M2UwYy0yZmUxLTQyNWMtODllOS0yZWQzNzA0MDY0MTgiLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc2NzU4ODM4NCwiZXhwIjoxNzY4MTkzMTg0fQ._h6iH3QFMR4qmUaebD84TTROesYdcNdfjJUXZwsY-is
+@YOUR_JWT_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5ODE3M2UwYy0yZmUxLTQyNWMtODllOS0yZWQzNzA0MDY0MTgiLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc2ODM2NDQ2MSwiZXhwIjoxNzY4OTY5MjYxfQ.r22hCinmF3VEx7gzntYZML5wgtTcUcRFXcOo_sO-EDM
 
 
 ### Health Check
@@ -85,19 +85,40 @@ Authorization: Bearer {{YOUR_JWT_TOKEN}}
 # -- Reels
 
 ### Get Reels/Feed
-GET {{BASE_URL}}/api/v1/reels/feed?limit=2
+GET {{BASE_URL}}/api/v1/reels/feed?limit=3
 Content-Type: application/json
 Authorization: Bearer {{YOUR_JWT_TOKEN}}
 
+### Get Reels/Top Snap
+GET {{BASE_URL}}/api/v1/reels/top-snap?limit=10
+Content-Type: application/json
+Authorization: Bearer {{YOUR_JWT_TOKEN}}
 
-### Update/Create
-PATCH {{BASE_URL}}/api/v1/reels?reelId=ddadcb03-7df4-4ed9-b972-c6f3fe0a37ed
+### Get Reels/My Circle Snap
+GET {{BASE_URL}}/api/v1/reels/my-circle?limit=10
+Content-Type: application/json
+Authorization: Bearer {{YOUR_JWT_TOKEN}}
+
+### Watch Reel
+POST {{BASE_URL}}/api/v1/reels/count
 Content-Type: application/json
 Authorization: Bearer {{YOUR_JWT_TOKEN}}
 
 {
-    "title": "Random Title With READY STATUS",
-    "description": "Random Description With READY STATUS"
+    "reelId": "b0595d23-f502-42a5-b787-c8b9c350a6ec"
+}
+
+### Update/Create
+PATCH {{BASE_URL}}/api/v1/reels
+# PATCH {{BASE_URL}}/api/v1/reels?reelId=ddadcb03-7df4-4ed9-b972-c6f3fe0a37ed
+Content-Type: application/json
+Authorization: Bearer {{YOUR_JWT_TOKEN}}
+
+{
+    "title": "Random Title With READY CIRCLE",
+    "description": "Random Description With READY CIRCLE",
+    "type": "CIRCLE",
+    "circleId": "fa53c669-bf89-46ed-b4d5-94754941759c"
 }
 
 
@@ -121,3 +142,9 @@ Authorization: Bearer {{YOUR_JWT_TOKEN}}
 {
     "title": "Random title"
 }
+
+
+###
+GET https://kuponna.com/api/user/deal/purchase-status?dealId=c78270db-b08b-444e-9cf5-05ee6bb0d31c
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOiJiYWVhMjZlNi1jNjNkLTRlNjAtYTg0Zi1lNGZhMGJhY2I3MmYiLCJlbWFpbCI6ImhoYXNuYW40MDBAZ21haWwuY29tIiwicm9sZSI6InVzZXIiLCJpc1ZlcmlmaWVkIjp0cnVlLCJtZXJjaGFudFZlcmlmaWVkIjpmYWxzZSwiaWF0IjoxNzY4MzU1OTcxLCJleHAiOjE3Njg0NDIzNzF9.uDbhq4WJSkvj0z3v5vKKtmkHPeR23gCkkS5K-ozsV-c
