@@ -209,7 +209,7 @@ const getTopSnapsFeed = async (req, res, next) => {
         // 9) Response
         return res.status(200).json({
             success: true,
-            items,
+            reels: items,
             nextCursor,
             msg: "Snaps fetched successfully",
         });
