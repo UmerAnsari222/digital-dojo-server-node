@@ -15,7 +15,7 @@ urlRouter.post(
 );
 
 urlRouter.post(
-  "/upload-url",
+  "/generate-reel-url",
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await generateCFPresignedUrl(req, res, next);
