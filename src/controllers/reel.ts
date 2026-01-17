@@ -8,7 +8,7 @@ import { VideoType } from "@prisma/client";
 export const createReel = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { title, description } = req.body;
@@ -47,7 +47,7 @@ export const createReel = async (
 export const createReelCount = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { reelId } = req.body;
@@ -107,7 +107,7 @@ export const createReelCount = async (
 export const getReelsFeed = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { cursor, limit = 10 } = req.query as unknown as {
     limit: number;
@@ -163,7 +163,7 @@ export const getReelsFeed = async (
 export const getTopSnapsFeed = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const {
@@ -359,7 +359,7 @@ export const getTopSnapsFeed = async (
 export const getMyCircleReelsFeed = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { cursor, limit = 10 } = req.query as unknown as {
@@ -438,7 +438,7 @@ export const getMyCircleReelsFeed = async (
 export const updateReelById = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { reelId } = req.query as unknown as { reelId: string };
@@ -449,6 +449,8 @@ export const updateReelById = async (
     circleId: string | null;
     key: string | null;
   };
+
+  console.log("Hello");
 
   if (!userId) {
     return next(new ErrorHandler("Unauthorized", 403));

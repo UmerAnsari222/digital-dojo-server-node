@@ -363,6 +363,7 @@ const updateReelById = async (req, res, next) => {
     const { userId } = req;
     const { reelId } = req.query;
     const { title, description, type, circleId, key } = req.body;
+    console.log("Hello");
     if (!userId) {
         return next(new error_1.default("Unauthorized", 403));
     }
