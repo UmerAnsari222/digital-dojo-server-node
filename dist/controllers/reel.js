@@ -362,7 +362,7 @@ exports.getMyCircleReelsFeed = getMyCircleReelsFeed;
 const updateReelById = async (req, res, next) => {
     const { userId } = req;
     const { reelId } = req.query;
-    const { title, description, type, circleId } = req.body;
+    const { title, description, type, circleId, key } = req.body;
     if (!userId) {
         return next(new error_1.default("Unauthorized", 403));
     }
@@ -413,6 +413,7 @@ const updateReelById = async (req, res, next) => {
                 status: "READY",
                 type: type,
                 circleId: circle && circle.id,
+                imageUrl: key,
             },
             where: { id: reelId ? reelId : "" },
             update: {
@@ -421,6 +422,7 @@ const updateReelById = async (req, res, next) => {
                 publishedAt: new Date(),
                 type: type,
                 circleId: circle && circle.id,
+                // imageUrl: key,
             },
         });
         return res.status(200).json({

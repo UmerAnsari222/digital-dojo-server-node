@@ -442,11 +442,12 @@ export const updateReelById = async (
 ) => {
   const { userId } = req;
   const { reelId } = req.query as unknown as { reelId: string };
-  const { title, description, type, circleId } = req.body as {
+  const { title, description, type, circleId, key } = req.body as {
     title: string;
     description: string;
     type: VideoType;
     circleId: string | null;
+    key: string | null;
   };
 
   if (!userId) {
@@ -508,6 +509,7 @@ export const updateReelById = async (
         status: "READY",
         type: type,
         circleId: circle && circle.id,
+        imageUrl: key,
       },
       where: { id: reelId ? reelId : "" },
       update: {
@@ -516,6 +518,7 @@ export const updateReelById = async (
         publishedAt: new Date(),
         type: type,
         circleId: circle && circle.id,
+        // imageUrl: key,
       },
     });
 

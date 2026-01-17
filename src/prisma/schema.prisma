@@ -361,6 +361,8 @@ model Video {
   playbackHls  String?
   playbackDash String?
 
+  imageUrl String?
+
   type VideoType @default(CHALLENGE)
 
   circleId String?
