@@ -3,7 +3,7 @@ import { db } from "../config/db";
 import ErrorHandler from "../utils/error";
 import { getObjectUrl } from "../utils/aws";
 import { AWS_BUCKET_NAME } from "../config/dotEnv";
-import { VideoType } from "@prisma/client";
+import { ReelType, VideoType } from "@prisma/client";
 
 export const createReel = async (
   req: Request,
@@ -463,12 +463,13 @@ export const updateReelById = async (
 ) => {
   const { userId } = req;
   const { reelId } = req.query as unknown as { reelId: string };
-  const { title, description, type, circleId, key } = req.body as {
+  const { title, description, type, circleId, key, reelType } = req.body as {
     title: string;
     description: string;
     type: VideoType;
     circleId: string | null;
     key: string | null;
+    reelType: ReelType;
   };
 
   console.log("Hello");
@@ -533,6 +534,7 @@ export const updateReelById = async (
         type: type,
         circleId: circle && circle.id,
         imageUrl: key,
+        reelType,
       },
       where: { id: reelId ? reelId : "" },
       update: {
@@ -542,6 +544,7 @@ export const updateReelById = async (
         type: type,
         circleId: circle && circle.id,
         // imageUrl: key,
+        reelType,
       },
     });
 
