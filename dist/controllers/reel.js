@@ -118,6 +118,12 @@ const getReelsFeed = async (req, res, next) => {
                     key: reel.user.imageUrl,
                 });
             }
+            if (reel.imageUrl) {
+                reel.imageUrl = await (0, aws_1.getObjectUrl)({
+                    bucket: dotEnv_1.AWS_BUCKET_NAME,
+                    key: reel.imageUrl,
+                });
+            }
         }
         return res.status(200).json({
             success: true,
@@ -203,6 +209,12 @@ const getTopSnapsFeed = async (req, res, next) => {
                 item.user.imageUrl = await (0, aws_1.getObjectUrl)({
                     bucket: dotEnv_1.AWS_BUCKET_NAME,
                     key: item.user.imageUrl,
+                });
+            }
+            if (item.imageUrl) {
+                item.imageUrl = await (0, aws_1.getObjectUrl)({
+                    bucket: dotEnv_1.AWS_BUCKET_NAME,
+                    key: item.imageUrl,
                 });
             }
         }
@@ -343,6 +355,12 @@ const getMyCircleReelsFeed = async (req, res, next) => {
                 reel.user.imageUrl = await (0, aws_1.getObjectUrl)({
                     bucket: dotEnv_1.AWS_BUCKET_NAME,
                     key: reel.user.imageUrl,
+                });
+            }
+            if (reel.imageUrl) {
+                reel.imageUrl = await (0, aws_1.getObjectUrl)({
+                    bucket: dotEnv_1.AWS_BUCKET_NAME,
+                    key: reel.imageUrl,
                 });
             }
         }

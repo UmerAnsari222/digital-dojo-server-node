@@ -146,6 +146,13 @@ export const getReelsFeed = async (
           key: reel.user.imageUrl,
         });
       }
+
+      if (reel.imageUrl) {
+        reel.imageUrl = await getObjectUrl({
+          bucket: AWS_BUCKET_NAME,
+          key: reel.imageUrl,
+        });
+      }
     }
 
     return res.status(200).json({
@@ -257,6 +264,13 @@ export const getTopSnapsFeed = async (
         item.user.imageUrl = await getObjectUrl({
           bucket: AWS_BUCKET_NAME,
           key: item.user.imageUrl,
+        });
+      }
+
+      if (item.imageUrl) {
+        item.imageUrl = await getObjectUrl({
+          bucket: AWS_BUCKET_NAME,
+          key: item.imageUrl,
         });
       }
     }
@@ -419,6 +433,13 @@ export const getMyCircleReelsFeed = async (
         reel.user.imageUrl = await getObjectUrl({
           bucket: AWS_BUCKET_NAME,
           key: reel.user.imageUrl,
+        });
+      }
+
+      if (reel.imageUrl) {
+        reel.imageUrl = await getObjectUrl({
+          bucket: AWS_BUCKET_NAME,
+          key: reel.imageUrl,
         });
       }
     }
