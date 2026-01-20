@@ -363,7 +363,8 @@ model Video {
 
   imageUrl String?
 
-  type VideoType @default(CHALLENGE)
+  type     VideoType @default(CHALLENGE)
+  reelType ReelType  @default(VIDEO)
 
   circleId String?
   circle   Circle? @relation(fields: [circleId], references: [id], onDelete: Cascade)
@@ -431,4 +432,10 @@ enum VideoStatus {
 enum VideoType {
   CIRCLE
   CHALLENGE
+}
+
+enum ReelType {
+  TEXT
+  VIDEO
+  IMAGE
 }
