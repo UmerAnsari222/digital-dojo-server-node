@@ -2,6 +2,7 @@ import fetch from "node-fetch";
 import { CF_ACCOUNT_ID, CF_API_TOKEN } from "../config/dotEnv";
 
 let url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/stream/direct_upload`;
+let deleteUrl = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/stream`;
 
 export async function getCFPresignedUrl() {
   // console.log("URL: ", { url, CF_API_TOKEN });
@@ -16,6 +17,18 @@ export async function getCFPresignedUrl() {
     body: JSON.stringify({
       maxDurationSeconds: 90,
     }),
+  });
+
+  return res.json();
+}
+
+export async function deleteCFVideo(streamId: string) {
+  const res = await fetch(`${url}/${streamId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${CF_API_TOKEN}`,
+      "Content-Type": "application/json",
+    },
   });
 
   return res.json();

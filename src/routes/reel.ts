@@ -1,9 +1,10 @@
 import { Router, Request, Response, NextFunction } from "express";
 
-import { authMiddleware } from "../middlewares/auth";
+import { authAdminMiddleware, authMiddleware } from "../middlewares/auth";
 import {
   createReel,
   createReelCount,
+  deleteReelById,
   getMyCircleReelsFeed,
   getReelsFeed,
   getTopSnapsFeed,
@@ -17,7 +18,7 @@ reelRouter.get(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await createReel(req, res, next);
-  }
+  },
 );
 
 reelRouter.post(
@@ -25,7 +26,7 @@ reelRouter.post(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await createReelCount(req, res, next);
-  }
+  },
 );
 
 reelRouter.get(
@@ -33,7 +34,7 @@ reelRouter.get(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await getReelsFeed(req, res, next);
-  }
+  },
 );
 
 reelRouter.get(
@@ -41,7 +42,7 @@ reelRouter.get(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await getTopSnapsFeed(req, res, next);
-  }
+  },
 );
 
 reelRouter.get(
@@ -49,7 +50,7 @@ reelRouter.get(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await getMyCircleReelsFeed(req, res, next);
-  }
+  },
 );
 
 reelRouter.patch(
@@ -57,5 +58,13 @@ reelRouter.patch(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await updateReelById(req, res, next);
-  }
+  },
+);
+
+reelRouter.delete(
+  "/:reelId",
+  authAdminMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await deleteReelById(req, res, next);
+  },
 );

@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import { db } from "../config/db";
 import ErrorHandler from "../utils/error";
-import { getObjectUrl } from "../utils/aws";
+import { deleteFromAwsStorage, getObjectUrl } from "../utils/aws";
 import { AWS_BUCKET_NAME } from "../config/dotEnv";
 import { ReelType, VideoType } from "@prisma/client";
+import { deleteCFVideo } from "../services/cloudflare";
 
 export const createReel = async (
   req: Request,
@@ -472,8 +473,6 @@ export const updateReelById = async (
     reelType: ReelType;
   };
 
-  console.log("Hello");
-
   if (!userId) {
     return next(new ErrorHandler("Unauthorized", 403));
   }
@@ -552,6 +551,58 @@ export const updateReelById = async (
       reel: updatedReel,
       success: true,
       msg: "Reel Created Successfully",
+    });
+  } catch (error) {
+    console.error("[UPDATE_REEL_ERROR]:", error);
+    return next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const deleteReelById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { userId } = req;
+  const { reelId } = req.params as unknown as { reelId: string };
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 403));
+  }
+
+  if (!reelId) {
+    return next(new ErrorHandler("Reel id is required", 400));
+  }
+
+  try {
+    const self = await db.user.findUnique({ where: { id: userId } });
+
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 403));
+    }
+
+    const reel = await db.video.findUnique({ where: { id: reelId } });
+
+    if (!reel) {
+      return next(new ErrorHandler("Reel is not found", 404));
+    }
+
+    if (reel.streamId != null) {
+      await deleteCFVideo(reel.streamId);
+    }
+
+    if (reel.imageUrl != null) {
+      await deleteFromAwsStorage({
+        Bucket: AWS_BUCKET_NAME,
+        Key: reel.imageUrl,
+      });
+    }
+
+    await db.video.delete({ where: { id: reelId } });
+
+    return res.status(200).json({
+      success: true,
+      msg: "Reel Deleted Successfully",
     });
   } catch (error) {
     console.error("[UPDATE_REEL_ERROR]:", error);

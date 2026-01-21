@@ -3,11 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateReelById = exports.getMyCircleReelsFeed = exports.getTopSnapsFeed = exports.getReelsFeed = exports.createReelCount = exports.createReel = void 0;
+exports.deleteReelById = exports.updateReelById = exports.getMyCircleReelsFeed = exports.getTopSnapsFeed = exports.getReelsFeed = exports.createReelCount = exports.createReel = void 0;
 const db_1 = require("../config/db");
 const error_1 = __importDefault(require("../utils/error"));
 const aws_1 = require("../utils/aws");
 const dotEnv_1 = require("../config/dotEnv");
+const cloudflare_1 = require("../services/cloudflare");
 const createReel = async (req, res, next) => {
     const { userId } = req;
     const { title, description } = req.body;
@@ -381,7 +382,6 @@ const updateReelById = async (req, res, next) => {
     const { userId } = req;
     const { reelId } = req.query;
     const { title, description, type, circleId, key, reelType } = req.body;
-    console.log("Hello");
     if (!userId) {
         return next(new error_1.default("Unauthorized", 403));
     }
@@ -458,6 +458,45 @@ const updateReelById = async (req, res, next) => {
     }
 };
 exports.updateReelById = updateReelById;
+const deleteReelById = async (req, res, next) => {
+    const { userId } = req;
+    const { reelId } = req.params;
+    if (!userId) {
+        return next(new error_1.default("Unauthorized", 403));
+    }
+    if (!reelId) {
+        return next(new error_1.default("Reel id is required", 400));
+    }
+    try {
+        const self = await db_1.db.user.findUnique({ where: { id: userId } });
+        if (!self) {
+            return next(new error_1.default("Unauthorized", 403));
+        }
+        const reel = await db_1.db.video.findUnique({ where: { id: reelId } });
+        if (!reel) {
+            return next(new error_1.default("Reel is not found", 404));
+        }
+        if (reel.streamId != null) {
+            await (0, cloudflare_1.deleteCFVideo)(reel.streamId);
+        }
+        if (reel.imageUrl != null) {
+            await (0, aws_1.deleteFromAwsStorage)({
+                Bucket: dotEnv_1.AWS_BUCKET_NAME,
+                Key: reel.imageUrl,
+            });
+        }
+        await db_1.db.video.delete({ where: { id: reelId } });
+        return res.status(200).json({
+            success: true,
+            msg: "Reel Deleted Successfully",
+        });
+    }
+    catch (error) {
+        console.error("[UPDATE_REEL_ERROR]:", error);
+        return next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.deleteReelById = deleteReelById;
 // JS score calc
 function calculateScore(views, createdAt) {
     const DECAY_RATE_HOURS = 24;

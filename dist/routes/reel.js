@@ -23,3 +23,6 @@ exports.reelRouter.get("/my-circle", auth_1.authMiddleware, async (req, res, nex
 exports.reelRouter.patch("/", auth_1.authMiddleware, async (req, res, next) => {
     await (0, reel_1.updateReelById)(req, res, next);
 });
+exports.reelRouter.delete("/:reelId", auth_1.authAdminMiddleware, async (req, res, next) => {
+    await (0, reel_1.deleteReelById)(req, res, next);
+});
