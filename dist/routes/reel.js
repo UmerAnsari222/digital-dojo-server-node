@@ -20,6 +20,12 @@ exports.reelRouter.get("/top-snap", auth_1.authMiddleware, async (req, res, next
 exports.reelRouter.get("/my-circle", auth_1.authMiddleware, async (req, res, next) => {
     await (0, reel_1.getMyCircleReelsFeed)(req, res, next);
 });
+exports.reelRouter.get("/circle/:circleId", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, reel_1.getCircleReelsFeedById)(req, res, next);
+});
+exports.reelRouter.get("/me", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, reel_1.getUserReelsFeed)(req, res, next);
+});
 exports.reelRouter.patch("/", auth_1.authMiddleware, async (req, res, next) => {
     await (0, reel_1.updateReelById)(req, res, next);
 });

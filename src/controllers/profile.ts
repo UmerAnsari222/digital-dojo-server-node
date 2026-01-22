@@ -13,7 +13,7 @@ import {
 export const getProfile = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   if (!userId) {
@@ -63,6 +63,12 @@ export const getProfile = async (
             },
           },
         },
+        userPreferences: {
+          select: {
+            challengeAlerts: true,
+            dailyReminders: true,
+          },
+        },
       },
     });
 
@@ -95,9 +101,8 @@ export const getProfile = async (
       }
     }
 
-    const lastCurrentMonth = await getChallengesCountLastAndCurrentMonth(
-      userId
-    );
+    const lastCurrentMonth =
+      await getChallengesCountLastAndCurrentMonth(userId);
 
     // const bestWeek = await computeBestWeek(userId);
     // const growthScore = await calculateUserGrowthScore({
@@ -139,7 +144,7 @@ export const getProfile = async (
 export const updateProfile = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { name, key } = req.body;
@@ -181,7 +186,7 @@ export const updateProfile = async (
 export const updatePreferences = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { dailyReminders, challengeAlerts } = req.body;

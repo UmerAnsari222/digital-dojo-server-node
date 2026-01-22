@@ -57,6 +57,12 @@ const getProfile = async (req, res, next) => {
                         },
                     },
                 },
+                userPreferences: {
+                    select: {
+                        challengeAlerts: true,
+                        dailyReminders: true,
+                    },
+                },
             },
         });
         if (!user) {

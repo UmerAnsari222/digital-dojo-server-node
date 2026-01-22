@@ -452,6 +452,185 @@ export const getMyCircleReelsFeed = async (
       msg: "Reel Updated successfully",
     });
   } catch (error) {
+    console.error("[GET_MY_CIRCLE_REELS_FEED_ERROR]:", error);
+    return next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const getCircleReelsFeedById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { userId } = req;
+  const { circleId } = req.params as { circleId: string };
+  const { cursor, limit = 10 } = req.query as unknown as {
+    limit: number;
+    cursor: string;
+  };
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 403));
+  }
+
+  try {
+    const self = await db.user.findUnique({ where: { id: userId } });
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 403));
+    }
+
+    const circle = await db.circle.findUnique({ where: { id: circleId } });
+    if (!circle) {
+      return next(new ErrorHandler("Circle not found", 404));
+    }
+
+    const reels = await db.video.findMany({
+      where: {
+        status: "READY",
+        type: "CIRCLE",
+        circleId: circle.id,
+        // AND: [
+        //   {
+        //     circle: {
+        //       OR: [
+        //         { ownerId: self.id },
+        //         { members: { some: { id: self.id } } },
+        //       ],
+        //     },
+        //   },
+        // ],
+      },
+      orderBy: { createdAt: "desc" },
+      take: Number(limit) + 1,
+      ...(cursor ? { cursor: { id: cursor as string }, skip: 1 } : {}),
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            imageUrl: true,
+          },
+        },
+        videoViews: true,
+      },
+    });
+
+    let nextCursor: string | null = null;
+    if (reels.length > Number(limit)) {
+      const nextItem = reels.pop();
+      nextCursor = nextItem!.id;
+    }
+
+    for (const reel of reels) {
+      if (reel.user.imageUrl) {
+        reel.user.imageUrl = await getObjectUrl({
+          bucket: AWS_BUCKET_NAME,
+          key: reel.user.imageUrl,
+        });
+      }
+
+      if (reel.imageUrl) {
+        reel.imageUrl = await getObjectUrl({
+          bucket: AWS_BUCKET_NAME,
+          key: reel.imageUrl,
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      reels,
+      nextCursor,
+      msg: "Reel Updated successfully",
+    });
+  } catch (error) {
+    console.error("[GET_CIRCLE_REELS_FEED_BY_ID_ERROR]:", error);
+    return next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const getUserReelsFeed = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { userId } = req;
+  const { cursor, limit = 10 } = req.query as unknown as {
+    limit: number;
+    cursor: string;
+  };
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 403));
+  }
+
+  try {
+    const self = await db.user.findUnique({ where: { id: userId } });
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 403));
+    }
+
+    const reels = await db.video.findMany({
+      where: {
+        status: "READY",
+        userId: userId,
+        // AND: [
+        //   {
+        //     circle: {
+        //       OR: [
+        //         { ownerId: self.id },
+        //         { members: { some: { id: self.id } } },
+        //       ],
+        //     },
+        //   },
+        // ],
+      },
+      orderBy: { createdAt: "desc" },
+      take: Number(limit) + 1,
+      ...(cursor ? { cursor: { id: cursor as string }, skip: 1 } : {}),
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            imageUrl: true,
+          },
+        },
+        videoViews: true,
+      },
+    });
+
+    let nextCursor: string | null = null;
+    if (reels.length > Number(limit)) {
+      const nextItem = reels.pop();
+      nextCursor = nextItem!.id;
+    }
+
+    for (const reel of reels) {
+      if (reel.user.imageUrl) {
+        reel.user.imageUrl = await getObjectUrl({
+          bucket: AWS_BUCKET_NAME,
+          key: reel.user.imageUrl,
+        });
+      }
+
+      if (reel.imageUrl) {
+        reel.imageUrl = await getObjectUrl({
+          bucket: AWS_BUCKET_NAME,
+          key: reel.imageUrl,
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      reels,
+      nextCursor,
+      msg: "Reel Updated successfully",
+    });
+  } catch (error) {
     console.error("[GET_REELS_FEED_ERROR]:", error);
     return next(new ErrorHandler("Something went wrong", 500));
   }

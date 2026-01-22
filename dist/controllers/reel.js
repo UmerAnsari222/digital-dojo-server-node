@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteReelById = exports.updateReelById = exports.getMyCircleReelsFeed = exports.getTopSnapsFeed = exports.getReelsFeed = exports.createReelCount = exports.createReel = void 0;
+exports.deleteReelById = exports.updateReelById = exports.getUserReelsFeed = exports.getCircleReelsFeedById = exports.getMyCircleReelsFeed = exports.getTopSnapsFeed = exports.getReelsFeed = exports.createReelCount = exports.createReel = void 0;
 const db_1 = require("../config/db");
 const error_1 = __importDefault(require("../utils/error"));
 const aws_1 = require("../utils/aws");
@@ -373,11 +373,163 @@ const getMyCircleReelsFeed = async (req, res, next) => {
         });
     }
     catch (error) {
-        console.error("[GET_REELS_FEED_ERROR]:", error);
+        console.error("[GET_MY_CIRCLE_REELS_FEED_ERROR]:", error);
         return next(new error_1.default("Something went wrong", 500));
     }
 };
 exports.getMyCircleReelsFeed = getMyCircleReelsFeed;
+const getCircleReelsFeedById = async (req, res, next) => {
+    const { userId } = req;
+    const { circleId } = req.params;
+    const { cursor, limit = 10 } = req.query;
+    if (!userId) {
+        return next(new error_1.default("Unauthorized", 403));
+    }
+    try {
+        const self = await db_1.db.user.findUnique({ where: { id: userId } });
+        if (!self) {
+            return next(new error_1.default("Unauthorized", 403));
+        }
+        const circle = await db_1.db.circle.findUnique({ where: { id: circleId } });
+        if (!circle) {
+            return next(new error_1.default("Circle not found", 404));
+        }
+        const reels = await db_1.db.video.findMany({
+            where: {
+                status: "READY",
+                type: "CIRCLE",
+                circleId: circle.id,
+                // AND: [
+                //   {
+                //     circle: {
+                //       OR: [
+                //         { ownerId: self.id },
+                //         { members: { some: { id: self.id } } },
+                //       ],
+                //     },
+                //   },
+                // ],
+            },
+            orderBy: { createdAt: "desc" },
+            take: Number(limit) + 1,
+            ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        imageUrl: true,
+                    },
+                },
+                videoViews: true,
+            },
+        });
+        let nextCursor = null;
+        if (reels.length > Number(limit)) {
+            const nextItem = reels.pop();
+            nextCursor = nextItem.id;
+        }
+        for (const reel of reels) {
+            if (reel.user.imageUrl) {
+                reel.user.imageUrl = await (0, aws_1.getObjectUrl)({
+                    bucket: dotEnv_1.AWS_BUCKET_NAME,
+                    key: reel.user.imageUrl,
+                });
+            }
+            if (reel.imageUrl) {
+                reel.imageUrl = await (0, aws_1.getObjectUrl)({
+                    bucket: dotEnv_1.AWS_BUCKET_NAME,
+                    key: reel.imageUrl,
+                });
+            }
+        }
+        return res.status(200).json({
+            success: true,
+            reels,
+            nextCursor,
+            msg: "Reel Updated successfully",
+        });
+    }
+    catch (error) {
+        console.error("[GET_CIRCLE_REELS_FEED_BY_ID_ERROR]:", error);
+        return next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.getCircleReelsFeedById = getCircleReelsFeedById;
+const getUserReelsFeed = async (req, res, next) => {
+    const { userId } = req;
+    const { cursor, limit = 10 } = req.query;
+    if (!userId) {
+        return next(new error_1.default("Unauthorized", 403));
+    }
+    try {
+        const self = await db_1.db.user.findUnique({ where: { id: userId } });
+        if (!self) {
+            return next(new error_1.default("Unauthorized", 403));
+        }
+        const reels = await db_1.db.video.findMany({
+            where: {
+                status: "READY",
+                userId: userId,
+                // AND: [
+                //   {
+                //     circle: {
+                //       OR: [
+                //         { ownerId: self.id },
+                //         { members: { some: { id: self.id } } },
+                //       ],
+                //     },
+                //   },
+                // ],
+            },
+            orderBy: { createdAt: "desc" },
+            take: Number(limit) + 1,
+            ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        imageUrl: true,
+                    },
+                },
+                videoViews: true,
+            },
+        });
+        let nextCursor = null;
+        if (reels.length > Number(limit)) {
+            const nextItem = reels.pop();
+            nextCursor = nextItem.id;
+        }
+        for (const reel of reels) {
+            if (reel.user.imageUrl) {
+                reel.user.imageUrl = await (0, aws_1.getObjectUrl)({
+                    bucket: dotEnv_1.AWS_BUCKET_NAME,
+                    key: reel.user.imageUrl,
+                });
+            }
+            if (reel.imageUrl) {
+                reel.imageUrl = await (0, aws_1.getObjectUrl)({
+                    bucket: dotEnv_1.AWS_BUCKET_NAME,
+                    key: reel.imageUrl,
+                });
+            }
+        }
+        return res.status(200).json({
+            success: true,
+            reels,
+            nextCursor,
+            msg: "Reel Updated successfully",
+        });
+    }
+    catch (error) {
+        console.error("[GET_REELS_FEED_ERROR]:", error);
+        return next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.getUserReelsFeed = getUserReelsFeed;
 const updateReelById = async (req, res, next) => {
     const { userId } = req;
     const { reelId } = req.query;

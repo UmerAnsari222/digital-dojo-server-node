@@ -5,9 +5,11 @@ import {
   createReel,
   createReelCount,
   deleteReelById,
+  getCircleReelsFeedById,
   getMyCircleReelsFeed,
   getReelsFeed,
   getTopSnapsFeed,
+  getUserReelsFeed,
   updateReelById,
 } from "../controllers/reel";
 
@@ -50,6 +52,22 @@ reelRouter.get(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await getMyCircleReelsFeed(req, res, next);
+  },
+);
+
+reelRouter.get(
+  "/circle/:circleId",
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await getCircleReelsFeedById(req, res, next);
+  },
+);
+
+reelRouter.get(
+  "/me",
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await getUserReelsFeed(req, res, next);
   },
 );
 
