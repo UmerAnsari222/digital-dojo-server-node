@@ -7,7 +7,7 @@ import { STRIPE_MONTHLY_PRICE_ID } from "../config/dotEnv";
 export const makeCheckout = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { email } = req.body;
@@ -70,6 +70,7 @@ export const makeCheckout = async (
       cancel_url: "intestinofelizapp://cancel",
       payment_method_types: ["card"],
       metadata: { userId },
+      origin_context: "mobile_app",
     });
 
     return res.status(201).json({

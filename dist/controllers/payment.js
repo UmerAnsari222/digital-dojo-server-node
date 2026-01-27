@@ -61,6 +61,7 @@ const makeCheckout = async (req, res, next) => {
             cancel_url: "intestinofelizapp://cancel",
             payment_method_types: ["card"],
             metadata: { userId },
+            origin_context: "mobile_app",
         });
         return res.status(201).json({
             url: session.url,
