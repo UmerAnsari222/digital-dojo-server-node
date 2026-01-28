@@ -12,7 +12,7 @@ import { SEND_NOTIFICATION } from "../types/constant";
 export const makeCompletion = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { userHabitId, dailyChallengeId, skip } = req.body;
@@ -113,7 +113,7 @@ export const makeCompletion = async (
           userHabitId ? "habit" : "challenge"
         } today!`,
         extraData: {}, // optional extra data for push
-        type: "dynamic", // optional: you can use 'dailyReminder', 'challengeAlert', or 'custom'
+        type: "challengeAlert", // optional: you can use 'dailyReminder', 'challengeAlert', or 'custom'
       });
     }
 
@@ -133,7 +133,7 @@ export const makeCompletion = async (
 export const makeWeeklyChallengeCompletion = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { weeklyChallengeId, challengeId, skip } = req.body;
@@ -294,7 +294,7 @@ export const makeWeeklyChallengeCompletion = async (
 
 export async function processCompletion(
   userId: string,
-  today: Date = new Date()
+  today: Date = new Date(),
 ) {
   console.log({ userId, today });
 
@@ -322,7 +322,7 @@ export async function processCompletion(
   } else {
     const diffDays = differenceInCalendarDays(
       todayNormalized,
-      lastCompletionDate
+      lastCompletionDate,
     );
 
     console.log("[processCompletion] diffDays:", diffDays);

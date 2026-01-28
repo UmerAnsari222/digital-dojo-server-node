@@ -155,8 +155,10 @@ exports.notificationWorker = new bullmq_1.Worker(notification_1.NOTIFICATION_QUE
         if (!prefs)
             continue;
         // Only send if challenge alerts are enabled
-        if (!prefs.challengeAlerts)
+        if (type === "challengeAlert" && !prefs.challengeAlerts) {
+            console.log(`Skipping ${user.id} — challengeAlerts disabled`);
             continue;
+        }
         // Save notification in DB
         await db_1.db.notification.create({
             data: { userId: user.id, title, description },
@@ -176,6 +178,9 @@ exports.reminderWorker.on("failed", (job, err) => {
     console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
 });
 exports.challengeWorker.on("failed", (job, err) => {
+    console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
+});
+exports.notificationWorker.on("failed", (job, err) => {
     console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
 });
 async function getUserPreferences(skip, take) {

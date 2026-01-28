@@ -207,8 +207,10 @@ export const notificationWorker = new Worker(
       if (!prefs) continue;
 
       // Only send if challenge alerts are enabled
-      if (!prefs.challengeAlerts) continue;
-
+      if (type === "challengeAlert" && !prefs.challengeAlerts) {
+        console.log(`Skipping ${user.id} — challengeAlerts disabled`);
+        continue;
+      }
       // Save notification in DB
       await db.notification.create({
         data: { userId: user.id, title, description },
@@ -234,6 +236,10 @@ reminderWorker.on("failed", (job, err) => {
 });
 
 challengeWorker.on("failed", (job, err) => {
+  console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
+});
+
+notificationWorker.on("failed", (job, err) => {
   console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
 });
 

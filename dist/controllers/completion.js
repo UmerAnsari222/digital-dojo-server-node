@@ -95,7 +95,7 @@ const makeCompletion = async (req, res, next) => {
                 title: `${userHabitId ? "Habit" : "Challenge"} Completion!`,
                 description: `Congratulations on completing your ${userHabitId ? "habit" : "challenge"} today!`,
                 extraData: {}, // optional extra data for push
-                type: "dynamic", // optional: you can use 'dailyReminder', 'challengeAlert', or 'custom'
+                type: "challengeAlert", // optional: you can use 'dailyReminder', 'challengeAlert', or 'custom'
             });
         }
         return res.status(201).json({
