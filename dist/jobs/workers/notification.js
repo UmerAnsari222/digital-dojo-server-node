@@ -9,80 +9,71 @@ const firebase_1 = require("../../firebase");
 exports.reminderWorker = new bullmq_1.Worker(notification_1.REMINDER_QUEUE, async (job) => {
     const { title, description } = job.data;
     console.log("[BullMQ] Running Reminder worker check...");
-    const batchSize = 60; // you choose
+    const batchSize = 60;
     let skip = 0;
     while (true) {
         const preferences = await getUserPreferences(batchSize, skip);
         if (preferences.length === 0)
             break;
-        const usersWithToken = preferences.filter((p) => p.user.fcmToken);
-        const usersWithoutToken = preferences.filter((p) => !p.user.fcmToken);
-        // Extract only valid fcmTokens
-        const tokens = usersWithToken.map((p) => p.user.fcmToken);
-        // ---------------------------------------------
-        // 1️⃣ SEND PUSH NOTIFICATION to users with tokens
-        // ---------------------------------------------
-        // if (tokens.length === 0) {
-        //   console.log(`No valid FCM tokens in this batch`);
-        //   skip += batchSize;
-        //   continue;
-        // }
-        if (tokens.length > 0) {
-            console.log(`Sending push daily reminder to ${tokens.length} users...`);
-            // FCM multicast supports up to 500 tokens
+        // Collect all tokens
+        const allTokens = preferences.flatMap((p) => p.user.fcmTokens);
+        const uniqueTokens = Array.from(new Set(allTokens)); // dedupe
+        // Chunk into groups of <= 500
+        const chunks = [];
+        const CHUNK_SIZE = 500;
+        for (let i = 0; i < uniqueTokens.length; i += CHUNK_SIZE) {
+            chunks.push(uniqueTokens.slice(i, i + CHUNK_SIZE));
+        }
+        // Send FCM push in chunks
+        for (const tokens of chunks) {
+            if (tokens.length === 0)
+                continue;
+            console.log(`Sending daily reminder to ${tokens.length} device tokens...`);
             const message = {
-                notification: {
-                    title: "Daily Reminder!",
-                    body: "Don't forget to complete your challenge today!",
-                },
+                notification: { title, body: description },
                 tokens,
             };
             const response = await firebase_1.messaging.sendEachForMulticast(message);
             await Promise.all(response.responses.map(async (res, index) => {
-                const pref = usersWithToken[index];
-                // always save notification (success or fail)
+                const token = tokens[index];
+                // Find the pref object for this token
+                const pref = preferences.find((p) => p.user.fcmTokens.includes(token));
+                if (!pref)
+                    return;
+                // Always save notification record
                 await db_1.db.notification.create({
                     data: {
-                        title: "Daily Reminder!",
-                        description: "Don't forget to complete your challenge today!",
+                        title,
+                        description,
                         userId: pref.user.id,
                     },
                 });
+                // Remove invalid tokens
+                if (!res.success) {
+                    console.warn(`Removing invalid FCM token: ${token}`);
+                    await db_1.db.user.update({
+                        where: { id: pref.user.id },
+                        data: {
+                            fcmTokens: pref.user.fcmTokens.filter((t) => t !== token),
+                        },
+                    });
+                }
             }));
         }
-        // ---------------------------------------------
-        // 2️⃣ USERS WITHOUT TOKEN → still save notifications
-        // ---------------------------------------------
+        // Users with no tokens still get database notifications
+        const usersWithoutToken = preferences.filter((p) => p.user.fcmTokens.length === 0);
         if (usersWithoutToken.length > 0) {
             await db_1.db.notification.createMany({
                 data: usersWithoutToken.map((p) => ({
-                    title: "Daily Reminder!",
-                    description: "Don't forget to complete your challenge today!",
+                    title,
+                    description,
                     userId: p.user.id,
                 })),
             });
-            console.log(`Saved notifications for ${usersWithoutToken.length} users without token`);
+            console.log(`Saved reminders for ${usersWithoutToken.length} users without FCM tokens`);
         }
-        // Cleanup invalid tokens
-        //   response.responses.forEach((res, index) => {
-        //     if (!res.success) {
-        //       const badToken = tokens[index];
-        //       console.log("Removing invalid FCM token:", badToken);
-        //       db.user
-        //         .updateMany({
-        //           where: { fcmToken: badToken },
-        //           data: { fcmToken: null },
-        //         })
-        //         .catch(() => {});
-        //     }
-        //   });
-        //   // Send notifications to this batch
-        //   for (const pref of users) {
-        //     console.log("Sending daily reminder to", pref.user.email);
-        //     // call email/push service here
-        //   }
         skip += batchSize;
-        console.log("[BullMQ] ✅ Daily Reminder! Done");
+        console.log("[BullMQ] ✅ Daily Reminder batch complete");
     }
 }, { connection: redis_1.redisConnection, concurrency: 1 });
 exports.challengeWorker = new bullmq_1.Worker(notification_1.CHALLENGE_QUEUE, async (job) => {
@@ -94,51 +85,65 @@ exports.challengeWorker = new bullmq_1.Worker(notification_1.CHALLENGE_QUEUE, as
         const preferences = await getUserPreferences(batchSize, skip);
         if (preferences.length === 0)
             break;
-        // Split users
-        const usersWithToken = preferences.filter((p) => p.user.fcmToken);
-        const usersWithoutToken = preferences.filter((p) => !p.user.fcmToken);
-        // Extract tokens
-        const tokens = usersWithToken.map((p) => p.user.fcmToken);
-        // -----------------------------------------------------
-        // 1️⃣ SEND FCM PUSH NOTIFICATIONS (only users w/ tokens)
-        // -----------------------------------------------------
-        if (tokens.length > 0) {
-            console.log(`Sending daily challenges to ${tokens.length} users...`);
+        // Gather all tokens from all users
+        const allTokens = preferences.flatMap((p) => p.user.fcmTokens);
+        const uniqueTokens = Array.from(new Set(allTokens)); // dedupe
+        // Split into sub-batches of 500 because FCM only accepts up to 500 tokens
+        const chunks = [];
+        const CHUNK_SIZE = 500;
+        for (let i = 0; i < uniqueTokens.length; i += CHUNK_SIZE) {
+            chunks.push(uniqueTokens.slice(i, i + CHUNK_SIZE));
+        }
+        // Send each chunk
+        for (const tokens of chunks) {
+            if (tokens.length === 0)
+                continue;
+            console.log(`Sending challenge alert to ${tokens.length} device tokens...`);
             const message = {
-                notification: {
-                    title: "Challenge Alert!",
-                    body: "You have a new challenge waiting. Complete it today!",
-                },
+                notification: { title, body: description },
                 tokens,
             };
             const response = await firebase_1.messaging.sendEachForMulticast(message);
-            // Save notifications for each user with token (push sent)
-            await Promise.all(response.responses.map(async (_res, index) => {
-                const pref = usersWithToken[index];
+            // Handle response: record notifications & clean bad tokens
+            await Promise.all(response.responses.map(async (res, index) => {
+                const token = tokens[index];
+                // Find which user this token belongs to
+                const pref = preferences.find((p) => p.user.fcmTokens.includes(token));
+                if (!pref)
+                    return;
+                // Save notification in DB
                 await db_1.db.notification.create({
                     data: {
-                        title: "Challenge Alert!",
-                        description: "You have a new challenge waiting. Complete it today!",
+                        title,
+                        description,
                         userId: pref.user.id,
                     },
                 });
+                // If the token failed due to invalid/expired, remove it
+                if (!res.success) {
+                    console.warn(`Removing invalid FCM token: ${token}`);
+                    await db_1.db.user.update({
+                        where: { id: pref.user.id },
+                        data: {
+                            fcmTokens: pref.user.fcmTokens.filter((t) => t !== token),
+                        },
+                    });
+                }
             }));
         }
-        // -----------------------------------------------------
-        // 2️⃣ USERS WITHOUT TOKENS → STILL SAVE NOTIFICATIONS
-        // -----------------------------------------------------
+        // For users with NO tokens → still save notification
+        const usersWithoutToken = preferences.filter((p) => p.user.fcmTokens.length === 0);
         if (usersWithoutToken.length > 0) {
             await db_1.db.notification.createMany({
                 data: usersWithoutToken.map((p) => ({
-                    title: "Challenge Alert!",
-                    description: "You have a new challenge waiting. Complete it today!",
+                    title,
+                    description,
                     userId: p.user.id,
                 })),
             });
-            console.log(`Saved challenge notifications for ${usersWithoutToken.length} users without FCM token`);
         }
         skip += batchSize;
-        console.log("[BullMQ] ✅ Challenge Alert! Batch complete");
+        console.log("[BullMQ] ✅ Challenge Alert batch complete");
     }
 }, { connection: redis_1.redisConnection, concurrency: 1 });
 exports.notificationWorker = new bullmq_1.Worker(notification_1.NOTIFICATION_QUEUE, async (job) => {
@@ -164,9 +169,9 @@ exports.notificationWorker = new bullmq_1.Worker(notification_1.NOTIFICATION_QUE
             data: { userId: user.id, title, description },
         });
         // Send push if token exists
-        if (user.fcmToken) {
+        if (user.fcmTokens.length > 0) {
             await firebase_1.messaging.sendEachForMulticast({
-                tokens: [user.fcmToken],
+                tokens: user.fcmTokens,
                 notification: { title, body: description },
                 data: extraData || {},
             });
@@ -193,7 +198,7 @@ async function getUserPreferences(skip, take) {
                 select: {
                     id: true,
                     email: true,
-                    fcmToken: true,
+                    fcmTokens: true,
                 },
             },
         },

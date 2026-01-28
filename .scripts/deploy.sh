@@ -20,6 +20,7 @@ cd src/
 npx prisma db push
 
 echo "🚦 Restarting app with PM2..."
-pm2 restart 0 --update-env
+# pm2 restart 0 --update-env
+pm2 restart all --update-env
 
 echo "✅ Deployment complete!"
