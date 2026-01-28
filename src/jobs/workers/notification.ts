@@ -63,7 +63,7 @@ export const reminderWorker = new Worker(
                 userId: pref.user.id,
               },
             });
-          })
+          }),
         );
       }
 
@@ -80,7 +80,7 @@ export const reminderWorker = new Worker(
         });
 
         console.log(
-          `Saved notifications for ${usersWithoutToken.length} users without token`
+          `Saved notifications for ${usersWithoutToken.length} users without token`,
         );
       }
 
@@ -109,7 +109,7 @@ export const reminderWorker = new Worker(
       console.log("[BullMQ] ✅ Daily Reminder! Done");
     }
   },
-  { connection: redisConnection, concurrency: 1 }
+  { connection: redisConnection, concurrency: 1 },
 );
 
 export const challengeWorker = new Worker(
@@ -161,7 +161,7 @@ export const challengeWorker = new Worker(
                 userId: pref.user.id,
               },
             });
-          })
+          }),
         );
       }
 
@@ -178,7 +178,7 @@ export const challengeWorker = new Worker(
         });
 
         console.log(
-          `Saved challenge notifications for ${usersWithoutToken.length} users without FCM token`
+          `Saved challenge notifications for ${usersWithoutToken.length} users without FCM token`,
         );
       }
 
@@ -187,7 +187,7 @@ export const challengeWorker = new Worker(
       console.log("[BullMQ] ✅ Challenge Alert! Batch complete");
     }
   },
-  { connection: redisConnection, concurrency: 1 }
+  { connection: redisConnection, concurrency: 1 },
 );
 
 export const notificationWorker = new Worker(
@@ -202,8 +202,12 @@ export const notificationWorker = new Worker(
     });
 
     for (const user of users) {
-      // Only send if user has preferences object
-      if (!user.userPreferences) continue;
+      const prefs = user.userPreferences;
+      // Skip users without preferences
+      if (!prefs) continue;
+
+      // Only send if challenge alerts are enabled
+      if (!prefs.challengeAlerts) continue;
 
       // Save notification in DB
       await db.notification.create({
@@ -220,9 +224,9 @@ export const notificationWorker = new Worker(
       }
     }
 
-    console.log(`[Worker] ✅ Notifications sent for users with preferences`);
+    console.log(`[Worker] ✅ Challenge notifications sent where enabled`);
   },
-  { connection: redisConnection, concurrency: 5 }
+  { connection: redisConnection, concurrency: 5 },
 );
 
 reminderWorker.on("failed", (job, err) => {

@@ -150,8 +150,12 @@ exports.notificationWorker = new bullmq_1.Worker(notification_1.NOTIFICATION_QUE
         include: { userPreferences: true },
     });
     for (const user of users) {
-        // Only send if user has preferences object
-        if (!user.userPreferences)
+        const prefs = user.userPreferences;
+        // Skip users without preferences
+        if (!prefs)
+            continue;
+        // Only send if challenge alerts are enabled
+        if (!prefs.challengeAlerts)
             continue;
         // Save notification in DB
         await db_1.db.notification.create({
@@ -166,7 +170,7 @@ exports.notificationWorker = new bullmq_1.Worker(notification_1.NOTIFICATION_QUE
             });
         }
     }
-    console.log(`[Worker] ✅ Notifications sent for users with preferences`);
+    console.log(`[Worker] ✅ Challenge notifications sent where enabled`);
 }, { connection: redis_1.redisConnection, concurrency: 5 });
 exports.reminderWorker.on("failed", (job, err) => {
     console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
