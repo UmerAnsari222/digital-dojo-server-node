@@ -69,6 +69,7 @@ export const getProfile = async (
             dailyReminders: true,
           },
         },
+        fcmTokens: true,
       },
     });
 

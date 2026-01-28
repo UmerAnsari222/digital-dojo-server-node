@@ -63,6 +63,7 @@ const getProfile = async (req, res, next) => {
                         dailyReminders: true,
                     },
                 },
+                fcmTokens: true,
             },
         });
         if (!user) {

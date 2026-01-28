@@ -85,9 +85,12 @@ const login = async (req, res, next) => {
         if (!isPasswordMatch) {
             return next(new error_1.default("Invalid credentials", 401));
         }
+        const fcmTokenSet = new Set(isExisting.fcmTokens);
+        fcmTokenSet.add(fcmToken);
+        const fcmTokens = Array.from(fcmTokenSet);
         await db_1.db.user.update({
             where: { id: isExisting.id },
-            data: { fcmToken: fcmToken, timezone: timeZone },
+            data: { fcmTokens: fcmTokens, timezone: timeZone },
         });
         const token = (0, jwt_1.createToken)({ userId: isExisting.id, role: isExisting.role });
         delete isExisting.password;

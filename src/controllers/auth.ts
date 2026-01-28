@@ -14,7 +14,7 @@ import { verifyAppleToken, verifyGoogleToken } from "../services/auth";
 export const register = async (
   req: Request<{}, {}, NewRegisterUserWithEmailRequest>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { name, email, password, confirmPassword, timeZone } = req.body;
@@ -82,7 +82,7 @@ export const register = async (
 export const login = async (
   req: Request<{}, {}, LoginUserWithEmailRequest>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { email, password, fcmToken, timeZone } = req.body;
@@ -106,16 +106,21 @@ export const login = async (
     // check password or hash password is same
     const isPasswordMatch = await comparePassword(
       password,
-      isExisting.password
+      isExisting.password,
     );
 
     if (!isPasswordMatch) {
       return next(new ErrorHandler("Invalid credentials", 401));
     }
 
+    const fcmTokenSet = new Set(isExisting.fcmTokens);
+    fcmTokenSet.add(fcmToken);
+
+    const fcmTokens = Array.from(fcmTokenSet);
+
     await db.user.update({
       where: { id: isExisting.id },
-      data: { fcmToken: fcmToken, timezone: timeZone },
+      data: { fcmTokens: fcmTokens, timezone: timeZone },
     });
 
     const token = createToken({ userId: isExisting.id, role: isExisting.role });
@@ -137,7 +142,7 @@ export const login = async (
 export const loginWithApple = async (
   req: Request<{}, {}, LoginWithProvider & { name: string }>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { identityToken, timezone, fcmToken, name } = req.body;
@@ -208,7 +213,7 @@ export const loginWithApple = async (
 export const loginWithGoogle = async (
   req: Request<{}, {}, LoginWithProvider>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { identityToken, timezone, fcmToken } = req.body;
