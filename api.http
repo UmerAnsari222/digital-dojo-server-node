@@ -1,5 +1,5 @@
-@BASE_URL = https://api.digitaldojoteam.com
-# @BASE_URL = http://localhost:5500
+# @BASE_URL = https://api.digitaldojoteam.com
+@BASE_URL = http://localhost:5500
 @YOUR_JWT_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5ODE3M2UwYy0yZmUxLTQyNWMtODllOS0yZWQzNzA0MDY0MTgiLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc2ODM2NDQ2MSwiZXhwIjoxNzY4OTY5MjYxfQ.r22hCinmF3VEx7gzntYZML5wgtTcUcRFXcOo_sO-EDM
 
 

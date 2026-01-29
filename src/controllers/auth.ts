@@ -113,23 +113,31 @@ export const login = async (
       return next(new ErrorHandler("Invalid credentials", 401));
     }
 
-    const fcmTokenSet = new Set(isExisting.fcmTokens);
-    fcmTokenSet.add(fcmToken);
+    let fcmTokenSet = new Set();
 
-    const fcmTokens = Array.from(fcmTokenSet);
+    if (fcmToken) {
+      fcmTokenSet = new Set(isExisting.fcmTokens);
+      fcmTokenSet.add(fcmToken);
+    }
 
-    await db.user.update({
+    const fcmTokens = Array.from(fcmTokenSet) as string[];
+
+    const update = await db.user.update({
       where: { id: isExisting.id },
-      data: { fcmTokens: fcmTokens, timezone: timeZone },
+      data: {
+        fcmTokens: fcmTokens.length > 0 ? fcmTokens : [],
+        timezone: timeZone,
+      },
     });
 
     const token = createToken({ userId: isExisting.id, role: isExisting.role });
 
     delete isExisting.password;
+    delete update.password;
 
     return res.status(200).json({
       token,
-      user: isExisting,
+      user: update,
       msg: "Login Successfully",
       success: true,
     });
@@ -166,6 +174,15 @@ export const loginWithApple = async (
       where: { providerId: appleId },
     });
 
+    let fcmTokenSet = new Set();
+
+    if (fcmToken) {
+      fcmTokenSet = new Set(user.fcmTokens);
+      fcmTokenSet.add(fcmToken);
+    }
+
+    const fcmTokens = Array.from(fcmTokenSet) as string[];
+
     if (!user) {
       const firstBelt = await db.belt.findFirst({
         orderBy: {
@@ -177,7 +194,8 @@ export const loginWithApple = async (
         providerId: appleId,
         email: email,
         name: name,
-        fcmToken: fcmToken,
+        // fcmToken: fcmToken,
+        fcmTokens: fcmTokens,
         timeZone: timezone,
         provider: Provider.APPLE,
         firstBeltId: firstBelt ? firstBelt.id : null,
@@ -187,7 +205,8 @@ export const loginWithApple = async (
         where: { providerId: appleId },
         data: {
           timezone: timezone,
-          fcmToken: fcmToken,
+          // fcmToken: fcmToken,
+          fcmTokens: fcmTokens || [],
           name: name || user.name,
         },
       });
@@ -236,6 +255,15 @@ export const loginWithGoogle = async (
       where: { providerId: googleId },
     });
 
+    let fcmTokenSet = new Set();
+
+    if (fcmToken) {
+      fcmTokenSet = new Set(user.fcmTokens);
+      fcmTokenSet.add(fcmToken);
+    }
+
+    const fcmTokens = Array.from(fcmTokenSet) as string[];
+
     if (!user) {
       const firstBelt = await db.belt.findFirst({
         orderBy: {
@@ -253,7 +281,7 @@ export const loginWithGoogle = async (
         providerId: googleId,
         email: email,
         name,
-        fcmToken,
+        fcmTokens,
         timeZone: timezone,
         provider: Provider.GOOGLE,
         firstBeltId: firstBelt ? firstBelt.id : null,
@@ -263,7 +291,7 @@ export const loginWithGoogle = async (
         where: { providerId: googleId },
         data: {
           timezone,
-          fcmToken,
+          fcmTokens: fcmTokens || [],
         },
       });
     }
@@ -293,7 +321,7 @@ async function createUser({
   providerId,
   provider,
   firstBeltId,
-  fcmToken,
+  fcmTokens,
 }: {
   name: string;
   email: string;
@@ -302,7 +330,7 @@ async function createUser({
   providerId?: string;
   provider?: Provider;
   firstBeltId?: string;
-  fcmToken?: string;
+  fcmTokens?: string[];
 }) {
   return await db.$transaction(async (tx) => {
     // 1️⃣ Create the user
@@ -316,7 +344,7 @@ async function createUser({
         timezone: timeZone,
         providerId,
         provider,
-        fcmToken,
+        fcmTokens: fcmTokens || [],
       },
     });
 
