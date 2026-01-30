@@ -41,10 +41,11 @@ async function getStats() {
     }),
     db.user.count({
       where: {
-        NOT: [
-          { subscription: null },
-          { subscription: { status: { not: "active" } } },
-        ],
+        subscription: null,
+        // NOT: [
+        //   { subscription: null },
+        //   { subscription: { status: { not: "active" } } },
+        // ],
       },
     }),
   ]);
