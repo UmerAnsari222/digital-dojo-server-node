@@ -341,7 +341,8 @@ export async function processCompletion(
       // Consecutive day (yesterday), increment streak and beltProgress
       streak += 1;
       beltProgress += 1;
-    } else if (diffDays > 1) {
+      // } else if (diffDays > 1) {
+    } else if (diffDays >= 3) {
       // Streak is broken, reset streak to 0 and belt progress to 1
       streak = 1; // Streak is broken after 2+ days
       beltProgress = 1; // Start progress at 1 after break

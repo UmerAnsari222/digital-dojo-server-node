@@ -18,7 +18,8 @@ export const streakWorker = new Worker(
       const lastCompletion = startOfDay(new Date(user.lastCompletionDate));
       const diff = differenceInCalendarDays(today, lastCompletion);
 
-      if (diff > 1 && user.streak > 0) {
+      // if (diff > 1 && user.streak > 0) {
+      if (diff >= 3 && user.streak > 0) {
         await db.user.update({
           where: { id: user.id },
           data: {
@@ -32,7 +33,7 @@ export const streakWorker = new Worker(
 
     console.log("[BullMQ] ✅ Daily streak reset job done");
   },
-  { connection: redisConnection }
+  { connection: redisConnection },
 );
 
 streakWorker.on("failed", (job, err) => {

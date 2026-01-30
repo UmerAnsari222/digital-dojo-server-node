@@ -14,7 +14,8 @@ exports.streakWorker = new bullmq_1.Worker("streakQueue", async (job) => {
     for (const user of users) {
         const lastCompletion = (0, date_fns_1.startOfDay)(new Date(user.lastCompletionDate));
         const diff = (0, date_fns_1.differenceInCalendarDays)(today, lastCompletion);
-        if (diff > 1 && user.streak > 0) {
+        // if (diff > 1 && user.streak > 0) {
+        if (diff >= 3 && user.streak > 0) {
             await db_1.db.user.update({
                 where: { id: user.id },
                 data: {
