@@ -330,13 +330,15 @@ export async function processCompletion(
     if (diffDays === 0) {
       // Same day completion, no changes to streak or beltProgress
       console.log("[processCompletion] Same day completion, no changes.");
-      return {
-        streak,
-        beltProgress,
-        lastCompletionDate,
-        currentBelt,
-        beltAchieved: false,
-      };
+      // return {
+      //   streak,
+      //   beltProgress,
+      //   lastCompletionDate,
+      //   currentBelt,
+      //   beltAchieved: false,
+      // };
+      streak = 1;
+      beltProgress = 1;
     } else if (diffDays === 1) {
       // Consecutive day (yesterday), increment streak and beltProgress
       streak += 1;
