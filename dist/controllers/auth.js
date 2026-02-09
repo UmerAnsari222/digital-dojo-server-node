@@ -136,6 +136,7 @@ const loginWithApple = async (req, res, next) => {
             fcmTokenSet.add(fcmToken);
         }
         const fcmTokens = Array.from(fcmTokenSet);
+        let isAlreadyRegister = false;
         if (!user) {
             const firstBelt = await db_1.db.belt.findFirst({
                 orderBy: {
@@ -144,7 +145,7 @@ const loginWithApple = async (req, res, next) => {
             });
             user = await createUser({
                 providerId: appleId,
-                email: email,
+                email: email || "",
                 name: name,
                 // fcmToken: fcmToken,
                 fcmTokens: fcmTokens,
@@ -152,6 +153,7 @@ const loginWithApple = async (req, res, next) => {
                 provider: client_1.Provider.APPLE,
                 firstBeltId: firstBelt ? firstBelt.id : null,
             });
+            isAlreadyRegister = false;
         }
         else {
             user = await db_1.db.user.update({
@@ -163,6 +165,7 @@ const loginWithApple = async (req, res, next) => {
                     name: name || user.name,
                 },
             });
+            isAlreadyRegister = true;
         }
         const token = (0, jwt_1.createToken)({
             role: user.role,
@@ -171,6 +174,7 @@ const loginWithApple = async (req, res, next) => {
         return res.status(200).json({
             token,
             user,
+            isAlreadyRegister,
             msg: "Login Successfully",
             success: true,
         });
@@ -188,6 +192,9 @@ const loginWithGoogle = async (req, res, next) => {
             return next(new error_1.default("Google id is required", 400));
         }
         const payload = await (0, auth_1.verifyGoogleToken)(identityToken);
+        if (!payload) {
+            return next(new error_1.default("Failed to verify Google token", 400));
+        }
         const googleId = payload.sub;
         const email = payload.email || null;
         const name = payload.name || null;
@@ -203,6 +210,7 @@ const loginWithGoogle = async (req, res, next) => {
             fcmTokenSet.add(fcmToken);
         }
         const fcmTokens = Array.from(fcmTokenSet);
+        let isAlreadyRegister = false;
         if (!user) {
             const firstBelt = await db_1.db.belt.findFirst({
                 orderBy: {
@@ -215,13 +223,14 @@ const loginWithGoogle = async (req, res, next) => {
             }
             user = await createUser({
                 providerId: googleId,
-                email: email,
+                email: email || "",
                 name,
                 fcmTokens,
                 timeZone: timezone,
                 provider: client_1.Provider.GOOGLE,
                 firstBeltId: firstBelt ? firstBelt.id : null,
             });
+            isAlreadyRegister = false;
         }
         else {
             user = await db_1.db.user.update({
@@ -231,6 +240,7 @@ const loginWithGoogle = async (req, res, next) => {
                     fcmTokens: fcmTokens || [],
                 },
             });
+            isAlreadyRegister = true;
         }
         const token = (0, jwt_1.createToken)({
             role: user.role,
@@ -239,6 +249,7 @@ const loginWithGoogle = async (req, res, next) => {
         return res.status(200).json({
             token,
             user,
+            isAlreadyRegister,
             msg: "Login Successfully",
             success: true,
         });
