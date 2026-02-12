@@ -16,7 +16,7 @@ const limit = pLimit(10);
 export const createCircle = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { name, goal, colors } = req.body;
@@ -39,8 +39,8 @@ export const createCircle = async (
       return next(
         new ErrorHandler(
           "You need an active subscription to create a circle",
-          403
-        )
+          403,
+        ),
       );
     }
 
@@ -67,7 +67,7 @@ export const createCircle = async (
 export const getAllCircle = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   try {
@@ -144,7 +144,7 @@ export const getAllCircle = async (
 export const getUserAllCircle = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   try {
@@ -214,7 +214,7 @@ export const getUserAllCircle = async (
 export const getCircleById = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { circleId } = req.params;
@@ -299,6 +299,15 @@ export const getCircleById = async (
       };
     });
 
+    for (const circleM of circle?.members) {
+      if (circleM.imageUrl) {
+        circleM.imageUrl = await getObjectUrl({
+          bucket: AWS_BUCKET_NAME,
+          key: circleM.imageUrl,
+        });
+      }
+    }
+
     // for (const circle of circles) {
     if (circle?.owner?.imageUrl) {
       circle.owner.imageUrl = await getObjectUrl({
@@ -340,13 +349,14 @@ export const getCircleById = async (
           ]);
 
           return { growthScore, challengeStats, ownerId: owner.id };
-        })
-      )
+        }),
+      ),
     );
 
     const ownerStats = results
       .filter(
-        (r): r is PromiseFulfilledResult<OwnerStats> => r.status === "fulfilled"
+        (r): r is PromiseFulfilledResult<OwnerStats> =>
+          r.status === "fulfilled",
       )
       .map((r) => r.value);
 
@@ -395,7 +405,7 @@ export const getCircleById = async (
 export const addMemberInCircle = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { circleId } = req.params;
@@ -456,7 +466,7 @@ export const addMemberInCircle = async (
 export const leaveMemberFromCircle = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { circleId } = req.params;
@@ -474,7 +484,7 @@ export const leaveMemberFromCircle = async (
 
     if (circle.ownerId === userId) {
       return next(
-        new ErrorHandler("Circle owner cannot leave their own circle", 400)
+        new ErrorHandler("Circle owner cannot leave their own circle", 400),
       );
     }
 
@@ -520,7 +530,7 @@ export const leaveMemberFromCircle = async (
 export const createCircleChallenge = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { circleId, title, description, expireAt, categoryId } = req.body;
@@ -555,7 +565,7 @@ export const createCircleChallenge = async (
     });
     if (!isAvailable) {
       return next(
-        new ErrorHandler("Your are not the member of this circle", 404)
+        new ErrorHandler("Your are not the member of this circle", 404),
       );
     }
 
@@ -584,7 +594,7 @@ export const createCircleChallenge = async (
 export const markCircleChallenge = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { challengeId, skip } = req.body;
@@ -649,7 +659,7 @@ export const markCircleChallenge = async (
 export const getActiveCircleChallenges = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { circleId } = req.params;
   // const { userId } = req;
@@ -697,7 +707,7 @@ export const getActiveCircleChallenges = async (
 export const deleteCircleById = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { circleId } = req.params;
@@ -715,7 +725,7 @@ export const deleteCircleById = async (
 
     if (circle.ownerId !== userId) {
       return next(
-        new ErrorHandler("You are not the owner of this circle", 403)
+        new ErrorHandler("You are not the owner of this circle", 403),
       );
     }
 
@@ -734,7 +744,7 @@ export const deleteCircleById = async (
 export const deleteCircleChallengeById = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { challengeId } = req.params;
@@ -754,7 +764,7 @@ export const deleteCircleChallengeById = async (
 
     if (challenge.ownerId !== userId) {
       return next(
-        new ErrorHandler("You are not the owner of this challenge", 403)
+        new ErrorHandler("You are not the owner of this challenge", 403),
       );
     }
 

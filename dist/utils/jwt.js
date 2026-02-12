@@ -16,7 +16,7 @@ const client = (0, jwks_rsa_1.default)({
 });
 // function for generate jwt token
 const createToken = (user) => {
-    return jsonwebtoken_1.default.sign(user, dotEnv_1.JWT_SECRET, { expiresIn: "7d" });
+    return jsonwebtoken_1.default.sign(user, dotEnv_1.JWT_SECRET, { expiresIn: "7m" });
 };
 exports.createToken = createToken;
 // function for verify jwt token

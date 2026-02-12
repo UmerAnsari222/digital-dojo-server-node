@@ -12,7 +12,7 @@ const client = jwksClient({
 
 // function for generate jwt token
 export const createToken = (user: { userId: string; role: string }) => {
-  return jwt.sign(user, JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign(user, JWT_SECRET!, { expiresIn: "7m" });
 };
 
 // function for verify jwt token

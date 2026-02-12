@@ -261,6 +261,14 @@ const getCircleById = async (req, res, next) => {
                 isExpired,
             };
         });
+        for (const circleM of circle?.members) {
+            if (circleM.imageUrl) {
+                circleM.imageUrl = await (0, aws_1.getObjectUrl)({
+                    bucket: dotEnv_1.AWS_BUCKET_NAME,
+                    key: circleM.imageUrl,
+                });
+            }
+        }
         // for (const circle of circles) {
         if (circle?.owner?.imageUrl) {
             circle.owner.imageUrl = await (0, aws_1.getObjectUrl)({

@@ -7,7 +7,7 @@ import { AWS_BUCKET_NAME } from "../config/dotEnv";
 export const createBelt = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { name, duration, key } = req.body;
 
@@ -77,7 +77,7 @@ export const createBelt = async (
 export const getAllBelts = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const belts = await db.belt.findMany({
@@ -94,7 +94,7 @@ export const getAllBelts = async (
             key: belt.imageUrl,
           });
         }
-      })
+      }),
     );
 
     return res.status(200).json({
@@ -111,7 +111,7 @@ export const getAllBelts = async (
 export const updateBelt = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { name, duration, key } = req.body;
   const { beltId } = req.params;
@@ -161,7 +161,7 @@ export const updateBelt = async (
 export const deleteBelt = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { beltId } = req.params;
 
