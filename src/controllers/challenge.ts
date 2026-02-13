@@ -498,16 +498,15 @@ export const getTodayDailyChallenge = async (
     const user = await db.user.findUnique({ where: { id: userId } });
     if (!user) return next(new ErrorHandler("User not found", 404));
 
-    // 1. Fetch all daily challenges
+    // 1. Get all challenges ordered by createdAt (or any consistent order)
     const challenges = await db.dailyChallenge.findMany({
       include: {
         category: true,
         challenge: true,
       },
-      orderBy: { createdAt: "asc" }, // or whichever order you want
+      orderBy: { createdAt: "asc" },
     });
 
-    // No challenges at all
     if (challenges.length === 0) {
       return res.status(200).json({
         challenge: null,
@@ -519,13 +518,10 @@ export const getTodayDailyChallenge = async (
     // 2. Calculate days since user registered
     const today = new Date();
     const registeredDate = new Date(user.createdAt);
-
     const daysSinceRegistered = differenceInCalendarDays(today, registeredDate);
 
-    console.log("daysSinceRegistered:", daysSinceRegistered);
-
-    // 3. Check if user has challenge available
-    if (daysSinceRegistered < 0 || daysSinceRegistered >= challenges.length) {
+    // negative means user is from the future somehow
+    if (daysSinceRegistered < 0) {
       return res.status(200).json({
         challenge: null,
         msg: "No challenge for today",
@@ -533,23 +529,32 @@ export const getTodayDailyChallenge = async (
       });
     }
 
-    // 4. Pick today’s challenge
-    const daily = challenges[daysSinceRegistered];
+    // 3. The challenge index should be equal to days since registered
+    const challengeForToday = challenges[daysSinceRegistered];
+
+    // If admin hasn't created that many challenges yet
+    if (!challengeForToday) {
+      return res.status(200).json({
+        challenge: null,
+        msg: "No challenge for today",
+        success: true,
+      });
+    }
 
     const completion = await db.completion.findFirst({
       where: {
         userId,
-        userChallengeId: daily.id,
+        userChallengeId: challengeForToday.id,
       },
     });
 
     return res.status(200).json({
-      challenge: { ...daily, completion },
+      challenge: { ...challengeForToday, completion },
       msg: "Today's Challenge Fetched Successfully",
       success: true,
     });
-  } catch (error) {
-    console.error("[GET_TODAY_DAILY_CHALLENGE_ERROR]", error);
+  } catch (e) {
+    console.log("[GET_TODAY_DAILY_CHALLENGE_ERROR]", e);
     next(new ErrorHandler("Something went wrong", 500));
   }
 };
