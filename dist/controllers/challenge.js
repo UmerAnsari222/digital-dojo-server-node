@@ -368,7 +368,6 @@ const getTodayDailyChallenge = async (req, res, next) => {
         const user = await db_1.db.user.findUnique({ where: { id: userId } });
         if (!user)
             return next(new error_1.default("User not found", 404));
-        // 1. Get all challenges ordered by createdAt (or any consistent order)
         const challenges = await db_1.db.dailyChallenge.findMany({
             include: {
                 category: true,
@@ -383,11 +382,9 @@ const getTodayDailyChallenge = async (req, res, next) => {
                 success: true,
             });
         }
-        // 2. Calculate days since user registered
         const today = new Date();
         const registeredDate = new Date(user.createdAt);
         const daysSinceRegistered = (0, date_fns_1.differenceInCalendarDays)(today, registeredDate);
-        // negative means user is from the future somehow
         if (daysSinceRegistered < 0) {
             return res.status(200).json({
                 challenge: null,
@@ -395,10 +392,18 @@ const getTodayDailyChallenge = async (req, res, next) => {
                 success: true,
             });
         }
-        // 3. The challenge index should be equal to days since registered
-        const challengeForToday = challenges[daysSinceRegistered];
-        // If admin hasn't created that many challenges yet
-        if (!challengeForToday) {
+        // If user index exists → use that
+        let challengeForUser = challenges[daysSinceRegistered];
+        // If that exact index doesn’t exist
+        if (!challengeForUser) {
+            // But admin has created some challenges
+            // Show the **latest challenge admin created**
+            challengeForUser = challenges[challenges.length - 1];
+        }
+        // Next: check creation times
+        const challengeCreatedDate = new Date(challengeForUser.createdAt);
+        if (challengeCreatedDate > today) {
+            // if even the latest challenge was created in the future (unlikely)
             return res.status(200).json({
                 challenge: null,
                 msg: "No challenge for today",
@@ -408,17 +413,17 @@ const getTodayDailyChallenge = async (req, res, next) => {
         const completion = await db_1.db.completion.findFirst({
             where: {
                 userId,
-                userChallengeId: challengeForToday.id,
+                userChallengeId: challengeForUser.id,
             },
         });
         return res.status(200).json({
-            challenge: { ...challengeForToday, completion },
+            challenge: { ...challengeForUser, completion },
             msg: "Today's Challenge Fetched Successfully",
             success: true,
         });
     }
     catch (e) {
-        console.log("[GET_TODAY_DAILY_CHALLENGE_ERROR]", e);
+        console.error("[GET_TODAY_DAILY_CHALLENGE_ERROR]", e);
         next(new error_1.default("Something went wrong", 500));
     }
 };
