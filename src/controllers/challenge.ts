@@ -39,7 +39,7 @@ import { challengeSkipQueue } from "../jobs/queues/challengeSkip";
 export const createDailyChallengePlan = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId, role } = req;
   const { title, challengeType } = req.body;
@@ -97,7 +97,7 @@ export const createDailyChallengePlan = async (
 export const createDailyChallenge = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId, role } = req;
   const { title, description, categoryId, challengeId, startTime, endTime } =
@@ -153,7 +153,7 @@ export const createDailyChallenge = async (
 export const createWeeklyChallenge = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId, role } = req;
   const { title, challengeType } = req.body;
@@ -206,7 +206,7 @@ export const createWeeklyChallenge = async (
 export const getAllWeeklyChallenges = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId, role } = req;
 
@@ -279,7 +279,7 @@ export const getAllWeeklyChallenges = async (
           return updated;
         }
         return challenge; // leave as is if not ready to start
-      })
+      }),
     );
 
     return res.status(200).json({
@@ -297,7 +297,7 @@ export const getAllWeeklyChallenges = async (
 export const updateWeeklyChallengeById = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId, role } = req;
   const { weeklyChallengeId } = req.params;
@@ -382,7 +382,7 @@ export const updateWeeklyChallengeById = async (
 export const makePublishWeeklyChallenge = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId, role } = req;
   const { challengeId } = req.params;
@@ -417,7 +417,7 @@ export const makePublishWeeklyChallenge = async (
     }
 
     const isDataFilled = challenge.weeklyChallenges.every(
-      (wc) => wc.isChallengeUpdate
+      (wc) => wc.isChallengeUpdate,
     );
 
     console.log(isDataFilled);
@@ -426,8 +426,8 @@ export const makePublishWeeklyChallenge = async (
       return next(
         new ErrorHandler(
           "Please fill all the challenge details before publishing",
-          400
-        )
+          400,
+        ),
       );
     }
 
@@ -459,8 +459,8 @@ export const makePublishWeeklyChallenge = async (
       return next(
         new ErrorHandler(
           `Another challenge is already scheduled within this week: ${overlappingChallenge.startDate.toDateString()}`,
-          400
-        )
+          400,
+        ),
       );
     }
 
@@ -486,7 +486,7 @@ export const makePublishWeeklyChallenge = async (
 export const getTodayDailyChallenge = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
 
@@ -495,43 +495,37 @@ export const getTodayDailyChallenge = async (
   }
 
   try {
-    const self = await db.user.findUnique({ where: { id: userId } });
-    if (!self) return next(new ErrorHandler("User not found", 404));
+    const user = await db.user.findUnique({ where: { id: userId } });
+    if (!user) return next(new ErrorHandler("User not found", 404));
 
+    // 1. Fetch all daily challenges
     const challenges = await db.dailyChallenge.findMany({
       include: {
         category: true,
         challenge: true,
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "asc" }, // or whichever order you want
     });
 
-    console.log("Total challenges:", challenges.length);
-    console.log(
-      "All challenges IDs:",
-      challenges.map((c) => c.id)
-    );
-
+    // No challenges at all
     if (challenges.length === 0) {
       return res.status(200).json({
         challenge: null,
-        msg: "No challenges in DB",
+        msg: "No challenges available",
         success: true,
       });
     }
 
-    const firstChallengeDate = new Date(challenges[0].createdAt);
-    const startDate = new Date(
-      Math.max(new Date(self.createdAt).getTime(), firstChallengeDate.getTime())
-    );
+    // 2. Calculate days since user registered
+    const today = new Date();
+    const registeredDate = new Date(user.createdAt);
 
-    const daysSince = differenceInCalendarDays(new Date(), startDate);
+    const daysSinceRegistered = differenceInCalendarDays(today, registeredDate);
 
-    console.log("startDate:", startDate);
-    console.log("daysSince:", daysSince);
-    console.log("index we want:", daysSince, "of", challenges.length);
+    console.log("daysSinceRegistered:", daysSinceRegistered);
 
-    if (daysSince < 0 || daysSince >= challenges.length) {
+    // 3. Check if user has challenge available
+    if (daysSinceRegistered < 0 || daysSinceRegistered >= challenges.length) {
       return res.status(200).json({
         challenge: null,
         msg: "No challenge for today",
@@ -539,7 +533,8 @@ export const getTodayDailyChallenge = async (
       });
     }
 
-    const daily = challenges[daysSince];
+    // 4. Pick today’s challenge
+    const daily = challenges[daysSinceRegistered];
 
     const completion = await db.completion.findFirst({
       where: {
@@ -553,16 +548,92 @@ export const getTodayDailyChallenge = async (
       msg: "Today's Challenge Fetched Successfully",
       success: true,
     });
-  } catch (e) {
-    console.log("[GET_TODAY_DAILY_CHALLENGE_ERROR]", e);
+  } catch (error) {
+    console.error("[GET_TODAY_DAILY_CHALLENGE_ERROR]", error);
     next(new ErrorHandler("Something went wrong", 500));
   }
 };
 
+// export const getTodayDailyChallenge = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const { userId } = req;
+
+//   if (!userId) {
+//     return next(new ErrorHandler("Unauthorized", 401));
+//   }
+
+//   try {
+//     const self = await db.user.findUnique({ where: { id: userId } });
+//     if (!self) return next(new ErrorHandler("User not found", 404));
+
+//     const challenges = await db.dailyChallenge.findMany({
+//       include: {
+//         category: true,
+//         challenge: true,
+//       },
+//       orderBy: { createdAt: "asc" },
+//     });
+
+//     console.log("Total challenges:", challenges.length);
+//     console.log(
+//       "All challenges IDs:",
+//       challenges.map((c) => c.id)
+//     );
+
+//     if (challenges.length === 0) {
+//       return res.status(200).json({
+//         challenge: null,
+//         msg: "No challenges in DB",
+//         success: true,
+//       });
+//     }
+
+//     const firstChallengeDate = new Date(challenges[0].createdAt);
+//     const startDate = new Date(
+//       Math.max(new Date(self.createdAt).getTime(), firstChallengeDate.getTime())
+//     );
+
+//     const daysSince = differenceInCalendarDays(new Date(), startDate);
+
+//     console.log("startDate:", startDate);
+//     console.log("daysSince:", daysSince);
+//     console.log("index we want:", daysSince, "of", challenges.length);
+
+//     if (daysSince < 0 || daysSince >= challenges.length) {
+//       return res.status(200).json({
+//         challenge: null,
+//         msg: "No challenge for today",
+//         success: true,
+//       });
+//     }
+
+//     const daily = challenges[daysSince];
+
+//     const completion = await db.completion.findFirst({
+//       where: {
+//         userId,
+//         userChallengeId: daily.id,
+//       },
+//     });
+
+//     return res.status(200).json({
+//       challenge: { ...daily, completion },
+//       msg: "Today's Challenge Fetched Successfully",
+//       success: true,
+//     });
+//   } catch (e) {
+//     console.log("[GET_TODAY_DAILY_CHALLENGE_ERROR]", e);
+//     next(new ErrorHandler("Something went wrong", 500));
+//   }
+// };
+
 export const getDailyChallenges = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId, role } = req;
 
@@ -708,7 +779,7 @@ export const getDailyChallenges = async (
 export const getTodayWeeklyChallenge = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   if (!userId) return next(new ErrorHandler("Unauthorized", 401));
@@ -733,7 +804,7 @@ export const getTodayWeeklyChallenge = async (
 
     // 3️⃣ Find active challenge for today
     const activeChallenge = challenges.find((c) =>
-      isTodayInChallengeWeek(c.startDate.toISOString(), userTimeZone)
+      isTodayInChallengeWeek(c.startDate.toISOString(), userTimeZone),
     );
 
     if (!activeChallenge) {
@@ -747,11 +818,11 @@ export const getTodayWeeklyChallenge = async (
     // 4️⃣ Determine today's weekly challenge
     const todayDayIndex = getRelativeDayIndex(
       activeChallenge.startDate.toISOString(),
-      nowLocal.toISOString()
+      nowLocal.toISOString(),
     );
 
     const todayWeekly = activeChallenge.weeklyChallenges.find(
-      (w) => w.dayOfWeek === todayDayIndex
+      (w) => w.dayOfWeek === todayDayIndex,
     );
 
     if (!todayWeekly) {
@@ -811,7 +882,7 @@ export const getTodayWeeklyChallenge = async (
 export const getWeeklyChallengeProgress = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
 
@@ -843,7 +914,7 @@ export const getWeeklyChallengeProgress = async (
     const activeChallenge = challenges.find(
       (c) =>
         c.startDate &&
-        isTodayInChallengeWeek(c.startDate.toString(), userTimeZone)
+        isTodayInChallengeWeek(c.startDate.toString(), userTimeZone),
     );
 
     if (!activeChallenge) {
@@ -873,10 +944,10 @@ export const getWeeklyChallengeProgress = async (
     const days = Array.from({ length: 7 }).map((_, i) => {
       const currentDay = addDays(startDate, i);
       const done = completionDates.some(
-        (d) => isSameDay(d.date, currentDay) && d.skip === false
+        (d) => isSameDay(d.date, currentDay) && d.skip === false,
       );
       const skip = completionDates.some(
-        (d) => isSameDay(d.date, currentDay) && d.skip === true
+        (d) => isSameDay(d.date, currentDay) && d.skip === true,
       );
 
       return {
@@ -901,7 +972,7 @@ export const getWeeklyChallengeProgress = async (
 export const getPastChallenges = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const type = req.query.type as ChallengeType;
@@ -967,7 +1038,7 @@ export const getPastChallenges = async (
 export const deleteDailyChallengePlainById = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId, role } = req;
   const { challengeId } = req.params;
@@ -1018,7 +1089,7 @@ export const deleteDailyChallengePlainById = async (
 export const deleteWeeklyChallengePlainById = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId, role } = req;
   const { challengeId } = req.params;
@@ -1072,7 +1143,7 @@ export const deleteWeeklyChallengePlainById = async (
 export const deleteWeeklyChallengeById = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId, role } = req;
   const { weeklyChallengeId } = req.params;
@@ -1122,7 +1193,7 @@ export const deleteWeeklyChallengeById = async (
 export const deleteDailyChallengeById = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId, role } = req;
   const { dailyChallengeId } = req.params;

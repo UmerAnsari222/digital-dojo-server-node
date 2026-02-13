@@ -49,13 +49,6 @@ export async function verifyGoogleToken(identityToken: string) {
     const ticket = await googleClient.verifyIdToken({
       idToken: identityToken,
       audience: GOOGLE_CLIENT_ID,
-      // "118239193211-1c7759fqgohf7vtdd04tjtr9l5b7a39k.apps.googleusercontent.com",
-      // audience: [
-      //   // "118239193211-6e2lj3uprjk92uiec0ncupm1ia6iqme9.apps.googleusercontent.com",
-      //   "118239193211-1c7759fqgohf7vtdd04tjr9l5b7a39k.apps.googleusercontent.com",
-      //   // "118239193211-q2nvtrdqvuep6o38kqdb816655vf28i9.apps.googleusercontent.com",
-      //   // "118239193211-th0njp0j497m2a1q13bl569nokkb38nf.apps.googleusercontent.com",
-      // ],
     });
 
     return ticket.getPayload();

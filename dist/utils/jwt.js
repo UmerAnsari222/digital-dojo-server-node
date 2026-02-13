@@ -16,7 +16,7 @@ const client = (0, jwks_rsa_1.default)({
 });
 // function for generate jwt token
 const createToken = (user) => {
-    return jsonwebtoken_1.default.sign(user, dotEnv_1.JWT_SECRET, { expiresIn: "7m" });
+    return jsonwebtoken_1.default.sign(user, dotEnv_1.JWT_SECRET, { expiresIn: "7d" });
 };
 exports.createToken = createToken;
 // function for verify jwt token
@@ -29,6 +29,8 @@ function getApplePublicKey(kid) {
         client.getSigningKey(kid, (err, key) => {
             if (err)
                 return reject(err);
+            if (!key)
+                return reject(new Error("No signing key found"));
             const signingKey = key.getPublicKey();
             resolve(signingKey);
         });

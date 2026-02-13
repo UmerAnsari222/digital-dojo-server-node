@@ -365,39 +365,40 @@ const getTodayDailyChallenge = async (req, res, next) => {
         return next(new error_1.default("Unauthorized", 401));
     }
     try {
-        const self = await db_1.db.user.findUnique({ where: { id: userId } });
-        if (!self)
+        const user = await db_1.db.user.findUnique({ where: { id: userId } });
+        if (!user)
             return next(new error_1.default("User not found", 404));
+        // 1. Fetch all daily challenges
         const challenges = await db_1.db.dailyChallenge.findMany({
             include: {
                 category: true,
                 challenge: true,
             },
-            orderBy: { createdAt: "asc" },
+            orderBy: { createdAt: "asc" }, // or whichever order you want
         });
-        console.log("Total challenges:", challenges.length);
-        console.log("All challenges IDs:", challenges.map((c) => c.id));
+        // No challenges at all
         if (challenges.length === 0) {
             return res.status(200).json({
                 challenge: null,
-                msg: "No challenges in DB",
+                msg: "No challenges available",
                 success: true,
             });
         }
-        const firstChallengeDate = new Date(challenges[0].createdAt);
-        const startDate = new Date(Math.max(new Date(self.createdAt).getTime(), firstChallengeDate.getTime()));
-        const daysSince = (0, date_fns_1.differenceInCalendarDays)(new Date(), startDate);
-        console.log("startDate:", startDate);
-        console.log("daysSince:", daysSince);
-        console.log("index we want:", daysSince, "of", challenges.length);
-        if (daysSince < 0 || daysSince >= challenges.length) {
+        // 2. Calculate days since user registered
+        const today = new Date();
+        const registeredDate = new Date(user.createdAt);
+        const daysSinceRegistered = (0, date_fns_1.differenceInCalendarDays)(today, registeredDate);
+        console.log("daysSinceRegistered:", daysSinceRegistered);
+        // 3. Check if user has challenge available
+        if (daysSinceRegistered < 0 || daysSinceRegistered >= challenges.length) {
             return res.status(200).json({
                 challenge: null,
                 msg: "No challenge for today",
                 success: true,
             });
         }
-        const daily = challenges[daysSince];
+        // 4. Pick today’s challenge
+        const daily = challenges[daysSinceRegistered];
         const completion = await db_1.db.completion.findFirst({
             where: {
                 userId,
@@ -410,12 +411,75 @@ const getTodayDailyChallenge = async (req, res, next) => {
             success: true,
         });
     }
-    catch (e) {
-        console.log("[GET_TODAY_DAILY_CHALLENGE_ERROR]", e);
+    catch (error) {
+        console.error("[GET_TODAY_DAILY_CHALLENGE_ERROR]", error);
         next(new error_1.default("Something went wrong", 500));
     }
 };
 exports.getTodayDailyChallenge = getTodayDailyChallenge;
+// export const getTodayDailyChallenge = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const { userId } = req;
+//   if (!userId) {
+//     return next(new ErrorHandler("Unauthorized", 401));
+//   }
+//   try {
+//     const self = await db.user.findUnique({ where: { id: userId } });
+//     if (!self) return next(new ErrorHandler("User not found", 404));
+//     const challenges = await db.dailyChallenge.findMany({
+//       include: {
+//         category: true,
+//         challenge: true,
+//       },
+//       orderBy: { createdAt: "asc" },
+//     });
+//     console.log("Total challenges:", challenges.length);
+//     console.log(
+//       "All challenges IDs:",
+//       challenges.map((c) => c.id)
+//     );
+//     if (challenges.length === 0) {
+//       return res.status(200).json({
+//         challenge: null,
+//         msg: "No challenges in DB",
+//         success: true,
+//       });
+//     }
+//     const firstChallengeDate = new Date(challenges[0].createdAt);
+//     const startDate = new Date(
+//       Math.max(new Date(self.createdAt).getTime(), firstChallengeDate.getTime())
+//     );
+//     const daysSince = differenceInCalendarDays(new Date(), startDate);
+//     console.log("startDate:", startDate);
+//     console.log("daysSince:", daysSince);
+//     console.log("index we want:", daysSince, "of", challenges.length);
+//     if (daysSince < 0 || daysSince >= challenges.length) {
+//       return res.status(200).json({
+//         challenge: null,
+//         msg: "No challenge for today",
+//         success: true,
+//       });
+//     }
+//     const daily = challenges[daysSince];
+//     const completion = await db.completion.findFirst({
+//       where: {
+//         userId,
+//         userChallengeId: daily.id,
+//       },
+//     });
+//     return res.status(200).json({
+//       challenge: { ...daily, completion },
+//       msg: "Today's Challenge Fetched Successfully",
+//       success: true,
+//     });
+//   } catch (e) {
+//     console.log("[GET_TODAY_DAILY_CHALLENGE_ERROR]", e);
+//     next(new ErrorHandler("Something went wrong", 500));
+//   }
+// };
 const getDailyChallenges = async (req, res, next) => {
     const { userId, role } = req;
     if (!userId) {

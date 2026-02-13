@@ -12,18 +12,19 @@ const client = jwksClient({
 
 // function for generate jwt token
 export const createToken = (user: { userId: string; role: string }) => {
-  return jwt.sign(user, JWT_SECRET!, { expiresIn: "7m" });
+  return jwt.sign(user, JWT_SECRET!, { expiresIn: "7d" });
 };
 
 // function for verify jwt token
 export const verifyToken = (token: string) => {
-  return jwt.verify(token, JWT_SECRET);
+  return jwt.verify(token, JWT_SECRET!);
 };
 
 export function getApplePublicKey(kid: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    client.getSigningKey(kid, (err: Error | null, key: SigningKey) => {
+    client.getSigningKey(kid, (err: Error | null, key?: SigningKey) => {
       if (err) return reject(err);
+      if (!key) return reject(new Error("No signing key found"));
 
       const signingKey = key.getPublicKey();
       resolve(signingKey);
