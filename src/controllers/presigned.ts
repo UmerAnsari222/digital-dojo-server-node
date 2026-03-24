@@ -9,7 +9,7 @@ import { db } from "../config/db";
 export const generatePresignedUrl = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { fileType, filename, key } = req.body;
@@ -36,7 +36,7 @@ export const generatePresignedUrl = async (
 export const generateCFPresignedUrl = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
 
@@ -54,8 +54,8 @@ export const generateCFPresignedUrl = async (
         new ErrorHandler(
           "Failed to generate signed url",
           500,
-          JSON.stringify(cfData.errors, null, 2)
-        )
+          JSON.stringify(cfData.errors, null, 2),
+        ),
       );
     }
 
@@ -73,7 +73,7 @@ export const generateCFPresignedUrl = async (
       msg: "URL generated successfully",
       success: true,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("[GET_CLOUD_FLARE_PRESIGNED_URL_ERROR]", error);
     next(new ErrorHandler("Something went wrong", 500, error));
   }

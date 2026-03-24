@@ -13,13 +13,13 @@ const BATCH_SIZE = 200;
 export const getUserStreak = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   try {
     const today = new Date();
 
-    const preview = await calculateStreakPreview(userId, today);
+    const preview = await calculateStreakPreview(userId!, today);
 
     const self = await db.user.findUnique({
       where: { id: userId },
@@ -40,6 +40,11 @@ export const getUserStreak = async (
         },
       },
     });
+
+    if (!self) {
+      return next(new ErrorHandler("Unauthorized", 403));
+    }
+
     const belts = self.userBelts.map((ub) => ({
       earnedAt: ub.earnedAt,
       ...ub.belt,
@@ -71,7 +76,7 @@ export async function calculateUserStreak(userId: string) {
   if (completions.length === 0) return 0;
 
   const uniqueDays = Array.from(
-    new Set(completions.map((c) => c.date.toISOString().split("T")[0]))
+    new Set(completions.map((c) => c.date.toISOString().split("T")[0])),
   ).map((d) => new Date(d));
 
   let streak = 1; // today counts as 1
@@ -90,7 +95,7 @@ export async function calculateUserStreak(userId: string) {
 
 export async function calculateStreakPreview(
   userId: string,
-  today: Date = new Date()
+  today: Date = new Date(),
 ) {
   const user = await db.user.findUnique({
     where: { id: userId },
@@ -114,7 +119,7 @@ export async function calculateStreakPreview(
   } else {
     const diffDays = differenceInCalendarDays(
       todayNormalized,
-      lastCompletionDate
+      lastCompletionDate,
     );
 
     if (diffDays === 0) {
@@ -144,14 +149,14 @@ export async function calculateStreakPreview(
 cron.schedule(
   "0 2 * * *",
   () => recalculateGrowthScores().catch(console.error),
-  { timezone: "America/New_York" }
+  { timezone: "America/New_York" },
 );
 
 // Runs nightly at 2AM EST
 cron.schedule(
   "0 2 * * *",
   () => nightlyConsistencyUpdate().catch(console.error),
-  { timezone: "America/New_York" }
+  { timezone: "America/New_York" },
 );
 
 // async function recalculateGrowthScores() {

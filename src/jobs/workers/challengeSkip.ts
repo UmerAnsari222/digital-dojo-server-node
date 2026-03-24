@@ -32,7 +32,7 @@ export const challengeSkipWorker = new Worker(
   async () => {
     await runDailySkipJob();
   },
-  { connection: redisConnection }
+  { connection: redisConnection },
 );
 
 // Optional: log failed jobs
@@ -72,7 +72,7 @@ export async function runDailySkipJob() {
 
   for (const challenge of runningChallenges) {
     // Skip future challenges
-    if (isBefore(nowUTC, challenge.startDate)) {
+    if (isBefore(nowUTC, challenge.startDate!)) {
       console.log(`Skipping future challenge ${challenge.id}`);
       continue;
     }
@@ -81,7 +81,7 @@ export async function runDailySkipJob() {
 
     // Calculate the day index for yesterday relative to challenge start
     const dayIndex =
-      ((differenceInCalendarDays(yesterdayUTC, challenge.startDate) % 7) + 7) %
+      ((differenceInCalendarDays(yesterdayUTC, challenge.startDate!) % 7) + 7) %
       7;
 
     for (const weekly of challenge.weeklyChallenges) {
@@ -101,7 +101,7 @@ export async function runDailySkipJob() {
           skipDuplicates: true,
         });
         console.log(
-          `✅ Bulk skipped ${bulkCreates.length} users for weekly challenge ${weekly.id}`
+          `✅ Bulk skipped ${bulkCreates.length} users for weekly challenge ${weekly.id}`,
         );
       }
     }

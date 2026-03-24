@@ -289,7 +289,7 @@ export const getCircleById = async (
     const nowUTC = new Date();
     const nowLocal = toZonedTime(nowUTC, userTimezone);
 
-    const updatedChallenges = circle.circleChallenges.map((challenge) => {
+    const updatedChallenges = circle?.circleChallenges.map((challenge) => {
       const expireLocal = toZonedTime(challenge.expireAt, userTimezone);
       const isExpired = nowLocal > expireLocal;
 
@@ -299,12 +299,15 @@ export const getCircleById = async (
       };
     });
 
-    for (const circleM of circle?.members) {
-      if (circleM.imageUrl) {
-        circleM.imageUrl = await getObjectUrl({
-          bucket: AWS_BUCKET_NAME,
-          key: circleM.imageUrl,
-        });
+    // if (circle?.members?.length) {
+    if (Array.isArray(circle?.members) && circle?.members.length > 0) {
+      for (const circleM of circle?.members) {
+        if (circleM.imageUrl) {
+          circleM.imageUrl = await getObjectUrl({
+            bucket: AWS_BUCKET_NAME,
+            key: circleM.imageUrl,
+          });
+        }
       }
     }
 
@@ -326,18 +329,24 @@ export const getCircleById = async (
       }
     }
 
-    for (const circleCh of circle.circleChallenges) {
-      if (circleCh?.owner?.imageUrl) {
-        circleCh.owner.imageUrl = await getObjectUrl({
-          bucket: AWS_BUCKET_NAME,
-          key: circleCh?.owner?.imageUrl,
-        });
+    if (
+      Array.isArray(circle?.circleChallenges) &&
+      circle.circleChallenges.length > 0
+    ) {
+      for (const circleCh of circle.circleChallenges) {
+        if (circleCh?.owner?.imageUrl) {
+          circleCh.owner.imageUrl = await getObjectUrl({
+            bucket: AWS_BUCKET_NAME,
+            key: circleCh?.owner?.imageUrl,
+          });
+        }
       }
     }
 
+    const challenges = circle?.circleChallenges ?? [];
     // let ownerStats: OwnerStats[] = [];
     const results = await Promise.allSettled(
-      circle.circleChallenges.map(({ owner }) =>
+      challenges.map(({ owner }) =>
         limit(async () => {
           const [growthScore, challengeStats] = await Promise.all([
             calculateUserGrowthScore({
@@ -436,7 +445,7 @@ export const addMemberInCircle = async (
       },
     });
 
-    const isAlreadyMember = existingCircle?.members.length > 0;
+    const isAlreadyMember = !!existingCircle?.members?.length;
 
     if (!isAlreadyMember) {
       const joined = await db.circle.update({
@@ -499,7 +508,7 @@ export const leaveMemberFromCircle = async (
       },
     });
 
-    const isMember = existingCircle?.members.length > 0;
+    const isMember = !!existingCircle?.members.length;
 
     if (!isMember) {
       return next(new ErrorHandler("You are not a member of this circle", 400));
@@ -574,7 +583,7 @@ export const createCircleChallenge = async (
         title,
         description,
         circleId,
-        ownerId: userId,
+        ownerId: userId!,
         expireAt: new Date(expireAt),
         categoryId,
       },
@@ -636,7 +645,7 @@ export const markCircleChallenge = async (
 
     const participant = await db.circleChallengeParticipant.create({
       data: {
-        userId,
+        userId: userId!,
         challengeId,
         skip: skip,
       },
@@ -647,7 +656,7 @@ export const markCircleChallenge = async (
       msg: "Mark challenge successfully",
       success: true,
     });
-  } catch (e) {
+  } catch (e: any) {
     console.log("[JOIN_CIRCLE_CHALLENGE_ERROR]", e);
     if (e.code === "P2002") {
       return next(new ErrorHandler("Already joined this challenge", 400));

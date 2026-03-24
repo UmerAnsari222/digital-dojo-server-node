@@ -458,7 +458,7 @@ export const makePublishWeeklyChallenge = async (
     if (overlappingChallenge) {
       return next(
         new ErrorHandler(
-          `Another challenge is already scheduled within this week: ${overlappingChallenge.startDate.toDateString()}`,
+          `Another challenge is already scheduled within this week: ${overlappingChallenge?.startDate?.toDateString()}`,
           400,
         ),
       );
@@ -817,8 +817,10 @@ export const getTodayWeeklyChallenge = async (
     });
 
     // 3️⃣ Find active challenge for today
-    const activeChallenge = challenges.find((c) =>
-      isTodayInChallengeWeek(c.startDate.toISOString(), userTimeZone),
+    const activeChallenge = challenges.find(
+      (c) =>
+        c.startDate &&
+        isTodayInChallengeWeek(c.startDate.toISOString(), userTimeZone),
     );
 
     if (!activeChallenge) {
@@ -831,7 +833,7 @@ export const getTodayWeeklyChallenge = async (
 
     // 4️⃣ Determine today's weekly challenge
     const todayDayIndex = getRelativeDayIndex(
-      activeChallenge.startDate.toISOString(),
+      activeChallenge.startDate!.toISOString(),
       nowLocal.toISOString(),
     );
 
@@ -952,7 +954,7 @@ export const getWeeklyChallengeProgress = async (
       skip: c.skip,
     }));
 
-    const startDate = startOfDay(new Date(activeChallenge.startDate));
+    const startDate = startOfDay(new Date(activeChallenge.startDate!));
 
     // Build a 7-day week view
     const days = Array.from({ length: 7 }).map((_, i) => {

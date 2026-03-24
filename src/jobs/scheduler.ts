@@ -22,7 +22,7 @@ export async function scheduleStreakJob() {
       name: "streak-reset-job",
       data: { jobData: Date.now() },
       opts: { removeOnComplete: true },
-    }
+    },
   );
 
   const schedulers = await streakQueue.getJobSchedulers();
@@ -48,16 +48,88 @@ export async function scheduleWeeklySkipJob() {
         removeOnComplete: true,
         removeOnFail: true,
       },
-    }
+    },
   );
 
   const schedulers = await challengeSkipQueue.getJobSchedulers();
   // console.log("Schedulers:", schedulers);
 }
 
+// export async function reminderSchedule() {
+//   console.log("[CRON] Adding daily reminder job to queue");
+
+//   const schedulers = [
+//     {
+//       queue: reminderQueue,
+//       key: "daily-reminder",
+//       pattern: "0 4 * * *",
+//       name: "SEND_DAILY_REMINDER",
+//       data: {
+//         title: "Daily Reminder!",
+//         description: "Don't forget to complete your challenge today!",
+//       },
+//     },
+//     {
+//       queue: challengeQueue,
+//       key: "challenge-alert-hourly",
+//       pattern: "0 * * * *",
+//       name: "SEND_CHALLENGE_ALERT",
+//       data: {
+//         title: "Challenge Alert!",
+//         description: "You have a new challenge waiting. Complete it today!",
+//       },
+//     },
+//   ];
+
+//   await Promise.all(
+//     schedulers.map(({ queue, key, pattern, name, data }) => {
+//       console.log(`[Scheduler] Registering ${key}`);
+
+//       return queue.upsertJobScheduler(
+//         key,
+//         { pattern },
+//         { name, data, opts: { removeOnComplete: true } },
+//       );
+//     }),
+//   );
+
+//   // await reminderQueue.upsertJobScheduler(
+//   //   "daily-reminder",
+//   //   { pattern: "0 4 * * *" },
+//   //   {
+//   //     name: "SEND_DAILY_REMINDER",
+//   //     data: {
+//   //       title: "Daily Reminder!",
+//   //       description: "Don't forget to complete your challenge today!",
+//   //     },
+//   //     opts: {
+//   //       removeOnComplete: true,
+//   //     },
+//   //   },
+//   // );
+
+//   // await challengeQueue.upsertJobScheduler(
+//   //   "challenge-alert-hourly",
+//   //   {
+//   //     pattern: "0 * * * *",
+//   //   },
+//   //   {
+//   //     name: "SEND_CHALLENGE_ALERT",
+//   //     data: {
+//   //       title: "Challenge Alert!",
+//   //       description: "You have a new challenge waiting. Complete it today!",
+//   //     },
+//   //     opts: {
+//   //       removeOnComplete: true,
+//   //     },
+//   //   },
+//   // );
+// }
+
 export async function startScheduler() {
   await scheduleStreakJob();
   await scheduleWeeklySkipJob();
+  // await reminderSchedule();
 }
 
 // Run every morning at 9 AM

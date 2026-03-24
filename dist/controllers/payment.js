@@ -25,7 +25,7 @@ const makeCheckout = async (req, res, next) => {
         if (!customerId) {
             const customer = await stripe_1.stripe.customers.create({
                 email: self.email,
-                metadata: { userId },
+                metadata: { userId: userId },
             });
             customerId = customer.id;
             await db_1.db.user.update({
@@ -57,11 +57,11 @@ const makeCheckout = async (req, res, next) => {
             ],
             //   success_url: `${process.env.CLIENT_URL}/success`,
             //   cancel_url: `${process.env.CLIENT_URL}/cancel`,
-            success_url: "intestinofelizapp://success",
-            cancel_url: "intestinofelizapp://cancel",
-            payment_method_types: ["card"],
-            metadata: { userId },
             origin_context: "mobile_app",
+            success_url: "digitaldojo://success",
+            cancel_url: "digitaldojo://cancel",
+            payment_method_types: ["card"],
+            metadata: { userId: userId },
         });
         return res.status(201).json({
             url: session.url,

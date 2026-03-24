@@ -99,11 +99,10 @@ const login = async (req, res, next) => {
             },
         });
         const token = (0, jwt_1.createToken)({ userId: isExisting.id, role: isExisting.role });
-        delete isExisting.password;
-        delete update.password;
+        const { password: _, ...userWithoutPassword } = update;
         return res.status(200).json({
             token,
-            user: update,
+            user: userWithoutPassword,
             msg: "Login Successfully",
             success: true,
         });
@@ -132,7 +131,7 @@ const loginWithApple = async (req, res, next) => {
         });
         let fcmTokenSet = new Set();
         if (fcmToken) {
-            fcmTokenSet = new Set(user.fcmTokens);
+            fcmTokenSet = new Set(user?.fcmTokens);
             fcmTokenSet.add(fcmToken);
         }
         const fcmTokens = Array.from(fcmTokenSet);
@@ -206,7 +205,7 @@ const loginWithGoogle = async (req, res, next) => {
         });
         let fcmTokenSet = new Set();
         if (fcmToken) {
-            fcmTokenSet = new Set(user.fcmTokens);
+            fcmTokenSet = new Set(user?.fcmTokens);
             fcmTokenSet.add(fcmToken);
         }
         const fcmTokens = Array.from(fcmTokenSet);
@@ -217,6 +216,8 @@ const loginWithGoogle = async (req, res, next) => {
                     createdAt: "asc",
                 },
             });
+            if (!email)
+                return;
             const emailExist = await db_1.db.user.findUnique({ where: { email } });
             if (emailExist) {
                 return next(new error_1.default("Email is already exist", 409));
@@ -224,7 +225,7 @@ const loginWithGoogle = async (req, res, next) => {
             user = await createUser({
                 providerId: googleId,
                 email: email || "",
-                name,
+                name: name || "",
                 fcmTokens,
                 timeZone: timezone,
                 provider: client_1.Provider.GOOGLE,
@@ -265,7 +266,7 @@ async function createUser({ name, email, password, timeZone, providerId, provide
         // 1️⃣ Create the user
         const user = await tx.user.create({
             data: {
-                email,
+                email: email,
                 password: password,
                 name,
                 role: client_1.Role.USER,

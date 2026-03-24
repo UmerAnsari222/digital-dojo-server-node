@@ -29,7 +29,7 @@ export const makeCheckout = async (
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: self.email,
-        metadata: { userId },
+        metadata: { userId: userId! },
       });
 
       customerId = customer.id;
@@ -66,11 +66,11 @@ export const makeCheckout = async (
       ],
       //   success_url: `${process.env.CLIENT_URL}/success`,
       //   cancel_url: `${process.env.CLIENT_URL}/cancel`,
-      success_url: "intestinofelizapp://success",
-      cancel_url: "intestinofelizapp://cancel",
-      payment_method_types: ["card"],
-      metadata: { userId },
       origin_context: "mobile_app",
+      success_url: "digitaldojo://success",
+      cancel_url: "digitaldojo://cancel",
+      payment_method_types: ["card"],
+      metadata: { userId: userId! },
     });
 
     return res.status(201).json({

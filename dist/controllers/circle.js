@@ -253,7 +253,7 @@ const getCircleById = async (req, res, next) => {
         // --- compute isExpired for each challenge ---
         const nowUTC = new Date();
         const nowLocal = (0, date_fns_tz_1.toZonedTime)(nowUTC, userTimezone);
-        const updatedChallenges = circle.circleChallenges.map((challenge) => {
+        const updatedChallenges = circle?.circleChallenges.map((challenge) => {
             const expireLocal = (0, date_fns_tz_1.toZonedTime)(challenge.expireAt, userTimezone);
             const isExpired = nowLocal > expireLocal;
             return {
@@ -261,12 +261,15 @@ const getCircleById = async (req, res, next) => {
                 isExpired,
             };
         });
-        for (const circleM of circle?.members) {
-            if (circleM.imageUrl) {
-                circleM.imageUrl = await (0, aws_1.getObjectUrl)({
-                    bucket: dotEnv_1.AWS_BUCKET_NAME,
-                    key: circleM.imageUrl,
-                });
+        // if (circle?.members?.length) {
+        if (Array.isArray(circle?.members) && circle?.members.length > 0) {
+            for (const circleM of circle?.members) {
+                if (circleM.imageUrl) {
+                    circleM.imageUrl = await (0, aws_1.getObjectUrl)({
+                        bucket: dotEnv_1.AWS_BUCKET_NAME,
+                        key: circleM.imageUrl,
+                    });
+                }
             }
         }
         // for (const circle of circles) {
@@ -285,16 +288,20 @@ const getCircleById = async (req, res, next) => {
                 }
             }
         }
-        for (const circleCh of circle.circleChallenges) {
-            if (circleCh?.owner?.imageUrl) {
-                circleCh.owner.imageUrl = await (0, aws_1.getObjectUrl)({
-                    bucket: dotEnv_1.AWS_BUCKET_NAME,
-                    key: circleCh?.owner?.imageUrl,
-                });
+        if (Array.isArray(circle?.circleChallenges) &&
+            circle.circleChallenges.length > 0) {
+            for (const circleCh of circle.circleChallenges) {
+                if (circleCh?.owner?.imageUrl) {
+                    circleCh.owner.imageUrl = await (0, aws_1.getObjectUrl)({
+                        bucket: dotEnv_1.AWS_BUCKET_NAME,
+                        key: circleCh?.owner?.imageUrl,
+                    });
+                }
             }
         }
+        const challenges = circle?.circleChallenges ?? [];
         // let ownerStats: OwnerStats[] = [];
-        const results = await Promise.allSettled(circle.circleChallenges.map(({ owner }) => limit(async () => {
+        const results = await Promise.allSettled(challenges.map(({ owner }) => limit(async () => {
             const [growthScore, challengeStats] = await Promise.all([
                 (0, statistics_1.calculateUserGrowthScore)({
                     id: owner.id,
@@ -371,7 +378,7 @@ const addMemberInCircle = async (req, res, next) => {
                 },
             },
         });
-        const isAlreadyMember = existingCircle?.members.length > 0;
+        const isAlreadyMember = !!existingCircle?.members?.length;
         if (!isAlreadyMember) {
             const joined = await db_1.db.circle.update({
                 where: { id: circleId },
@@ -422,7 +429,7 @@ const leaveMemberFromCircle = async (req, res, next) => {
                 },
             },
         });
-        const isMember = existingCircle?.members.length > 0;
+        const isMember = !!existingCircle?.members.length;
         if (!isMember) {
             return next(new error_1.default("You are not a member of this circle", 400));
         }
@@ -537,7 +544,7 @@ const markCircleChallenge = async (req, res, next) => {
         }
         const participant = await db_1.db.circleChallengeParticipant.create({
             data: {
-                userId,
+                userId: userId,
                 challengeId,
                 skip: skip,
             },

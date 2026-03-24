@@ -338,7 +338,7 @@ const makePublishWeeklyChallenge = async (req, res, next) => {
             },
         });
         if (overlappingChallenge) {
-            return next(new error_1.default(`Another challenge is already scheduled within this week: ${overlappingChallenge.startDate.toDateString()}`, 400));
+            return next(new error_1.default(`Another challenge is already scheduled within this week: ${overlappingChallenge?.startDate?.toDateString()}`, 400));
         }
         const updateChallenge = await db_1.db.challenge.update({
             where: { id: challengeId },
@@ -637,7 +637,8 @@ const getTodayWeeklyChallenge = async (req, res, next) => {
             },
         });
         // 3️⃣ Find active challenge for today
-        const activeChallenge = challenges.find((c) => (0, dateTimeFormatter_1.isTodayInChallengeWeek)(c.startDate.toISOString(), userTimeZone));
+        const activeChallenge = challenges.find((c) => c.startDate &&
+            (0, dateTimeFormatter_1.isTodayInChallengeWeek)(c.startDate.toISOString(), userTimeZone));
         if (!activeChallenge) {
             return res.status(200).json({
                 weeklyChallenge: null,

@@ -99,7 +99,7 @@ export const createReelCount = async (
       success: true,
       msg: "Watched Count successfully",
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("[CREATE_REEL_COUNT_ERROR]:", error);
     return next(new ErrorHandler("Something went wrong", 500, error.message));
   }
@@ -673,12 +673,12 @@ export const updateReelById = async (
     //   return next(new ErrorHandler("Reel is not found", 404))
     // }
 
-    let circle: { id: string } = null;
+    let circle: { id: string } | null = null;
 
     if (type === "CIRCLE") {
       circle = await db.circle.findFirst({
         where: {
-          id: circleId,
+          id: circleId!,
           OR: [
             {
               ownerId: self.id,

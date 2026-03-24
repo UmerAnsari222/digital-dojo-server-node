@@ -7,7 +7,7 @@ import { eachDayOfInterval, endOfWeek, startOfWeek, format } from "date-fns";
 export const createHabit = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId, role } = req;
   const { flow } = req.query;
@@ -58,7 +58,7 @@ export const createHabit = async (
         // If 5 or more, block creation
         if (habitCount >= 3) {
           return next(
-            new ErrorHandler("Free plan limit reached (3 habits only)", 403)
+            new ErrorHandler("Free plan limit reached (3 habits only)", 403),
           );
         }
       }
@@ -96,7 +96,7 @@ export const createHabit = async (
 export const saveUserHabit = async (
   req: Request<{}, {}, { habitIds: string[] }>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { habitIds } = req.body;
@@ -164,7 +164,7 @@ export const saveUserHabit = async (
 export const getHabitOfSelection = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
 
@@ -210,7 +210,7 @@ export const getHabitOfSelection = async (
 export const getUserHabits = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
 
@@ -270,7 +270,7 @@ export const getUserHabits = async (
         const normalizedDay = new Date(day);
         normalizedDay.setHours(0, 0, 0, 0);
 
-        const done = habit.completions.some((c) => {
+        const done = habit.completions.some((c: any) => {
           const d = new Date(c.date);
           d.setHours(0, 0, 0, 0);
           return d.getTime() === normalizedDay.getTime();
@@ -311,7 +311,7 @@ export const getUserHabits = async (
 export const getAdminHabits = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
 
@@ -361,7 +361,7 @@ export const getAdminHabits = async (
 export const getUserHabitsProgress = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
 
@@ -419,12 +419,12 @@ export const getUserHabitsProgress = async (
 
     // console.log(JSON.stringify(habits, null, 2));
 
-    const mapHabitToWeekly = (habit) => {
+    const mapHabitToWeekly = (habit: any) => {
       const week = days.map((day) => {
         const normalizedDay = new Date(day);
         normalizedDay.setHours(0, 0, 0, 0);
 
-        const done = habit.completions.some((c) => {
+        const done = habit.completions.some((c: any) => {
           const d = new Date(c.date);
           d.setHours(0, 0, 0, 0);
           return d.getTime() === normalizedDay.getTime();
@@ -469,7 +469,7 @@ export const getUserHabitsProgress = async (
 export const updateAdminHabit = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { habitId } = req.params;
@@ -520,7 +520,7 @@ export const updateAdminHabit = async (
 export const updateUserHabit = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { habitId } = req.params;
@@ -571,7 +571,7 @@ export const updateUserHabit = async (
 export const deleteUserHabit = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { habitId } = req.params;
@@ -624,7 +624,7 @@ export const deleteUserHabit = async (
 export const deleteHabit = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { habitId } = req.params;

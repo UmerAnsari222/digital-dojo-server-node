@@ -73,7 +73,7 @@ export const register = async (
       msg: "Register Successfully",
       success: true,
     });
-  } catch (e) {
+  } catch (e: any) {
     console.log("[REGISTER_USER_WITH_EMAIL_ERROR]", e);
     next(new ErrorHandler("Something went wrong", 500, e));
   }
@@ -132,12 +132,11 @@ export const login = async (
 
     const token = createToken({ userId: isExisting.id, role: isExisting.role });
 
-    delete isExisting.password;
-    delete update.password;
+    const { password: _, ...userWithoutPassword } = update;
 
     return res.status(200).json({
       token,
-      user: update,
+      user: userWithoutPassword,
       msg: "Login Successfully",
       success: true,
     });
@@ -177,7 +176,7 @@ export const loginWithApple = async (
     let fcmTokenSet = new Set();
 
     if (fcmToken) {
-      fcmTokenSet = new Set(user.fcmTokens);
+      fcmTokenSet = new Set(user?.fcmTokens);
       fcmTokenSet.add(fcmToken);
     }
 
@@ -269,7 +268,7 @@ export const loginWithGoogle = async (
     let fcmTokenSet = new Set();
 
     if (fcmToken) {
-      fcmTokenSet = new Set(user.fcmTokens);
+      fcmTokenSet = new Set(user?.fcmTokens);
       fcmTokenSet.add(fcmToken);
     }
 
@@ -284,6 +283,8 @@ export const loginWithGoogle = async (
         },
       });
 
+      if (!email) return;
+
       const emailExist = await db.user.findUnique({ where: { email } });
 
       if (emailExist) {
@@ -293,7 +294,7 @@ export const loginWithGoogle = async (
       user = await createUser({
         providerId: googleId,
         email: email || "",
-        name,
+        name: name || "",
         fcmTokens,
         timeZone: timezone,
         provider: Provider.GOOGLE,
@@ -340,19 +341,19 @@ async function createUser({
   fcmTokens,
 }: {
   name: string;
-  email?: string;
+  email: string;
   password?: string;
   timeZone: string;
   providerId?: string;
   provider?: Provider;
-  firstBeltId?: string;
+  firstBeltId: string | null;
   fcmTokens?: string[];
 }) {
   return await db.$transaction(async (tx) => {
     // 1️⃣ Create the user
     const user = await tx.user.create({
       data: {
-        email,
+        email: email,
         password: password,
         name,
         role: Role.USER,

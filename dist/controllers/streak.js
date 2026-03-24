@@ -38,6 +38,9 @@ const getUserStreak = async (req, res, next) => {
                 },
             },
         });
+        if (!self) {
+            return next(new error_1.default("Unauthorized", 403));
+        }
         const belts = self.userBelts.map((ub) => ({
             earnedAt: ub.earnedAt,
             ...ub.belt,

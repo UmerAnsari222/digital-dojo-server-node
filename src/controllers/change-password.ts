@@ -9,7 +9,7 @@ import { Provider } from "@prisma/client";
 export const changePassword = async (
   req: Request<{}, {}, NewPasswordRequest>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { userId } = req;
   const { oldPassword, confirmPassword, newPassword } = req.body;
@@ -23,7 +23,7 @@ export const changePassword = async (
 
     if (self.provider !== Provider.EMAIL) {
       return next(
-        new ErrorHandler("Change password is not valid for you", 400)
+        new ErrorHandler("Change password is not valid for you", 400),
       );
     }
 
@@ -49,7 +49,7 @@ export const changePassword = async (
     return res
       .status(200)
       .json({ success: true, msg: "Password change successfully" });
-  } catch (error) {
+  } catch (error: any) {
     console.log("[CHANGE_PASSWORD_ERROR]", error);
     return next(new ErrorHandler("Something went wrong", 500, error));
   }

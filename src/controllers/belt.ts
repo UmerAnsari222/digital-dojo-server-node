@@ -43,6 +43,8 @@ export const createBelt = async (
     for (const user of users) {
       const earnedBeltIds = user.userBelts.map((b) => b.beltId);
 
+      if (!user.currentBelt?.id) return;
+
       // if the user has the previous "last belt" and currentBelt = that belt
       if (earnedBeltIds.includes(user.currentBelt?.id)) {
         // ✅ Move the user to the new belt
