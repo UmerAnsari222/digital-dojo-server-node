@@ -519,6 +519,8 @@ export const getTodayDailyChallenge = async (
     }
 
     const index = Math.min(completedCount, challenges.length - 1);
+    console.log("INDEX: ", index);
+
     const challengeForUser = challenges[index];
     // const today = new Date();
     // const registeredDate = new Date(user.createdAt);
