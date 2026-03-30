@@ -520,6 +520,7 @@ export const getTodayDailyChallenge = async (
 
     const index = Math.min(completedCount, challenges.length - 1);
     console.log("INDEX: ", index);
+    console.log("COMPLETION: ", completedCount);
 
     const challengeForUser = challenges[index];
     // const today = new Date();
