@@ -385,13 +385,22 @@ const getTodayDailyChallenge = async (req, res, next) => {
                 success: true,
             });
         }
+        // const today = new Date();
+        // const userStartDate = new Date(user.createdAt);
+        // const daysPassed = differenceInCalendarDays(today, userStartDate);
+        // // total challenges available
+        // const totalChallenges = challenges.length;
+        // // index should move daily, but not exceed available challenges
+        // const index = Math.min(daysPassed, totalChallenges - 1);
+        // const challengeForUser = challenges[index];
         const today = new Date();
-        const userStartDate = new Date(user.createdAt);
-        const daysPassed = (0, date_fns_1.differenceInCalendarDays)(today, userStartDate);
-        // total challenges available
+        const startDate = new Date(user.createdAt);
+        const daysPassed = (0, date_fns_1.differenceInCalendarDays)(today, startDate);
         const totalChallenges = challenges.length;
-        // index should move daily, but not exceed available challenges
-        const index = Math.min(daysPassed, totalChallenges - 1);
+        let index = daysPassed;
+        if (index >= totalChallenges) {
+            index = totalChallenges - 1;
+        }
         const challengeForUser = challenges[index];
         // const index = Math.min(completedCount, challenges.length - 1);
         // const challengeForUser = challenges[index];
