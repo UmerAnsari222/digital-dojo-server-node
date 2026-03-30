@@ -385,10 +385,18 @@ const getTodayDailyChallenge = async (req, res, next) => {
                 success: true,
             });
         }
-        const index = Math.min(completedCount, challenges.length - 1);
+        const today = new Date();
+        const userStartDate = new Date(user.createdAt);
+        const daysPassed = (0, date_fns_1.differenceInCalendarDays)(today, userStartDate);
+        // total challenges available
+        const totalChallenges = challenges.length;
+        // index should move daily, but not exceed available challenges
+        const index = Math.min(daysPassed, totalChallenges - 1);
+        const challengeForUser = challenges[index];
+        // const index = Math.min(completedCount, challenges.length - 1);
+        // const challengeForUser = challenges[index];
         console.log("INDEX: ", index);
         console.log("COMPLETION: ", completedCount);
-        const challengeForUser = challenges[index];
         // const today = new Date();
         // const registeredDate = new Date(user.createdAt);
         // const daysSinceRegistered = differenceInCalendarDays(today, registeredDate);
