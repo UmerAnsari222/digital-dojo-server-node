@@ -494,6 +494,8 @@ export const getTodayDailyChallenge = async (
     return next(new ErrorHandler("Unauthorized", 401));
   }
 
+  const today = new Date();
+
   try {
     const user = await db.user.findUnique({ where: { id: userId } });
     if (!user) return next(new ErrorHandler("User not found", 404));
@@ -502,12 +504,21 @@ export const getTodayDailyChallenge = async (
       where: { userId, userChallengeId: { not: null } },
     });
 
+    // const challenges = await db.dailyChallenge.findMany({
+    //   include: {
+    //     category: true,
+    //     challenge: true,
+    //   },
+    //   orderBy: { createdAt: "asc" },
+    // });
+
+    // 2. Fetch all challenges created **so far**
     const challenges = await db.dailyChallenge.findMany({
-      include: {
-        category: true,
-        challenge: true,
-      },
-      orderBy: { createdAt: "asc" },
+      where: { createdAt: { lte: today } },
+      orderBy: [
+        { createdAt: "asc" },
+        { id: "asc" }, // ensures consistent order if multiple created same day
+      ],
     });
 
     if (challenges.length === 0) {
@@ -531,20 +542,22 @@ export const getTodayDailyChallenge = async (
 
     // const challengeForUser = challenges[index];
 
-    const today = new Date();
+    // const today = new Date();
     const startDate = new Date(user.createdAt);
+    const daysSinceSignup = differenceInCalendarDays(today, startDate);
 
-    const daysPassed = differenceInCalendarDays(today, startDate);
+    // 4. Determine challenge index (sequential, capped by available challenges)
+    const index = Math.min(daysSinceSignup, challenges.length - 1);
 
-    const totalChallenges = challenges.length;
+    // const totalChallenges = challenges.length;
 
-    let index = daysPassed;
+    // let index = daysPassed;
 
-    if (index >= totalChallenges) {
-      index = totalChallenges - 1;
-    }
+    // if (index >= totalChallenges) {
+    //   index = totalChallenges - 1;
+    // }
 
-    const challengeForUser = challenges[index];
+    const challengeForUser = challenges[index] || null;
 
     // const index = Math.min(completedCount, challenges.length - 1);
     // const challengeForUser = challenges[index];
