@@ -548,7 +548,7 @@ export const getTodayDailyChallenge = async (
     const totalChallenges = challenges.length;
     let index: number;
 
-    if (index <= totalChallenges) {
+    if (daysSinceSignup <= totalChallenges) {
       index = daysSinceSignup;
     } else {
       index = (daysSinceSignup - totalChallenges) % totalChallenges;

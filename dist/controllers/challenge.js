@@ -407,7 +407,7 @@ const getTodayDailyChallenge = async (req, res, next) => {
         const daysSinceSignup = (0, date_fns_1.differenceInCalendarDays)(today, startDate);
         const totalChallenges = challenges.length;
         let index;
-        if (index <= totalChallenges) {
+        if (daysSinceSignup <= totalChallenges) {
             index = daysSinceSignup;
         }
         else {
