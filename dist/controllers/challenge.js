@@ -424,7 +424,7 @@ const getTodayDailyChallenge = async (req, res, next) => {
         // const index = Math.min(completedCount, challenges.length - 1);
         // const challengeForUser = challenges[index];
         console.log("INDEX: ", index);
-        console.log("COMPLETION: ", completedCount);
+        console.log("SIGNUP DAYS: ", daysSinceSignup);
         // const today = new Date();
         // const registeredDate = new Date(user.createdAt);
         // const daysSinceRegistered = differenceInCalendarDays(today, registeredDate);
