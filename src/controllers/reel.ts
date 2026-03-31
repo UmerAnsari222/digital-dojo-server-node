@@ -556,7 +556,12 @@ export const getUserReelsFeed = async (
   next: NextFunction,
 ) => {
   const { userId } = req;
-  const { cursor, limit = 10 } = req.query as unknown as {
+  const {
+    reelType,
+    cursor,
+    limit = 10,
+  } = req.query as unknown as {
+    reelType: ReelType;
     limit: number;
     cursor: string;
   };
@@ -575,6 +580,7 @@ export const getUserReelsFeed = async (
       where: {
         status: "READY",
         userId: userId,
+        reelType,
         // AND: [
         //   {
         //     circle: {

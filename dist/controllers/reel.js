@@ -459,7 +459,7 @@ const getCircleReelsFeedById = async (req, res, next) => {
 exports.getCircleReelsFeedById = getCircleReelsFeedById;
 const getUserReelsFeed = async (req, res, next) => {
     const { userId } = req;
-    const { cursor, limit = 10 } = req.query;
+    const { reelType, cursor, limit = 10, } = req.query;
     if (!userId) {
         return next(new error_1.default("Unauthorized", 403));
     }
@@ -472,6 +472,7 @@ const getUserReelsFeed = async (req, res, next) => {
             where: {
                 status: "READY",
                 userId: userId,
+                reelType,
                 // AND: [
                 //   {
                 //     circle: {

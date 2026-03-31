@@ -8,7 +8,7 @@ import { db } from "../config/db";
 export const cloudFlareStreamWebhookHandler = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const signatureHeader = req.header("Webhook-Signature") as string;
 
@@ -73,7 +73,7 @@ export const cloudFlareStreamWebhookHandler = async (
         },
       });
     }
-  } catch (e) {
+  } catch (e: any) {
     console.log("[CLOUDFRONT_WEBHOOK_ERROR]", e);
     return next(new ErrorHandler("Something went wrong", 500, e));
   }
