@@ -545,9 +545,17 @@ export const getTodayDailyChallenge = async (
     // const today = new Date();
     const startDate = new Date(user.createdAt);
     const daysSinceSignup = differenceInCalendarDays(today, startDate);
+    const totalChallenges = challenges.length;
+    let index: number;
+
+    if (index <= totalChallenges) {
+      index = daysSinceSignup;
+    } else {
+      index = (daysSinceSignup - totalChallenges) % totalChallenges;
+    }
 
     // 4. Determine challenge index (sequential, capped by available challenges)
-    const index = Math.min(daysSinceSignup, challenges.length - 1);
+    // const index = Math.min(daysSinceSignup, challenges.length - 1);
 
     // const totalChallenges = challenges.length;
 
