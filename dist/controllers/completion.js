@@ -79,15 +79,6 @@ const makeCompletion = async (req, res, next) => {
             const data = await processCompletion(self.id, today);
             console.log(data);
         }
-        // Save updates to DB
-        // await db.user.update({
-        //   where: { id: userId },
-        //   data: {
-        //     streak: data.streak,
-        //     beltProgress: data.beltProgress,
-        //     lastCompletionDate: data.lastCompletionDate,
-        //   },
-        // });
         if (!skip) {
             // Add job to notification queue
             await notification_1.notificationQueue.add(constant_1.SEND_NOTIFICATION, {
@@ -177,79 +168,6 @@ const makeWeeklyChallengeCompletion = async (req, res, next) => {
     }
 };
 exports.makeWeeklyChallengeCompletion = makeWeeklyChallengeCompletion;
-// export const makeWeeklyChallengeCompletion = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   const { userId } = req;
-//   const { weeklyChallengeId, challengeId, skip } = req.body;
-//   console.log({ weeklyChallengeId, challengeId, skip });
-//   if (!userId) {
-//     return next(new ErrorHandler("Unauthorized", 401));
-//   }
-//   const today = new Date();
-//   const startOfToday = new Date(today.setHours(0, 0, 0, 0));
-//   const endOfToday = new Date(today.setHours(23, 59, 59, 999));
-//   try {
-//     const self = await db.user.findUnique({ where: { id: userId } });
-//     if (!self) {
-//       return next(new ErrorHandler("Unauthorized", 401));
-//     }
-//     const isChallengeExisting = await db.challenge.findFirst({
-//       where: {
-//         id: challengeId,
-//         status: "RUNNING",
-//       },
-//     });
-//     if (!isChallengeExisting) {
-//       return next(new ErrorHandler("Challenge not found", 404));
-//     }
-//     const challenge = await db.weeklyChallenge.findFirst({
-//       where: {
-//         id: weeklyChallengeId,
-//         challenge: {
-//           status: "RUNNING",
-//         },
-//       },
-//     });
-//     if (!challenge) {
-//       return next(new ErrorHandler("Weekly challenge not found", 404));
-//     }
-//     const isExisting = await db.weeklyChallengeCompletion.findFirst({
-//       where: {
-//         weeklyChallengeId: weeklyChallengeId,
-//         userId,
-//         date: {
-//           gte: startOfToday,
-//           lte: endOfToday,
-//         },
-//       },
-//     });
-//     if (isExisting) {
-//       return next(new ErrorHandler("Challenge already completed today", 400));
-//     }
-//     const completion = await db.weeklyChallengeCompletion.create({
-//       data: {
-//         challengeId: isChallengeExisting.id,
-//         weeklyChallengeId: challenge.id,
-//         userId,
-//         date: new Date(),
-//         skip: skip,
-//       },
-//     });
-//     return res.status(201).json({
-//       completion,
-//       msg: skip
-//         ? "Weekly Challenge Skipped Successfully!"
-//         : "Weekly Challenge Completed Successfully!",
-//       success: true,
-//     });
-//   } catch (e) {
-//     console.log("[MAKE_WEEKLY_COMPLETION_ERROR]", e);
-//     next(new ErrorHandler("Something went wrong", 500));
-//   }
-// };
 async function processCompletion(userId, today = new Date()) {
     console.log({ userId, today });
     const user = await db_1.db.user.findUnique({
@@ -277,13 +195,6 @@ async function processCompletion(userId, today = new Date()) {
         if (diffDays === 0) {
             // Same day completion, no changes to streak or beltProgress
             console.log("[processCompletion] Same day completion, no changes.");
-            // return {
-            //   streak,
-            //   beltProgress,
-            //   lastCompletionDate,
-            //   currentBelt,
-            //   beltAchieved: false,
-            // };
             streak = 1;
             beltProgress = 1;
         }
@@ -373,13 +284,6 @@ async function processCompletion(userId, today = new Date()) {
             },
         });
     }
-    // console.log("[processCompletion] Result:", {
-    //   streak,
-    //   beltProgress,
-    //   lastCompletionDate: todayNormalized,
-    //   currentBelt,
-    //   beltAchieved,
-    // });
     return {
         streak,
         beltProgress,

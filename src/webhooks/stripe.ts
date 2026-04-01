@@ -8,7 +8,7 @@ import { STRIPE_WEBHOOK_SECRET } from "../config/dotEnv";
 export const stripeWebhookHandler = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const sig = req.headers["stripe-signature"] as string;
 
@@ -20,9 +20,9 @@ export const stripeWebhookHandler = async (
     event = stripe.webhooks.constructEvent(
       req.body,
       sig,
-      STRIPE_WEBHOOK_SECRET
+      STRIPE_WEBHOOK_SECRET,
     );
-  } catch (e) {
+  } catch (e: any) {
     console.log("[STRIPE_WEBHOOK_ERROR]", e);
     return next(new ErrorHandler("Something went wrong", 500, e));
   }
@@ -34,7 +34,7 @@ export const stripeWebhookHandler = async (
       session.subscription as string,
       {
         expand: ["items.data.price.product"],
-      }
+      },
     )) as Stripe.Subscription;
 
     const subItem = subscription.items.data[0];

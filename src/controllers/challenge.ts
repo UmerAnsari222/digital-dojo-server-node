@@ -28,7 +28,9 @@ import {
 import {
   convertToUserTime,
   formatTimeForUser,
+  getEndOfDay,
   getRelativeDayIndex,
+  getStartOfDay,
   isTodayInChallengeWeek,
 } from "../utils/dateTimeFormatter";
 import logger from "../config/logger";
@@ -495,6 +497,8 @@ export const getTodayDailyChallenge = async (
   }
 
   const today = new Date();
+  const todayStart = getStartOfDay(today);
+  const todayEnd = getEndOfDay(today);
 
   try {
     const user = await db.user.findUnique({ where: { id: userId } });
@@ -529,20 +533,6 @@ export const getTodayDailyChallenge = async (
       });
     }
 
-    // const today = new Date();
-    // const userStartDate = new Date(user.createdAt);
-
-    // const daysPassed = differenceInCalendarDays(today, userStartDate);
-
-    // // total challenges available
-    // const totalChallenges = challenges.length;
-
-    // // index should move daily, but not exceed available challenges
-    // const index = Math.min(daysPassed, totalChallenges - 1);
-
-    // const challengeForUser = challenges[index];
-
-    // const today = new Date();
     const startDate = new Date(user.createdAt);
     const daysSinceSignup = differenceInCalendarDays(today, startDate);
     const totalChallenges = challenges.length;
@@ -554,21 +544,7 @@ export const getTodayDailyChallenge = async (
       index = (daysSinceSignup - totalChallenges) % totalChallenges;
     }
 
-    // 4. Determine challenge index (sequential, capped by available challenges)
-    // const index = Math.min(daysSinceSignup, challenges.length - 1);
-
-    // const totalChallenges = challenges.length;
-
-    // let index = daysPassed;
-
-    // if (index >= totalChallenges) {
-    //   index = totalChallenges - 1;
-    // }
-
     const challengeForUser = challenges[index] || null;
-
-    // const index = Math.min(completedCount, challenges.length - 1);
-    // const challengeForUser = challenges[index];
 
     console.log("INDEX: ", index);
     console.log("SIGNUP DAYS: ", daysSinceSignup);
@@ -578,46 +554,14 @@ export const getTodayDailyChallenge = async (
       (daysSinceSignup - totalChallenges) % totalChallenges,
     );
 
-    // const today = new Date();
-    // const registeredDate = new Date(user.createdAt);
-
-    // const daysSinceRegistered = differenceInCalendarDays(today, registeredDate);
-
-    // if (daysSinceRegistered < 0) {
-    //   return res.status(200).json({
-    //     challenge: null,
-    //     msg: "No challenge for today",
-    //     success: true,
-    //   });
-    // }
-
-    // // If user index exists → use that
-    // let challengeForUser = challenges[daysSinceRegistered];
-
-    // // If that exact index doesn’t exist
-    // if (!challengeForUser) {
-    //   // But admin has created some challenges
-    //   // Show the **latest challenge admin created**
-    //   challengeForUser = challenges[challenges.length - 1];
-    // }
-
-    // // Next: check creation times
-
-    // const challengeCreatedDate = new Date(challengeForUser.createdAt);
-
-    // if (challengeCreatedDate > today) {
-    //   // if even the latest challenge was created in the future (unlikely)
-    //   return res.status(200).json({
-    //     challenge: null,
-    //     msg: "No challenge for today",
-    //     success: true,
-    //   });
-    // }
-
     const completion = await db.completion.findFirst({
       where: {
         userId,
         userChallengeId: challengeForUser.id,
+        date: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
       },
     });
 

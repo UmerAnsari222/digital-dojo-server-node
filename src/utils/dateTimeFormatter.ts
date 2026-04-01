@@ -55,10 +55,10 @@ import { toZonedTime, format } from "date-fns-tz";
 // Helper: Check if today is in the 7-day challenge week
 export function isTodayInChallengeWeek(
   startDateStr: string,
-  userTimeZone: string
+  userTimeZone: string,
 ): boolean {
   const startDate = startOfDay(
-    toZonedTime(new Date(startDateStr), userTimeZone)
+    toZonedTime(new Date(startDateStr), userTimeZone),
   );
   const today = startOfDay(toZonedTime(new Date(), userTimeZone));
   const endDate = addDays(startDate, 6);
@@ -67,7 +67,7 @@ export function isTodayInChallengeWeek(
 
 export function getRelativeDayIndex(
   startDateStr: string,
-  todayStr?: string
+  todayStr?: string,
 ): number | null {
   const startDate = startOfDay(new Date(startDateStr));
   const today = startOfDay(todayStr ? new Date(todayStr) : new Date());
@@ -78,7 +78,7 @@ export function getRelativeDayIndex(
 
 export function normalizeUTC(date: Date): Date {
   return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),
   );
 }
 
@@ -114,7 +114,7 @@ export function normalizeUTC(date: Date): Date {
  */
 export function convertToUserTime(
   utcDateStr: string,
-  timeZone: string
+  timeZone: string,
 ): string {
   // Convert UTC to user's timezone
   const zonedDate = toZonedTime(new Date(utcDateStr), timeZone);
@@ -136,7 +136,7 @@ function convertToUtc(date: Date, timeZone: string): Date {
  */
 export function formatTimeForUser(
   time: Date | string,
-  timeZone: string
+  timeZone: string,
 ): string {
   // Convert to Date if string
   const date = typeof time === "string" ? new Date(time) : time;
@@ -147,3 +147,15 @@ export function formatTimeForUser(
   // Format in 12-hour time
   return format(zonedDate, "h:mm a");
 }
+
+export const getStartOfDay = (date = new Date()) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+export const getEndOfDay = (date = new Date()) => {
+  const d = new Date(date);
+  d.setHours(23, 59, 59, 999);
+  return d;
+};

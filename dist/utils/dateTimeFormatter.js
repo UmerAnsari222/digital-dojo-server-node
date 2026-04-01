@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getEndOfDay = exports.getStartOfDay = void 0;
 exports.isTodayInChallengeWeek = isTodayInChallengeWeek;
 exports.getRelativeDayIndex = getRelativeDayIndex;
 exports.normalizeUTC = normalizeUTC;
@@ -108,3 +109,15 @@ function formatTimeForUser(time, timeZone) {
     // Format in 12-hour time
     return (0, date_fns_tz_1.format)(zonedDate, "h:mm a");
 }
+const getStartOfDay = (date = new Date()) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+};
+exports.getStartOfDay = getStartOfDay;
+const getEndOfDay = (date = new Date()) => {
+    const d = new Date(date);
+    d.setHours(23, 59, 59, 999);
+    return d;
+};
+exports.getEndOfDay = getEndOfDay;
