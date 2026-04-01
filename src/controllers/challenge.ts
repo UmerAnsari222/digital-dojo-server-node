@@ -519,6 +519,10 @@ export const getTodayDailyChallenge = async (
     // 2. Fetch all challenges created **so far**
     const challenges = await db.dailyChallenge.findMany({
       where: { createdAt: { lte: today } },
+      include: {
+        category: true,
+        challenge: true,
+      },
       orderBy: [
         { createdAt: "asc" },
         { id: "asc" }, // ensures consistent order if multiple created same day
