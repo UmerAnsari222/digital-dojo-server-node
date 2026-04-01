@@ -14,6 +14,7 @@ export const sendByEmail = async ({
   const rootDir = path.resolve(__dirname, "..");
   console.log(rootDir);
   transport.sendMail({
+    from: "Dee Dojo LLC",
     to: email,
     subject: "Verification Code",
     html: await ejs.renderFile(path.join(rootDir, "views/email.ejs"), {
