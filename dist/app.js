@@ -21,6 +21,7 @@ const streak_1 = require("./routes/streak");
 const cirlce_1 = require("./routes/cirlce");
 const logger_1 = __importDefault(require("./config/logger"));
 const scheduler_1 = require("./jobs/scheduler");
+// import { runDailySkipJob } from "./jobs/workers/challengeSkip";
 const change_password_1 = require("./routes/change-password");
 const notification_1 = require("./routes/notification");
 const payment_1 = require("./routes/payment");

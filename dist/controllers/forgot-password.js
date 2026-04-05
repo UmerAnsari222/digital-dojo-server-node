@@ -7,9 +7,9 @@ exports.changePassword = exports.verifyOtp = exports.sendOtp = void 0;
 const db_1 = require("../config/db");
 const error_1 = __importDefault(require("../utils/error"));
 const otp_1 = require("../utils/otp");
-const otpSender_1 = require("../utils/otpSender");
 const hashPassword_1 = require("../utils/hashPassword");
 const client_1 = require("@prisma/client");
+const otp_2 = require("../jobs/queues/otp");
 const sendOtp = async (req, res, next) => {
     try {
         const { email } = req.body;
@@ -31,9 +31,13 @@ const sendOtp = async (req, res, next) => {
         const expires = Date.now() + ttl;
         const data = `${otp}.${expires}`;
         const hash = (0, otp_1.hashOtp)(data);
-        await (0, otpSender_1.sendByEmail)({
-            email: self.email,
-            otp: otp,
+        // await sendByEmail({
+        //   email: self.email,
+        //   otp: otp,
+        // });
+        await otp_2.otpQueue.add(otp_2.OTP_QUEUE, {
+            email,
+            otp,
         });
         return res.status(200).json({
             hash: `${hash}.${expires}`,

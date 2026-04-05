@@ -18,7 +18,7 @@ import { streakRouter } from "./routes/streak";
 import { circleRouter } from "./routes/cirlce";
 import logger from "./config/logger";
 import { startScheduler } from "./jobs/scheduler";
-import { runDailySkipJob } from "./jobs/workers/challengeSkip";
+// import { runDailySkipJob } from "./jobs/workers/challengeSkip";
 import { changePasswordRouter } from "./routes/change-password";
 import { notificationRouter } from "./routes/notification";
 import { paymentRouter } from "./routes/payment";

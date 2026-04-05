@@ -6,14 +6,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.scheduleStreakJob = scheduleStreakJob;
 exports.scheduleWeeklySkipJob = scheduleWeeklySkipJob;
 exports.startScheduler = startScheduler;
-const streak_1 = require("./queues/streak");
+const notification_1 = require("./queues/notification");
 const challengeSkip_1 = require("./queues/challengeSkip"); // adjust import path
+const streak_1 = require("./queues/streak");
+const notification_2 = require("./workers/notification");
 require("../jobs/workers/streak");
 require("../jobs/workers/challengeSkip");
+require("../jobs/workers/otp");
 // import "../jobs/workers/notification";
-const notification_1 = require("./workers/notification");
 const node_cron_1 = __importDefault(require("node-cron"));
-const notification_2 = require("./queues/notification");
 async function scheduleStreakJob() {
     console.log("[BullMQ] Scheduling streak reset job (daily 00:00)...");
     await streak_1.streakQueue.removeJobScheduler("streak-reset-midnight");
@@ -122,14 +123,14 @@ node_cron_1.default.schedule("0 4 * * *", async () => {
     // cron.schedule("* * * * *", () => {
     console.log("[CRON] Adding daily reminder job to queue");
     // eventBus.emit("dailyReminder");
-    await notification_2.reminderQueue.add("SEND_DAILY_REMINDER", {
+    await notification_1.reminderQueue.add("SEND_DAILY_REMINDER", {
         title: "Daily Reminder!",
         description: "Don't forget to complete your challenge today!",
     });
 });
 // Challenge alerts every hour
 node_cron_1.default.schedule("0 * * * *", async () => {
-    await notification_2.challengeQueue.add("SEND_CHALLENGE_ALERT", {
+    await notification_1.challengeQueue.add("SEND_CHALLENGE_ALERT", {
         title: "Challenge Alert!",
         description: "You have a new challenge waiting. Complete it today!",
     });
@@ -137,8 +138,8 @@ node_cron_1.default.schedule("0 * * * *", async () => {
 });
 process.on("SIGINT", async () => {
     console.log("Shutting down gracefully...");
-    await notification_1.reminderWorker.close();
-    await notification_1.challengeWorker.close();
+    await notification_2.reminderWorker.close();
+    await notification_2.challengeWorker.close();
     process.exit(0);
 });
 // Worker to process the jobs

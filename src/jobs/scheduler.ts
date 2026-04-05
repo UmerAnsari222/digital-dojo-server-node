@@ -1,12 +1,14 @@
-import { streakQueue } from "./queues/streak";
+import { challengeQueue, reminderQueue } from "./queues/notification";
 import { challengeSkipQueue } from "./queues/challengeSkip"; // adjust import path
+import { streakQueue } from "./queues/streak";
+
+import { challengeWorker, reminderWorker } from "./workers/notification";
 import "../jobs/workers/streak";
 import "../jobs/workers/challengeSkip";
+import "../jobs/workers/otp";
 // import "../jobs/workers/notification";
-import { challengeWorker, reminderWorker } from "./workers/notification";
+
 import cron from "node-cron";
-import eventBus from "../events/eventBus";
-import { challengeQueue, reminderQueue } from "./queues/notification";
 
 export async function scheduleStreakJob() {
   console.log("[BullMQ] Scheduling streak reset job (daily 00:00)...");

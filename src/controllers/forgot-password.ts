@@ -6,11 +6,12 @@ import { sendByEmail } from "../utils/otpSender";
 import { ChangePasswordRequest, VerifyOtpRequest } from "../types";
 import { hashedPassword } from "../utils/hashPassword";
 import { Provider } from "@prisma/client";
+import { OTP_QUEUE, otpQueue } from "../jobs/queues/otp";
 
 export const sendOtp = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { email } = req.body;
@@ -27,7 +28,7 @@ export const sendOtp = async (
 
     if (self.provider !== Provider.EMAIL) {
       return next(
-        new ErrorHandler("Change password is not valid for you", 400)
+        new ErrorHandler("Change password is not valid for you", 400),
       );
     }
 
@@ -40,9 +41,14 @@ export const sendOtp = async (
     const data = `${otp}.${expires}`;
     const hash = hashOtp(data);
 
-    await sendByEmail({
-      email: self.email,
-      otp: otp,
+    // await sendByEmail({
+    //   email: self.email,
+    //   otp: otp,
+    // });
+
+    await otpQueue.add(OTP_QUEUE, {
+      email,
+      otp,
     });
 
     return res.status(200).json({
@@ -59,7 +65,7 @@ export const sendOtp = async (
 export const verifyOtp = async (
   req: Request<{}, {}, VerifyOtpRequest>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { hash, otp, email } = req.body;
@@ -106,7 +112,7 @@ export const verifyOtp = async (
 export const changePassword = async (
   req: Request<{}, {}, ChangePasswordRequest>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     // get data from request

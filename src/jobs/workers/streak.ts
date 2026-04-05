@@ -4,6 +4,7 @@ import { redisConnection } from "../../utils/redis";
 import { Worker } from "bullmq";
 
 export const streakWorker = new Worker(
+  // "streakQueue",
   "streakQueue",
   async (job) => {
     console.log("[BullMQ] Running daily streak check...");
@@ -15,7 +16,7 @@ export const streakWorker = new Worker(
     });
 
     for (const user of users) {
-      const lastCompletion = startOfDay(new Date(user.lastCompletionDate));
+      const lastCompletion = startOfDay(new Date(user.lastCompletionDate!));
       const diff = differenceInCalendarDays(today, lastCompletion);
 
       // if (diff > 1 && user.streak > 0) {

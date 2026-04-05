@@ -13,7 +13,8 @@ GIT_SSH_COMMAND="ssh -i ~/.ssh/digital_dojo_ed25519 -o StrictHostKeyChecking=no"
 echo "New changes copied to server !"
 
 echo "Installing Dependencies..."
-npm install --yes
+# npm install --yes
+npm ci
 
 echo "🧬 Running Prisma migrations..."
 cd src/

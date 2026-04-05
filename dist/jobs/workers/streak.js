@@ -5,7 +5,9 @@ const date_fns_1 = require("date-fns");
 const db_1 = require("../../config/db");
 const redis_1 = require("../../utils/redis");
 const bullmq_1 = require("bullmq");
-exports.streakWorker = new bullmq_1.Worker("streakQueue", async (job) => {
+exports.streakWorker = new bullmq_1.Worker(
+// "streakQueue",
+"streakQueue", async (job) => {
     console.log("[BullMQ] Running daily streak check...");
     const today = (0, date_fns_1.startOfDay)(new Date());
     const users = await db_1.db.user.findMany({
