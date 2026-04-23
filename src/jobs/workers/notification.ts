@@ -239,7 +239,7 @@ export const notificationWorker = new Worker(
 
     console.log(`[Worker] ✅ Challenge notifications sent where enabled`);
   },
-  { connection: redisConnection, concurrency: 5 },
+  { connection: redisConnection, concurrency: 2 },
 );
 
 reminderWorker.on("failed", (job, err) => {

@@ -178,7 +178,7 @@ exports.notificationWorker = new bullmq_1.Worker(notification_1.NOTIFICATION_QUE
         }
     }
     console.log(`[Worker] ✅ Challenge notifications sent where enabled`);
-}, { connection: redis_1.redisConnection, concurrency: 5 });
+}, { connection: redis_1.redisConnection, concurrency: 2 });
 exports.reminderWorker.on("failed", (job, err) => {
     console.error(`[BullMQ] ❌ Job ${job?.id} failed:`, err);
 });
