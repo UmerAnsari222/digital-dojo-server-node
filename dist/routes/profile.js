@@ -14,3 +14,6 @@ exports.profileRouter.patch("/update", auth_1.authMiddleware, async (req, res, n
 exports.profileRouter.patch("/update-preferences", auth_1.authMiddleware, async (req, res, next) => {
     await (0, profile_1.updatePreferences)(req, res, next);
 });
+exports.profileRouter.post("/delete-account", auth_1.authMiddleware, async (req, res, next) => {
+    await (0, profile_1.deleteAccount)(req, res, next);
+});

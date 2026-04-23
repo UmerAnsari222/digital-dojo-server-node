@@ -3,12 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updatePreferences = exports.updateProfile = exports.getProfile = void 0;
+exports.deleteAccount = exports.updatePreferences = exports.updateProfile = exports.getProfile = void 0;
 const db_1 = require("../config/db");
 const error_1 = __importDefault(require("../utils/error"));
 const aws_1 = require("../utils/aws");
 const dotEnv_1 = require("../config/dotEnv");
 const statistics_1 = require("../utils/statistics");
+const hashPassword_1 = require("../utils/hashPassword");
 const getProfile = async (req, res, next) => {
     const { userId } = req;
     if (!userId) {
@@ -189,3 +190,30 @@ const updatePreferences = async (req, res, next) => {
     }
 };
 exports.updatePreferences = updatePreferences;
+const deleteAccount = async (req, res, next) => {
+    const { userId } = req;
+    const { password } = req.body;
+    if (!userId) {
+        return next(new error_1.default("Unauthorized", 403));
+    }
+    try {
+        const isExisting = await db_1.db.user.findUnique({ where: { id: userId } });
+        if (!isExisting) {
+            return next(new error_1.default("User not found", 404));
+        }
+        const isPasswordValid = await (0, hashPassword_1.comparePassword)(password, isExisting.password);
+        if (!isPasswordValid) {
+            return next(new error_1.default("Invalid password", 400));
+        }
+        await db_1.db.user.delete({ where: { id: userId } });
+        return res.status(200).json({
+            success: true,
+            msg: "Account deleted successfully",
+        });
+    }
+    catch (error) {
+        console.error("[ERROR_DELETE_ACCOUNT]:", error);
+        return next(new error_1.default("Something went wrong", 500));
+    }
+};
+exports.deleteAccount = deleteAccount;

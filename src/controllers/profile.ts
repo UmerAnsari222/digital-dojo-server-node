@@ -9,6 +9,7 @@ import {
   computeBestWeek,
   getChallengesCountLastAndCurrentMonth,
 } from "../utils/statistics";
+import { comparePassword } from "../utils/hashPassword";
 
 export const getProfile = async (
   req: Request,
@@ -217,6 +218,46 @@ export const updatePreferences = async (
     });
   } catch (error) {
     console.error("[ERROR_UPDATE_PREFERENCES]:", error);
+    return next(new ErrorHandler("Something went wrong", 500));
+  }
+};
+
+export const deleteAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { userId } = req;
+  const { password } = req.body;
+
+  if (!userId) {
+    return next(new ErrorHandler("Unauthorized", 403));
+  }
+
+  try {
+    const isExisting = await db.user.findUnique({ where: { id: userId } });
+
+    if (!isExisting) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    const isPasswordValid = await comparePassword(
+      password,
+      isExisting.password,
+    );
+
+    if (!isPasswordValid) {
+      return next(new ErrorHandler("Invalid password", 400));
+    }
+
+    await db.user.delete({ where: { id: userId } });
+
+    return res.status(200).json({
+      success: true,
+      msg: "Account deleted successfully",
+    });
+  } catch (error) {
+    console.error("[ERROR_DELETE_ACCOUNT]:", error);
     return next(new ErrorHandler("Something went wrong", 500));
   }
 };

@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { authMiddleware } from "../middlewares/auth";
 import {
+  deleteAccount,
   getProfile,
   updatePreferences,
   updateProfile,
@@ -13,7 +14,7 @@ profileRouter.get(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await getProfile(req, res, next);
-  }
+  },
 );
 
 profileRouter.patch(
@@ -21,7 +22,7 @@ profileRouter.patch(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await updateProfile(req, res, next);
-  }
+  },
 );
 
 profileRouter.patch(
@@ -29,5 +30,13 @@ profileRouter.patch(
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await updatePreferences(req, res, next);
-  }
+  },
+);
+
+profileRouter.post(
+  "/delete-account",
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    await deleteAccount(req, res, next);
+  },
 );
