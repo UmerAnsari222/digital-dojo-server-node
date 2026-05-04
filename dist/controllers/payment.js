@@ -57,7 +57,7 @@ const makeCheckout = async (req, res, next) => {
             ],
             //   success_url: `${process.env.CLIENT_URL}/success`,
             //   cancel_url: `${process.env.CLIENT_URL}/cancel`,
-            // origin_context: "mobile_app",
+            origin_context: "mobile_app",
             success_url: "digitaldojo://success",
             cancel_url: "digitaldojo://cancel",
             payment_method_types: ["card"],
