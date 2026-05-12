@@ -31,21 +31,19 @@ const getDashboardStats = async (req, res, next) => {
 };
 exports.getDashboardStats = getDashboardStats;
 async function getStats() {
-    return await Promise.all([
-        db_1.db.user.count(),
-        db_1.db.user.count({
-            where: { subscription: { status: "active" } },
-        }),
-        db_1.db.user.count({
-            where: {
-                subscription: null,
-                // NOT: [
-                //   { subscription: null },
-                //   { subscription: { status: { not: "active" } } },
-                // ],
-            },
-        }),
-    ]);
+    const total = await db_1.db.user.count();
+    const subscribedUsers = await db_1.db.user.findMany({
+        where: {
+            OR: [
+                { subscription: { status: "active" } },
+                { subscriptionRevenueCat: { isActive: true } },
+            ],
+        },
+        select: { id: true },
+    });
+    const subscribed = subscribedUsers.length;
+    const free = total - subscribed;
+    return [total, subscribed, free];
 }
 async function getYearStats(year) {
     const subscribedMonthly = {};
@@ -67,18 +65,21 @@ async function getYearStats(year) {
     for (let month = 0; month < 12; month++) {
         const start = new Date(year, month, 1);
         const end = new Date(year, month + 1, 1);
-        const subscribedCount = await db_1.db.user.count({
+        const subscribedRC = await db_1.db.user.findMany({
             where: {
                 createdAt: { gte: start, lt: end },
-                subscription: { isNot: null },
+                OR: [
+                    { subscription: { isNot: null } },
+                    { subscriptionRevenueCat: { isNot: null } },
+                ],
             },
+            select: { id: true },
         });
-        const freeCount = await db_1.db.user.count({
-            where: {
-                createdAt: { gte: start, lt: end },
-                subscription: null,
-            },
+        const subscribedCount = subscribedRC.length;
+        const allInMonth = await db_1.db.user.count({
+            where: { createdAt: { gte: start, lt: end } },
         });
+        const freeCount = allInMonth - subscribedCount;
         const label = monthNames[month];
         subscribedMonthly[label] = subscribedCount;
         freeMonthly[label] = freeCount;

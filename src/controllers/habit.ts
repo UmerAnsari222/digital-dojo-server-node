@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import ErrorHandler from "../utils/error";
 import { db } from "../config/db";
+import { hasActiveSubscription } from "../utils/subscription";
 import { Habit, Role, UserHabit } from "@prisma/client";
 import { eachDayOfInterval, endOfWeek, startOfWeek, format } from "date-fns";
 
@@ -24,9 +25,6 @@ export const createHabit = async (
   try {
     const self = await db.user.findUnique({
       where: { id: userId },
-      include: {
-        subscription: true,
-      },
     });
 
     if (!self) {
@@ -48,14 +46,11 @@ export const createHabit = async (
         },
       });
     } else {
-      // If not subscribed or not active
-      if (!self.subscription || self.subscription.status !== "active") {
-        // Count how many habits the user already has
+      if (!(await hasActiveSubscription(self.id))) {
         const habitCount = await db.habit.count({
           where: { userId: self.id },
         });
 
-        // If 5 or more, block creation
         if (habitCount >= 3) {
           return next(
             new ErrorHandler("Free plan limit reached (3 habits only)", 403),
@@ -108,7 +103,6 @@ export const saveUserHabit = async (
   try {
     const self = await db.user.findUnique({
       where: { id: userId },
-      include: { subscription: true },
     });
 
     if (!self) {
@@ -130,9 +124,7 @@ export const saveUserHabit = async (
       return next(new ErrorHandler("No valid habits found", 400));
     }
 
-    const hasActiveSubscription = self.subscription?.status === "active";
-
-    if (habitIds.length > 3 && !hasActiveSubscription) {
+    if (habitIds.length > 3 && !(await hasActiveSubscription(userId!))) {
       return next(new ErrorHandler("You need an active subscription", 403));
     }
     // if (habitIds.length > 3) {

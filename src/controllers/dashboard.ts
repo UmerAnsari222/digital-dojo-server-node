@@ -34,21 +34,22 @@ export const getDashboardStats = async (
 };
 
 async function getStats() {
-  return await Promise.all([
-    db.user.count(),
-    db.user.count({
-      where: { subscription: { status: "active" } },
-    }),
-    db.user.count({
-      where: {
-        subscription: null,
-        // NOT: [
-        //   { subscription: null },
-        //   { subscription: { status: { not: "active" } } },
-        // ],
-      },
-    }),
-  ]);
+  const total = await db.user.count();
+
+  const subscribedUsers = await db.user.findMany({
+    where: {
+      OR: [
+        { subscription: { status: "active" } },
+        { subscriptionRevenueCat: { isActive: true } },
+      ],
+    },
+    select: { id: true },
+  });
+
+  const subscribed = subscribedUsers.length;
+  const free = total - subscribed;
+
+  return [total, subscribed, free];
 }
 
 async function getYearStats(year: number) {
@@ -74,19 +75,24 @@ async function getYearStats(year: number) {
     const start = new Date(year, month, 1);
     const end = new Date(year, month + 1, 1);
 
-    const subscribedCount = await db.user.count({
+    const subscribedRC = await db.user.findMany({
       where: {
         createdAt: { gte: start, lt: end },
-        subscription: { isNot: null },
+        OR: [
+          { subscription: { isNot: null } },
+          { subscriptionRevenueCat: { isNot: null } },
+        ],
       },
+      select: { id: true },
     });
 
-    const freeCount = await db.user.count({
-      where: {
-        createdAt: { gte: start, lt: end },
-        subscription: null,
-      },
+    const subscribedCount = subscribedRC.length;
+
+    const allInMonth = await db.user.count({
+      where: { createdAt: { gte: start, lt: end } },
     });
+
+    const freeCount = allInMonth - subscribedCount;
 
     const label = monthNames[month];
 

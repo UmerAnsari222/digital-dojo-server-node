@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteCircleChallengeById = exports.deleteCircleById = exports.getActiveCircleChallenges = exports.markCircleChallenge = exports.createCircleChallenge = exports.leaveMemberFromCircle = exports.addMemberInCircle = exports.getCircleById = exports.getUserAllCircle = exports.getAllCircle = exports.createCircle = void 0;
 const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
+const subscription_1 = require("../utils/subscription");
 const aws_1 = require("../utils/aws");
 const dotEnv_1 = require("../config/dotEnv");
 const date_fns_tz_1 = require("date-fns-tz");
@@ -21,12 +22,11 @@ const createCircle = async (req, res, next) => {
     try {
         const self = await db_1.db.user.findUnique({
             where: { id: userId },
-            include: { subscription: true },
         });
         if (!self) {
             return next(new error_1.default("Unauthorized", 401));
         }
-        if (!self.subscription || self.subscription.status !== "active") {
+        if (!(await (0, subscription_1.hasActiveSubscription)(userId))) {
             return next(new error_1.default("You need an active subscription to create a circle", 403));
         }
         const circle = await db_1.db.circle.create({

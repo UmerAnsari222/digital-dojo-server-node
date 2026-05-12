@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteHabit = exports.deleteUserHabit = exports.updateUserHabit = exports.updateAdminHabit = exports.getUserHabitsProgress = exports.getAdminHabits = exports.getUserHabits = exports.getHabitOfSelection = exports.saveUserHabit = exports.createHabit = void 0;
 const error_1 = __importDefault(require("../utils/error"));
 const db_1 = require("../config/db");
+const subscription_1 = require("../utils/subscription");
 const client_1 = require("@prisma/client");
 const date_fns_1 = require("date-fns");
 const createHabit = async (req, res, next) => {
@@ -18,9 +19,6 @@ const createHabit = async (req, res, next) => {
     try {
         const self = await db_1.db.user.findUnique({
             where: { id: userId },
-            include: {
-                subscription: true,
-            },
         });
         if (!self) {
             return next(new error_1.default("Unauthorized", 401));
@@ -39,13 +37,10 @@ const createHabit = async (req, res, next) => {
             });
         }
         else {
-            // If not subscribed or not active
-            if (!self.subscription || self.subscription.status !== "active") {
-                // Count how many habits the user already has
+            if (!(await (0, subscription_1.hasActiveSubscription)(self.id))) {
                 const habitCount = await db_1.db.habit.count({
                     where: { userId: self.id },
                 });
-                // If 5 or more, block creation
                 if (habitCount >= 3) {
                     return next(new error_1.default("Free plan limit reached (3 habits only)", 403));
                 }
@@ -88,7 +83,6 @@ const saveUserHabit = async (req, res, next) => {
     try {
         const self = await db_1.db.user.findUnique({
             where: { id: userId },
-            include: { subscription: true },
         });
         if (!self) {
             return next(new error_1.default("Unauthorized", 401));
@@ -106,8 +100,7 @@ const saveUserHabit = async (req, res, next) => {
         if (habits.length === 0) {
             return next(new error_1.default("No valid habits found", 400));
         }
-        const hasActiveSubscription = self.subscription?.status === "active";
-        if (habitIds.length > 3 && !hasActiveSubscription) {
+        if (habitIds.length > 3 && !(await (0, subscription_1.hasActiveSubscription)(userId))) {
             return next(new error_1.default("You need an active subscription", 403));
         }
         // if (habitIds.length > 3) {

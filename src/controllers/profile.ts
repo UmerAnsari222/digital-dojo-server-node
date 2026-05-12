@@ -42,6 +42,16 @@ export const getProfile = async (
             currentPeriodEnd: true,
           },
         },
+        subscriptionRevenueCat: {
+          select: {
+            id: true,
+            productId: true,
+            isActive: true,
+            willRenew: true,
+            expirationDate: true,
+            store: true,
+          },
+        },
         consistency: true,
         role: true,
         timezone: true,

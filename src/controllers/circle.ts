@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import ErrorHandler from "../utils/error";
 import { db } from "../config/db";
+import { hasActiveSubscription } from "../utils/subscription";
 import { getObjectUrl } from "../utils/aws";
 import { AWS_BUCKET_NAME } from "../config/dotEnv";
 import { toZonedTime } from "date-fns-tz";
@@ -28,14 +29,13 @@ export const createCircle = async (
   try {
     const self = await db.user.findUnique({
       where: { id: userId },
-      include: { subscription: true },
     });
 
     if (!self) {
       return next(new ErrorHandler("Unauthorized", 401));
     }
 
-    if (!self.subscription || self.subscription.status !== "active") {
+    if (!(await hasActiveSubscription(userId!))) {
       return next(
         new ErrorHandler(
           "You need an active subscription to create a circle",

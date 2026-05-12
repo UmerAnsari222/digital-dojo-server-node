@@ -49,6 +49,8 @@ model User {
   notifications               Notification[]
   videos                      Video[]
 
+  subscriptionRevenueCat SubscriptionRevenueCat?
+
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
   videoViews VideoView[]
@@ -343,6 +345,25 @@ model Subscription {
 
   createdAt DateTime @default(now())
   updateAt  DateTime @updatedAt
+}
+
+model SubscriptionRevenueCat {
+  id                    String    @id @default(uuid())
+  productId             String?
+  originalTransactionId String?
+  store                 String?
+  isActive              Boolean   @default(false)
+  willRenew             Boolean   @default(false)
+  expirationDate        DateTime?
+  unsubscribeDetectedAt DateTime?
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Video {
