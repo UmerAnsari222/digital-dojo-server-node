@@ -9,6 +9,9 @@ const dotEnv_1 = require("../config/dotEnv");
 const logger_1 = __importDefault(require("../config/logger"));
 const revenueCatWebhookHandler = async (req, res, next) => {
     const authHeader = req.headers.authorization;
+    console.log("====================================");
+    console.log(authHeader);
+    console.log("====================================");
     if (!authHeader || authHeader !== `Bearer ${dotEnv_1.REVENUECAT_WEBHOOK_SECRET}`) {
         return res.status(401).send("Unauthorized");
     }

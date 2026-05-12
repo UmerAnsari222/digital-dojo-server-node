@@ -10,6 +10,10 @@ export const revenueCatWebhookHandler = async (
 ) => {
   const authHeader = req.headers.authorization;
 
+  console.log("====================================");
+  console.log(authHeader);
+  console.log("====================================");
+
   if (!authHeader || authHeader !== `Bearer ${REVENUECAT_WEBHOOK_SECRET}`) {
     return res.status(401).send("Unauthorized");
   }
