@@ -12,6 +12,7 @@ export const revenueCatWebhookHandler = async (
 
   console.log("====================================");
   console.log(authHeader);
+  console.log(REVENUECAT_WEBHOOK_SECRET);
   console.log("====================================");
 
   if (!authHeader || authHeader !== `Bearer ${REVENUECAT_WEBHOOK_SECRET}`) {
