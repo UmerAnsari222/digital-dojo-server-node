@@ -40,7 +40,7 @@ app.use(
 
 app.use(
   "/api/v1/webhook",
-  // express.raw({ type: "application/json" }),
+  express.raw({ type: "application/json" }),
   webhookRouter,
 );
 
