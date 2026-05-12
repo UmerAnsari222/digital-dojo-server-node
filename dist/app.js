@@ -36,7 +36,9 @@ app.use((0, morgan_1.default)("combined", {
         write: (message) => logger_1.default.http(message.trim()),
     },
 })); // 'dev' is a pre-defined format string
-app.use("/api/v1/webhook", express_1.default.raw({ type: "application/json" }), webhook_1.webhookRouter);
+app.use("/api/v1/webhook", 
+// express.raw({ type: "application/json" }),
+webhook_1.webhookRouter);
 app.use((0, cors_1.default)({ origin: "*" }));
 app.use(express_1.default.json({ limit: "50mb" }));
 // app.use(bodyParser.raw({ type: "application/json" }));
