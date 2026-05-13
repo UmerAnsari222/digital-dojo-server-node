@@ -24,6 +24,7 @@ import { notificationRouter } from "./routes/notification";
 import { paymentRouter } from "./routes/payment";
 import { webhookRouter } from "./routes/webhook";
 import { reelRouter } from "./routes/reel";
+import { reportRouter } from "./routes/report";
 import { contactUsRouter } from "./routes/contact-us";
 import { dashboardRouter } from "./routes/dasboard";
 
@@ -75,6 +76,7 @@ app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/notifications", notificationRouter);
 app.use("/api/v1/reels", reelRouter);
+app.use("/api/v1/report", reportRouter);
 app.use("/api/v1/contact-us", contactUsRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
 app.use("/api/v1/presigned", urlRouter);

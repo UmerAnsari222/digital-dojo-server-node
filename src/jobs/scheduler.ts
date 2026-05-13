@@ -6,6 +6,7 @@ import { challengeWorker, reminderWorker } from "./workers/notification";
 import "../jobs/workers/streak";
 import "../jobs/workers/challengeSkip";
 import "../jobs/workers/otp";
+import "../jobs/workers/reportMail";
 // import "../jobs/workers/notification";
 
 import cron from "node-cron";

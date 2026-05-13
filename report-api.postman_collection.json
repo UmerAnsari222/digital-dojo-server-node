@@ -1,0 +1,297 @@
+{
+  "info": {
+    "name": "Report API",
+    "description": "Endpoints for reporting reel content, allowing users to flag inappropriate reels and admins to review, block, or unblock them.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Report",
+      "description": "Report a reel for inappropriate content. Sends an email notification to all admins via BullMQ.",
+      "item": [
+        {
+          "name": "Create Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"reelId\": \"b0595d23-f502-42a5-b787-c8b9c350a6ec\",\n    \"reason\": \"Sexual content\",\n    \"message\": \"This reel contains inappropriate material.\",\n    \"tags\": [\"sexual\", \"explicit\"]\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/report",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "report"]
+            },
+            "description": "Submit a report for a reel. Requires authentication. The `reason` is required; `message` and `tags` are optional. Prevents duplicate reports from the same user on the same reel."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n    \"success\": true,\n    \"report\": {\n        \"id\": \"uuid\",\n        \"reelId\": \"uuid\",\n        \"reportedById\": \"uuid\",\n        \"reason\": \"Sexual content\",\n        \"message\": \"This reel contains inappropriate material.\",\n        \"tags\": [\"sexual\", \"explicit\"],\n        \"status\": \"PENDING\",\n        \"isBlocked\": false,\n        \"blockReason\": null,\n        \"createdAt\": \"2026-05-13T10:00:00.000Z\",\n        \"updatedAt\": \"2026-05-13T10:00:00.000Z\"\n    },\n    \"msg\": \"Report submitted successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get All Reports",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_JWT_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/report/all?status=PENDING&limit=10",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "report", "all"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "description": "Filter by status: PENDING, RESOLVED, REJECTED"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of reports per page"
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "description": "Cursor for pagination (returned as nextCursor in response)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all reports with optional status filter. Admin only. Supports cursor-based pagination. Includes reel details, reporter info, and resolver info."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"reports\": [\n        {\n            \"id\": \"uuid\",\n            \"reason\": \"Sexual content\",\n            \"message\": \"...\",\n            \"tags\": [\"sexual\"],\n            \"status\": \"PENDING\",\n            \"isBlocked\": false,\n            \"blockReason\": null,\n            \"createdAt\": \"...\",\n            \"reel\": {\n                \"id\": \"uuid\",\n                \"title\": \"Reel title\",\n                \"isBlocked\": false,\n                \"user\": { \"id\": \"uuid\", \"name\": \"Owner\", \"email\": \"owner@email.com\" }\n            },\n            \"reportedBy\": { \"id\": \"uuid\", \"name\": \"Reporter\", \"email\": \"reporter@email.com\" },\n            \"resolvedBy\": null\n        }\n    ],\n    \"nextCursor\": \"uuid-or-null\",\n    \"msg\": \"Reports fetched successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Resolve Report",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_JWT_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"RESOLVED\",\n    \"blockReel\": true,\n    \"blockReason\": \"Violates community guidelines\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/report/resolve/:reportId",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "report", "resolve", ":reportId"],
+              "variable": [
+                {
+                  "key": "reportId",
+                  "value": "replace-with-report-uuid",
+                  "description": "ID of the report to resolve"
+                }
+              ]
+            },
+            "description": "Resolve or reject a report. Admin only. Set `status` to `RESOLVED` (accepted) or `REJECTED` (dismissed). Set `blockReel: true` to also block the reel. When blocking, `blockReason` is shown to the reel owner."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"report\": {\n        \"id\": \"uuid\",\n        \"status\": \"RESOLVED\",\n        \"isBlocked\": true,\n        \"blockReason\": \"Violates community guidelines\",\n        \"resolvedById\": \"admin-uuid\"\n    },\n    \"msg\": \"Report resolved successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reject Report",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_JWT_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"status\": \"REJECTED\",\n    \"blockReel\": false\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/report/resolve/:reportId",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "report", "resolve", ":reportId"],
+              "variable": [
+                {
+                  "key": "reportId",
+                  "value": "replace-with-report-uuid",
+                  "description": "ID of the report to reject"
+                }
+              ]
+            },
+            "description": "Dismiss/reject a report without blocking the reel. Admin only."
+          }
+        },
+        {
+          "name": "Block Reel",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_JWT_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"blockReason\": \"Spam content\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/report/block/:reelId",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "report", "block", ":reelId"],
+              "variable": [
+                {
+                  "key": "reelId",
+                  "value": "replace-with-reel-uuid",
+                  "description": "ID of the reel to block"
+                }
+              ]
+            },
+            "description": "Directly block a reel without going through a report. Admin only. Blocked reels are hidden from all feeds except the reel owner's own feed."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"reel\": {\n        \"id\": \"uuid\",\n        \"isBlocked\": true,\n        \"blockReason\": \"Spam content\"\n    },\n    \"msg\": \"Reel blocked successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Unblock Reel",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_JWT_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/report/unblock/:reelId",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "report", "unblock", ":reelId"],
+              "variable": [
+                {
+                  "key": "reelId",
+                  "value": "replace-with-reel-uuid",
+                  "description": "ID of the reel to unblock"
+                }
+              ]
+            },
+            "description": "Unblock a previously blocked reel. Admin only. The reel becomes visible in all feeds again."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"reel\": {\n        \"id\": \"uuid\",\n        \"isBlocked\": false,\n        \"blockReason\": null\n    },\n    \"msg\": \"Reel unblocked successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Blocked Reels",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ADMIN_JWT_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/report/blocked?limit=10",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "report", "blocked"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of reels per page"
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "description": "Cursor for pagination",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all currently blocked reels. Admin only. Supports cursor-based pagination. Shows the block reason and reel owner info."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"reels\": [\n        {\n            \"id\": \"uuid\",\n            \"title\": \"Reel title\",\n            \"description\": \"...\",\n            \"isBlocked\": true,\n            \"blockReason\": \"Spam content\",\n            \"user\": { \"id\": \"uuid\", \"name\": \"Owner\", \"email\": \"owner@email.com\" }\n        }\n    ],\n    \"nextCursor\": \"uuid-or-null\",\n    \"msg\": \"Blocked reels fetched successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "https://api.digitaldojoteam.com",
+      "type": "string"
+    },
+    {
+      "key": "JWT_TOKEN",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ADMIN_JWT_TOKEN",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

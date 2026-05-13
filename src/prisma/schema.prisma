@@ -53,8 +53,10 @@ model User {
 
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
-  videoViews VideoView[]
-  contacts   Contact[]
+  videoViews        VideoView[]
+  contacts          Contact[]
+  reportedReels     ReelReport[] @relation("ReportedBy")
+  resolvedReels     ReelReport[] @relation("ResolvedBy")
 }
 
 model Habit {
@@ -396,12 +398,16 @@ model Video {
   // views Int @default(0)
   likes Int @default(0)
 
+  isBlocked   Boolean @default(false)
+  blockReason String? @db.Text
+
   createdAt   DateTime  @default(now())
   publishedAt DateTime?
 
   error Json?
 
-  videoViews VideoView[]
+  videoViews   VideoView[]
+  reports      ReelReport[]
 
   @@index([createdAt])
   @@index([userId])
@@ -437,6 +443,38 @@ model Contact {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  REJECTED
+}
+
+model ReelReport {
+  id            String       @id @default(uuid())
+  reason        String
+  message       String?      @db.Text
+  tags          String[]
+  status        ReportStatus @default(PENDING)
+  isBlocked     Boolean      @default(false)
+  blockReason   String?      @db.Text
+
+  reelId       String
+  reel         Video    @relation(fields: [reelId], references: [id], onDelete: Cascade)
+
+  reportedById String
+  reportedBy   User     @relation("ReportedBy", fields: [reportedById], references: [id])
+
+  resolvedById String?
+  resolvedBy   User?    @relation("ResolvedBy", fields: [resolvedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reelId])
+  @@index([status])
+  @@index([reportedById])
 }
 
 enum Role {

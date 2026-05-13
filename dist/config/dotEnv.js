@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.REVENUECAT_WEBHOOK_SECRET = exports.CF_STREAM_WEBHOOK_SECRET = exports.CF_API_TOKEN = exports.CF_ACCOUNT_ID = exports.APPLE_SERVICE_ID = exports.APPLE_CLIENT_ID = exports.GOOGLE_CLIENT_ID = exports.REDIS_PORT = exports.REDIS_HOST = exports.DATABASE_URL = exports.STRIPE_WEBHOOK_SECRET = exports.STRIPE_MONTHLY_PRICE_ID = exports.STRIPE_SECRET_KEY = exports.AWS_BUCKET_NAME = exports.AWS_REGION = exports.AWS_ACCESS_SECRET_KEY = exports.AWS_ACCESS_KEY_ID = exports.HASH_SECRET = exports.EMAIL_HOST = exports.EMAIL_FROM_PASSWORD = exports.EMAIL_FROM = exports.EMAIL_PORT = exports.JWT_SECRET = exports.PORT = void 0;
+exports.CLIENT_URL = exports.REVENUECAT_WEBHOOK_SECRET = exports.CF_STREAM_WEBHOOK_SECRET = exports.CF_API_TOKEN = exports.CF_ACCOUNT_ID = exports.APPLE_SERVICE_ID = exports.APPLE_CLIENT_ID = exports.GOOGLE_CLIENT_ID = exports.REDIS_PORT = exports.REDIS_HOST = exports.DATABASE_URL = exports.STRIPE_WEBHOOK_SECRET = exports.STRIPE_MONTHLY_PRICE_ID = exports.STRIPE_SECRET_KEY = exports.AWS_BUCKET_NAME = exports.AWS_REGION = exports.AWS_ACCESS_SECRET_KEY = exports.AWS_ACCESS_KEY_ID = exports.HASH_SECRET = exports.EMAIL_HOST = exports.EMAIL_FROM_PASSWORD = exports.EMAIL_FROM = exports.EMAIL_PORT = exports.JWT_SECRET = exports.PORT = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 exports.PORT = process.env.PORT || 4400;
@@ -30,3 +30,4 @@ exports.CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
 exports.CF_API_TOKEN = process.env.CF_API_TOKEN;
 exports.CF_STREAM_WEBHOOK_SECRET = process.env.CF_STREAM_WEBHOOK_SECRET;
 exports.REVENUECAT_WEBHOOK_SECRET = process.env.REVENUECAT_WEBHOOK_SECRET;
+exports.CLIENT_URL = process.env.CLIENT_URL;

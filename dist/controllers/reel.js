@@ -91,7 +91,10 @@ const getReelsFeed = async (req, res, next) => {
     const { cursor, limit = 10 } = req.query;
     try {
         const reels = await db_1.db.video.findMany({
-            where: { status: "READY" },
+            where: {
+                status: "READY",
+                isBlocked: false,
+            },
             orderBy: { createdAt: "desc" },
             take: Number(limit) + 1,
             ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
@@ -143,7 +146,10 @@ const getTopSnapsFeed = async (req, res, next) => {
     try {
         const { cursor, limit = 10, batchSize = 50, } = req.query;
         // 1) Fetch ALL eligible videos (no time restriction)
-        const allTimeWhere = { status: "READY" };
+        const allTimeWhere = {
+            status: "READY",
+            isBlocked: false,
+        };
         const allTimeVideos = await db_1.db.video.findMany({
             where: allTimeWhere,
             orderBy: { createdAt: "desc" },
@@ -320,6 +326,7 @@ const getMyCircleReelsFeed = async (req, res, next) => {
             where: {
                 status: "READY",
                 type: "CIRCLE",
+                isBlocked: false,
                 AND: [
                     {
                         circle: {
@@ -399,6 +406,7 @@ const getCircleReelsFeedById = async (req, res, next) => {
                 status: "READY",
                 type: "CIRCLE",
                 circleId: circle.id,
+                isBlocked: false,
                 // AND: [
                 //   {
                 //     circle: {

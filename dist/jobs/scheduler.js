@@ -13,6 +13,7 @@ const notification_2 = require("./workers/notification");
 require("../jobs/workers/streak");
 require("../jobs/workers/challengeSkip");
 require("../jobs/workers/otp");
+require("../jobs/workers/reportMail");
 // import "../jobs/workers/notification";
 const node_cron_1 = __importDefault(require("node-cron"));
 async function scheduleStreakJob() {

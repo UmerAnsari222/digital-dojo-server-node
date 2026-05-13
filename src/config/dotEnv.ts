@@ -26,3 +26,4 @@ export const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID!;
 export const CF_API_TOKEN = process.env.CF_API_TOKEN!;
 export const CF_STREAM_WEBHOOK_SECRET = process.env.CF_STREAM_WEBHOOK_SECRET!;
 export const REVENUECAT_WEBHOOK_SECRET = process.env.REVENUECAT_WEBHOOK_SECRET!;
+export const CLIENT_URL = process.env.CLIENT_URL!;
