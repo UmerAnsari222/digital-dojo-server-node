@@ -44,7 +44,7 @@ export const reportMailWorker = new Worker(
     for (const admin of admins) {
       if (admin.email) {
         await transport.sendMail({
-          from: EMAIL_FROM,
+          from: "Report Bot <" + EMAIL_FROM + ">",
           to: admin.email,
           subject: "New Reel Report",
           html,

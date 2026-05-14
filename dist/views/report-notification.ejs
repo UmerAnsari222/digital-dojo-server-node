@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      body { font-family: Arial, sans-serif; }
+      .container { width: 65%; margin: 0 auto; }
+      .details { background-color: #f5f5f5; padding: 20px; border-radius: 10px; }
+      .label { font-weight: bold; }
+      .button {
+        display: inline-block;
+        padding: 12px 24px;
+        background-color: #4F46E5;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: bold;
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>New Reel Report</h1>
+      <p>A user has reported a reel. Details below:</p>
+      <div class="details">
+        <p><span class="label">Reported By:</span> <%= reporterName %> (<%= reporterEmail %>)</p>
+        <p><span class="label">Reason:</span> <%= reason %></p>
+        <% if (tags && tags.length) { %>
+          <p><span class="label">Tags:</span> <%= tags.join(', ') %></p>
+        <% } %>
+        <% if (message) { %>
+          <p><span class="label">Message:</span> <%= message %></p>
+        <% } %>
+        <p><span class="label">Reel ID:</span> <%= reelId %></p>
+        <p><span class="label">Reel Owner:</span> <%= reelOwnerName %> (<%= reelOwnerEmail %>)</p>
+        <p><span class="label">Report Time:</span> <%= createdAt %></p>
+      </div>
+      <a class="button" href="<%= dashboardUrl %>">Review Report</a>
+      <p style="margin-top: 24px;">Or copy this link: <a href="<%= dashboardUrl %>"><%= dashboardUrl %></a></p>
+      <h4>Digital Dojo</h4>
+    </div>
+  </body>
+</html>

@@ -28,7 +28,7 @@ exports.reportMailWorker = new bullmq_1.Worker(reportMail_1.REPORT_MAIL_QUEUE, a
     for (const admin of admins) {
         if (admin.email) {
             await mailer_1.transport.sendMail({
-                from: dotEnv_1.EMAIL_FROM,
+                from: "Report Bot <" + dotEnv_1.EMAIL_FROM + ">",
                 to: admin.email,
                 subject: "New Reel Report",
                 html,
