@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { db } from "../config/db";
 import ErrorHandler from "../utils/error";
+import { getObjectUrl } from "../utils/aws";
+import { AWS_BUCKET_NAME } from "../config/dotEnv";
 import { REPORT_MAIL_QUEUE, reportMailQueue } from "../jobs/queues/reportMail";
 
 export const createReport = async (
@@ -151,6 +153,15 @@ export const getAllReports = async (
         },
       },
     });
+
+    for (const report of reports) {
+      if (report.reel.imageUrl) {
+        report.reel.imageUrl = await getObjectUrl({
+          bucket: AWS_BUCKET_NAME,
+          key: report.reel.imageUrl,
+        });
+      }
+    }
 
     let nextCursor: string | null = null;
     if (reports.length > Number(limit)) {

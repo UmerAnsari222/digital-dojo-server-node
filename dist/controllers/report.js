@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBlockedReels = exports.unblockReel = exports.blockReel = exports.resolveReport = exports.getAllReports = exports.createReport = void 0;
 const db_1 = require("../config/db");
 const error_1 = __importDefault(require("../utils/error"));
+const aws_1 = require("../utils/aws");
+const dotEnv_1 = require("../config/dotEnv");
 const reportMail_1 = require("../jobs/queues/reportMail");
 const createReport = async (req, res, next) => {
     const { userId } = req;
@@ -127,6 +129,14 @@ const getAllReports = async (req, res, next) => {
                 },
             },
         });
+        for (const report of reports) {
+            if (report.reel.imageUrl) {
+                report.reel.imageUrl = await (0, aws_1.getObjectUrl)({
+                    bucket: dotEnv_1.AWS_BUCKET_NAME,
+                    key: report.reel.imageUrl,
+                });
+            }
+        }
         let nextCursor = null;
         if (reports.length > Number(limit)) {
             const nextItem = reports.pop();
