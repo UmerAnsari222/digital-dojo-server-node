@@ -774,7 +774,7 @@ export const deleteReelById = async (
       return next(new ErrorHandler("Unauthorized", 403));
     }
 
-    const reel = await db.video.findUnique({ where: { id: reelId } });
+    const reel = await db.video.findUnique({ where: { id: reelId, userId } });
 
     if (!reel) {
       return next(new ErrorHandler("Reel is not found", 404));
@@ -791,7 +791,7 @@ export const deleteReelById = async (
       });
     }
 
-    await db.video.delete({ where: { id: reelId } });
+    await db.video.delete({ where: { id: reelId, userId } });
 
     return res.status(200).json({
       success: true,

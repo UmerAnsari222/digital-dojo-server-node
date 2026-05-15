@@ -633,7 +633,7 @@ const deleteReelById = async (req, res, next) => {
         if (!self) {
             return next(new error_1.default("Unauthorized", 403));
         }
-        const reel = await db_1.db.video.findUnique({ where: { id: reelId } });
+        const reel = await db_1.db.video.findUnique({ where: { id: reelId, userId } });
         if (!reel) {
             return next(new error_1.default("Reel is not found", 404));
         }
@@ -646,7 +646,7 @@ const deleteReelById = async (req, res, next) => {
                 Key: reel.imageUrl,
             });
         }
-        await db_1.db.video.delete({ where: { id: reelId } });
+        await db_1.db.video.delete({ where: { id: reelId, userId } });
         return res.status(200).json({
             success: true,
             msg: "Reel Deleted Successfully",

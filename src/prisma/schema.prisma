@@ -51,12 +51,12 @@ model User {
 
   subscriptionRevenueCat SubscriptionRevenueCat?
 
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  videoViews        VideoView[]
-  contacts          Contact[]
-  reportedReels     ReelReport[] @relation("ReportedBy")
-  resolvedReels     ReelReport[] @relation("ResolvedBy")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  videoViews    VideoView[]
+  contacts      Contact[]
+  reportedReels ReelReport[] @relation("ReportedBy")
+  resolvedReels ReelReport[] @relation("ResolvedBy")
 }
 
 model Habit {
@@ -406,8 +406,8 @@ model Video {
 
   error Json?
 
-  videoViews   VideoView[]
-  reports      ReelReport[]
+  videoViews VideoView[]
+  reports    ReelReport[]
 
   @@index([createdAt])
   @@index([userId])
@@ -452,22 +452,22 @@ enum ReportStatus {
 }
 
 model ReelReport {
-  id            String       @id @default(uuid())
-  reason        String
-  message       String?      @db.Text
-  tags          String[]
-  status        ReportStatus @default(PENDING)
-  isBlocked     Boolean      @default(false)
-  blockReason   String?      @db.Text
+  id          String       @id @default(uuid())
+  reason      String
+  message     String?      @db.Text
+  tags        String[]
+  status      ReportStatus @default(PENDING)
+  isBlocked   Boolean      @default(false)
+  blockReason String?      @db.Text
 
-  reelId       String
-  reel         Video    @relation(fields: [reelId], references: [id], onDelete: Cascade)
+  reelId String
+  reel   Video  @relation(fields: [reelId], references: [id], onDelete: Cascade)
 
   reportedById String
-  reportedBy   User     @relation("ReportedBy", fields: [reportedById], references: [id])
+  reportedBy   User   @relation("ReportedBy", fields: [reportedById], references: [id])
 
   resolvedById String?
-  resolvedBy   User?    @relation("ResolvedBy", fields: [resolvedById], references: [id])
+  resolvedBy   User?   @relation("ResolvedBy", fields: [resolvedById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -29,6 +29,8 @@ exports.reelRouter.get("/me", auth_1.authMiddleware, async (req, res, next) => {
 exports.reelRouter.patch("/", auth_1.authMiddleware, async (req, res, next) => {
     await (0, reel_1.updateReelById)(req, res, next);
 });
-exports.reelRouter.delete("/:reelId", auth_1.authAdminMiddleware, async (req, res, next) => {
+exports.reelRouter.delete("/:reelId", 
+// authAdminMiddleware,
+auth_1.authMiddleware, async (req, res, next) => {
     await (0, reel_1.deleteReelById)(req, res, next);
 });

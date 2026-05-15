@@ -81,7 +81,8 @@ reelRouter.patch(
 
 reelRouter.delete(
   "/:reelId",
-  authAdminMiddleware,
+  // authAdminMiddleware,
+  authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     await deleteReelById(req, res, next);
   },
