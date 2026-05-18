@@ -120,6 +120,9 @@ export const getReelsFeed = async (
       where: {
         status: "READY",
         isBlocked: false,
+        NOT: {
+          reports: { some: { status: "PENDING" } },
+        },
       },
       orderBy: { createdAt: "desc" },
       take: Number(limit) + 1,
@@ -191,6 +194,9 @@ export const getTopSnapsFeed = async (
     const allTimeWhere: any = {
       status: "READY",
       isBlocked: false,
+      NOT: {
+        reports: { some: { status: "PENDING" } },
+      },
     };
 
     const allTimeVideos = await db.video.findMany({
@@ -225,6 +231,10 @@ export const getTopSnapsFeed = async (
     const weekVideos = await db.video.findMany({
       where: {
         status: "READY",
+        isBlocked: false,
+        NOT: {
+          reports: { some: { status: "PENDING" } },
+        },
         createdAt: { gte: sevenDaysAgo },
       },
       include: {
@@ -403,6 +413,9 @@ export const getMyCircleReelsFeed = async (
         status: "READY",
         type: "CIRCLE",
         isBlocked: false,
+        NOT: {
+          reports: { some: { status: "PENDING" } },
+        },
         AND: [
           {
             circle: {
@@ -497,6 +510,9 @@ export const getCircleReelsFeedById = async (
         type: "CIRCLE",
         circleId: circle.id,
         isBlocked: false,
+        NOT: {
+          reports: { some: { status: "PENDING" } },
+        },
         // AND: [
         //   {
         //     circle: {
