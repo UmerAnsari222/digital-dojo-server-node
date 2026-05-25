@@ -110,16 +110,20 @@ export const getReelsFeed = async (
   res: Response,
   next: NextFunction,
 ) => {
+  const { userId } = req;
   const { cursor, limit = 10 } = req.query as unknown as {
     limit: number;
     cursor: string;
   };
 
   try {
+    const excludeUserIds = userId ? await getExcludedUserIds(userId) : [];
+
     const reels = await db.video.findMany({
       where: {
         status: "READY",
         isBlocked: false,
+        userId: { notIn: excludeUserIds },
         NOT: {
           reports: { some: { status: "PENDING" } },
         },
@@ -179,6 +183,7 @@ export const getTopSnapsFeed = async (
   res: Response,
   next: NextFunction,
 ) => {
+  const { userId } = req;
   try {
     const {
       cursor,
@@ -190,10 +195,13 @@ export const getTopSnapsFeed = async (
       batchSize?: number;
     };
 
+    const excludeUserIds = userId ? await getExcludedUserIds(userId) : [];
+
     // 1) Fetch ALL eligible videos (no time restriction)
     const allTimeWhere: any = {
       status: "READY",
       isBlocked: false,
+      userId: { notIn: excludeUserIds },
       NOT: {
         reports: { some: { status: "PENDING" } },
       },
@@ -232,6 +240,7 @@ export const getTopSnapsFeed = async (
       where: {
         status: "READY",
         isBlocked: false,
+        userId: { notIn: excludeUserIds },
         NOT: {
           reports: { some: { status: "PENDING" } },
         },
@@ -408,11 +417,14 @@ export const getMyCircleReelsFeed = async (
       return next(new ErrorHandler("Unauthorized", 403));
     }
 
+    const excludeUserIds = await getExcludedUserIds(userId);
+
     const reels = await db.video.findMany({
       where: {
         status: "READY",
         type: "CIRCLE",
         isBlocked: false,
+        userId: { notIn: excludeUserIds },
         NOT: {
           reports: { some: { status: "PENDING" } },
         },
@@ -504,12 +516,15 @@ export const getCircleReelsFeedById = async (
       return next(new ErrorHandler("Circle not found", 404));
     }
 
+    const excludeUserIds = await getExcludedUserIds(userId);
+
     const reels = await db.video.findMany({
       where: {
         status: "READY",
         type: "CIRCLE",
         circleId: circle.id,
         isBlocked: false,
+        userId: { notIn: excludeUserIds },
         NOT: {
           reports: { some: { status: "PENDING" } },
         },
@@ -818,6 +833,23 @@ export const deleteReelById = async (
     return next(new ErrorHandler("Something went wrong", 500));
   }
 };
+
+async function getExcludedUserIds(userId: string): Promise<string[]> {
+  const [blockedUsers, notRecommendedUsers] = await Promise.all([
+    db.blockedUser.findMany({
+      where: { blockerId: userId },
+      select: { blockedId: true },
+    }),
+    db.notRecommendedUser.findMany({
+      where: { userId },
+      select: { notRecommendedId: true },
+    }),
+  ]);
+  return [
+    ...blockedUsers.map((b) => b.blockedId),
+    ...notRecommendedUsers.map((n) => n.notRecommendedId),
+  ];
+}
 
 // JS score calc
 function calculateScore(views: number, createdAt: Date) {

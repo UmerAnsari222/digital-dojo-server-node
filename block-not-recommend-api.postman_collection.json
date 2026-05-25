@@ -1,0 +1,243 @@
+{
+  "info": {
+    "name": "Block & Not Recommend API",
+    "description": "Endpoints for blocking or not recommending users. Blocked/not-recommended users' reels are hidden from all feeds (public feed, top snaps, circle feeds).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Block User",
+      "description": "Block a user so their reels no longer appear in your feeds.",
+      "item": [
+        {
+          "name": "Block User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/block-user/:userId",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "block-user", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "replace-with-user-uuid",
+                  "description": "ID of the user to block"
+                }
+              ]
+            },
+            "description": "Block a user. Requires authentication. Cannot block yourself. Returns error if user is already blocked."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n    \"success\": true,\n    \"msg\": \"User blocked successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Unblock User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/block-user/:userId",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "block-user", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "replace-with-user-uuid",
+                  "description": "ID of the user to unblock"
+                }
+              ]
+            },
+            "description": "Unblock a previously blocked user. Requires authentication. Returns error if user was not blocked."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"msg\": \"User unblocked successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Blocked Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/block-user?limit=10",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "block-user"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of users per page"
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "description": "Cursor for pagination (returned as nextCursor in response)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all users you have blocked. Requires authentication. Supports cursor-based pagination."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"users\": [\n        {\n            \"id\": \"uuid\",\n            \"name\": \"Blocked User\",\n            \"email\": \"blocked@email.com\",\n            \"imageUrl\": null\n        }\n    ],\n    \"nextCursor\": null,\n    \"msg\": \"Blocked users fetched successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not Recommend User",
+      "description": "Not-recommend a user so their reels are deprioritized in your feeds.",
+      "item": [
+        {
+          "name": "Not Recommend User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/not-recommend/:userId",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "not-recommend", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "replace-with-user-uuid",
+                  "description": "ID of the user to not recommend"
+                }
+              ]
+            },
+            "description": "Mark a user as not recommended so their reels are hidden from your feeds. Requires authentication. Cannot not-recommend yourself."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n    \"success\": true,\n    \"msg\": \"User not recommended successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Undo Not Recommend User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/not-recommend/:userId",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "not-recommend", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "replace-with-user-uuid",
+                  "description": "ID of the user to remove from not-recommended list"
+                }
+              ]
+            },
+            "description": "Remove a user from your not-recommended list. Requires authentication."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"msg\": \"Not-recommend undone successfully\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Not Recommended Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/not-recommend?limit=10",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "v1", "not-recommend"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of users per page"
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "description": "Cursor for pagination (returned as nextCursor in response)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all users you have marked as not recommended. Requires authentication. Supports cursor-based pagination."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n    \"success\": true,\n    \"users\": [\n        {\n            \"id\": \"uuid\",\n            \"name\": \"User\",\n            \"email\": \"user@email.com\",\n            \"imageUrl\": null\n        }\n    ],\n    \"nextCursor\": null,\n    \"msg\": \"Not-recommended users fetched successfully\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "https://api.digitaldojoteam.com",
+      "type": "string"
+    },
+    {
+      "key": "JWT_TOKEN",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

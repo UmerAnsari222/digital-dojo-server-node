@@ -27,6 +27,8 @@ import { reelRouter } from "./routes/reel";
 import { reportRouter } from "./routes/report";
 import { contactUsRouter } from "./routes/contact-us";
 import { dashboardRouter } from "./routes/dasboard";
+import { blockUserRouter } from "./routes/blockUser";
+import { notRecommendRouter } from "./routes/notRecommend";
 
 const app: Application = express();
 
@@ -81,6 +83,8 @@ app.use("/api/v1/contact-us", contactUsRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
 app.use("/api/v1/presigned", urlRouter);
 app.use("/api/v1/payment", paymentRouter);
+app.use("/api/v1/block-user", blockUserRouter);
+app.use("/api/v1/not-recommend", notRecommendRouter);
 
 startScheduler().then(() => {
   console.log("Job Scheduler started.");

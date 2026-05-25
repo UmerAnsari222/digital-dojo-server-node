@@ -55,8 +55,12 @@ model User {
   updatedAt     DateTime     @updatedAt
   videoViews    VideoView[]
   contacts      Contact[]
-  reportedReels ReelReport[] @relation("ReportedBy")
-  resolvedReels ReelReport[] @relation("ResolvedBy")
+  reportedReels         ReelReport[]         @relation("ReportedBy")
+  resolvedReels         ReelReport[]         @relation("ResolvedBy")
+  blockedUsers          BlockedUser[]        @relation("Blocker")
+  blockedBy             BlockedUser[]        @relation("Blocked")
+  notRecommendedUsers   NotRecommendedUser[] @relation("NotRecommender")
+  notRecommendedBy      NotRecommendedUser[] @relation("NotRecommended")
 }
 
 model Habit {
@@ -366,6 +370,32 @@ model SubscriptionRevenueCat {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+model BlockedUser {
+  id        String   @id @default(uuid())
+  blockerId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+model NotRecommendedUser {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation("NotRecommender", fields: [userId], references: [id], onDelete: Cascade)
+  notRecommendedId String
+  notRecommended   User     @relation("NotRecommended", fields: [notRecommendedId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+
+  @@unique([userId, notRecommendedId])
+  @@index([userId])
+  @@index([notRecommendedId])
 }
 
 model Video {

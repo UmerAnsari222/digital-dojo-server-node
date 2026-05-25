@@ -30,6 +30,8 @@ const reel_1 = require("./routes/reel");
 const report_1 = require("./routes/report");
 const contact_us_1 = require("./routes/contact-us");
 const dasboard_1 = require("./routes/dasboard");
+const blockUser_1 = require("./routes/blockUser");
+const notRecommend_1 = require("./routes/notRecommend");
 const app = (0, express_1.default)();
 // Use Morgan middleware
 app.use((0, morgan_1.default)("combined", {
@@ -70,6 +72,8 @@ app.use("/api/v1/contact-us", contact_us_1.contactUsRouter);
 app.use("/api/v1/dashboard", dasboard_1.dashboardRouter);
 app.use("/api/v1/presigned", presigned_1.urlRouter);
 app.use("/api/v1/payment", payment_1.paymentRouter);
+app.use("/api/v1/block-user", blockUser_1.blockUserRouter);
+app.use("/api/v1/not-recommend", notRecommend_1.notRecommendRouter);
 (0, scheduler_1.startScheduler)().then(() => {
     console.log("Job Scheduler started.");
 });

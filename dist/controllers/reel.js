@@ -88,12 +88,15 @@ const createReelCount = async (req, res, next) => {
 };
 exports.createReelCount = createReelCount;
 const getReelsFeed = async (req, res, next) => {
+    const { userId } = req;
     const { cursor, limit = 10 } = req.query;
     try {
+        const excludeUserIds = userId ? await getExcludedUserIds(userId) : [];
         const reels = await db_1.db.video.findMany({
             where: {
                 status: "READY",
                 isBlocked: false,
+                userId: { notIn: excludeUserIds },
                 NOT: {
                     reports: { some: { status: "PENDING" } },
                 },
@@ -146,12 +149,15 @@ const getReelsFeed = async (req, res, next) => {
 };
 exports.getReelsFeed = getReelsFeed;
 const getTopSnapsFeed = async (req, res, next) => {
+    const { userId } = req;
     try {
         const { cursor, limit = 10, batchSize = 50, } = req.query;
+        const excludeUserIds = userId ? await getExcludedUserIds(userId) : [];
         // 1) Fetch ALL eligible videos (no time restriction)
         const allTimeWhere = {
             status: "READY",
             isBlocked: false,
+            userId: { notIn: excludeUserIds },
             NOT: {
                 reports: { some: { status: "PENDING" } },
             },
@@ -186,6 +192,7 @@ const getTopSnapsFeed = async (req, res, next) => {
             where: {
                 status: "READY",
                 isBlocked: false,
+                userId: { notIn: excludeUserIds },
                 NOT: {
                     reports: { some: { status: "PENDING" } },
                 },
@@ -332,11 +339,13 @@ const getMyCircleReelsFeed = async (req, res, next) => {
         if (!self) {
             return next(new error_1.default("Unauthorized", 403));
         }
+        const excludeUserIds = await getExcludedUserIds(userId);
         const reels = await db_1.db.video.findMany({
             where: {
                 status: "READY",
                 type: "CIRCLE",
                 isBlocked: false,
+                userId: { notIn: excludeUserIds },
                 NOT: {
                     reports: { some: { status: "PENDING" } },
                 },
@@ -414,12 +423,14 @@ const getCircleReelsFeedById = async (req, res, next) => {
         if (!circle) {
             return next(new error_1.default("Circle not found", 404));
         }
+        const excludeUserIds = await getExcludedUserIds(userId);
         const reels = await db_1.db.video.findMany({
             where: {
                 status: "READY",
                 type: "CIRCLE",
                 circleId: circle.id,
                 isBlocked: false,
+                userId: { notIn: excludeUserIds },
                 NOT: {
                     reports: { some: { status: "PENDING" } },
                 },
@@ -674,6 +685,22 @@ const deleteReelById = async (req, res, next) => {
     }
 };
 exports.deleteReelById = deleteReelById;
+async function getExcludedUserIds(userId) {
+    const [blockedUsers, notRecommendedUsers] = await Promise.all([
+        db_1.db.blockedUser.findMany({
+            where: { blockerId: userId },
+            select: { blockedId: true },
+        }),
+        db_1.db.notRecommendedUser.findMany({
+            where: { userId },
+            select: { notRecommendedId: true },
+        }),
+    ]);
+    return [
+        ...blockedUsers.map((b) => b.blockedId),
+        ...notRecommendedUsers.map((n) => n.notRecommendedId),
+    ];
+}
 // JS score calc
 function calculateScore(views, createdAt) {
     const DECAY_RATE_HOURS = 24;
